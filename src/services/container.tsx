@@ -11,12 +11,14 @@ import { createContext, useContext, type ReactNode } from 'react';
 import { InMemoryFileSystem, type IFileSystem } from './filesystem';
 import { EditorService } from './editorService';
 import { ShellService } from './shell';
+import { BrowserService } from './browser';
 import { noCollab, type CollabExtensionFactory } from './collab';
 
 export interface Services {
 	fs: IFileSystem;
 	editor: EditorService;
 	shell: ShellService;
+	browser: BrowserService;
 	/** The collaboration seam. Swap for a CRDT factory to enable network sync. */
 	collab: CollabExtensionFactory;
 }
@@ -24,7 +26,7 @@ export interface Services {
 export function createServices(): Services {
 	const fs = new InMemoryFileSystem();
 	const editor = new EditorService(fs);
-	return { fs, editor, shell: new ShellService(fs, editor), collab: noCollab };
+	return { fs, editor, shell: new ShellService(fs, editor), browser: new BrowserService(), collab: noCollab };
 }
 
 let singleton: Services | null = null;
