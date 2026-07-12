@@ -23,71 +23,47 @@ export function CommandHeader() {
 	const tab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
 	const activePane = leaves(tab.tree).find((l) => l.pane.id === tab.activePaneId) ?? leaves(tab.tree)[0];
 	const mode = activePane.pane.mode;
-	const def = MODE_DEFS[mode];
+	void MODE_DEFS[mode];
 
 	return (
 		<div className="header">
-			{/* 1 · sidebar toggle */}
-			<button className="ib" title="Toggle sidebar" onClick={toggleSidebar}><Icon.sidebar /></button>
-			<div className="hsep" />
-
-			{/* 2 · navigation */}
-			<div className="hz">
-				<button className="ib" title="Back"><Icon.back /></button>
-				<button className="ib" title="Forward"><Icon.forward /></button>
-			</div>
-			<div className="crumb">
-				<span className="avatar" />
-				<span className="c">byron</span><span className="s">/</span>
-				<span className="c">streamline</span><span className="s">/</span>
-				<span className="c here">{tab.title}</span>
-			</div>
-			<div className="hsep" />
-
-			{/* 3 · contextual (mode-specific) actions */}
-			<div className="hz">
-				<button className="ib" title="Command palette"><Icon.command /></button>
-				<button className="ib" title="Search"><Icon.search /></button>
-			</div>
-
-			{/* 4 · center: title + mode dropdown */}
-			<div className="center">
+			{/* left · view + tools */}
+			<div className="hgroup">
+				<button className="ib" title="Toggle sidebar" aria-label="Toggle sidebar" onClick={toggleSidebar}><Icon.sidebar /></button>
+				<span className="brandmark" aria-hidden />
 				<ModeDropdown activeMode={mode} />
-				<div className="title">
-					<span className="branch" title="Switch branch">main <Icon.chevron /></span>
-					<span className="sync"><Icon.check /> saved</span>
+				<button className="ib" title="Command palette (⌘K)" aria-label="Command palette"><Icon.command /></button>
+				<button className="ib" title="Search (⌘P)" aria-label="Search"><Icon.search /></button>
+			</div>
+
+			{/* center · document title + branch */}
+			<div className="center">
+				<span className="doctitle">{tab.title}</span>
+				<span className="dsep">·</span>
+				<button className="branch" title="Switch branch"><Icon.git />main</button>
+				<span className="sync"><Icon.check />saved</span>
+			</div>
+
+			{/* right · run, people, share */}
+			<div className="hgroup right">
+				<button className="ib" title="Run / Preview" aria-label="Run"><Icon.play /></button>
+				<div className="presence" title="3 collaborators live">
+					{PEOPLE.map((p) => (
+						<span key={p.initial} className="av" style={{ background: p.color }}>{p.initial}</span>
+					))}
+					<span className="av more">+4</span>
 				</div>
+				<button className="btn ghost" onClick={() => setSheet('invite')}><Icon.invite />Invite</button>
+				<button className="btn brand" onClick={() => setSheet('share')}><Icon.share />Share</button>
+				<button
+					className="ib"
+					aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+					aria-pressed={theme === 'dark'}
+					onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+				>
+					{theme === 'dark' ? <Icon.moon /> : <Icon.sun />}
+				</button>
 			</div>
-
-			<div className="spacer" />
-
-			{/* contextual action hint for the active mode */}
-			<span className="livepill" title={`${def.name} actions`}><i />{def.actions[0]}</span>
-
-			{/* 5 · site actions */}
-			<div className="hz">
-				<button className="ib" title="Run / Preview"><Icon.play /></button>
-				<button className="ib" title="Deploy"><Icon.rocket /></button>
-			</div>
-			<div className="hsep" />
-
-			{/* 6 · presence */}
-			<div className="presence" title="3 collaborators live">
-				{PEOPLE.map((p) => <span key={p.initial} className="av" style={{ background: p.color }}>{p.initial}</span>)}
-				<span className="av more">+4</span>
-			</div>
-
-			{/* 7 · invite  8 · share */}
-			<button className="btn" onClick={() => setSheet('invite')}><Icon.invite />Invite</button>
-			<button className="btn brand" onClick={() => setSheet('share')}><Icon.share />Share</button>
-			<button
-				className="ib"
-				aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-				aria-pressed={theme === 'dark'}
-				onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-			>
-				{theme === 'dark' ? <Icon.moon /> : <Icon.sun />}
-			</button>
 
 			{sheet && <ShareSheet kind={sheet} onClose={() => setSheet(null)} />}
 		</div>

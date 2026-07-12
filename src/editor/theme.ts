@@ -59,10 +59,10 @@ const chrome = EditorView.theme({
 		color: 'var(--faint)',
 	},
 	'.cm-activeLine': {
-		backgroundColor: 'rgba(var(--fg-rgb), 0.045)',
+		backgroundColor: 'rgba(var(--fg-rgb), 0.07)',
 	},
 	'.cm-activeLineGutter': {
-		backgroundColor: 'rgba(var(--fg-rgb), 0.045)',
+		backgroundColor: 'rgba(var(--fg-rgb), 0.07)',
 		color: 'var(--fg)',
 	},
 	'&.cm-focused .cm-cursor': {

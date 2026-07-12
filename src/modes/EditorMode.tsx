@@ -60,12 +60,12 @@ export function EditorMode({ paneId }: { paneId: string }) {
 				</div>
 				{views > 1 && (
 					<span className="shared" title={`Editing live in ${views} panes`}>
-						<Icon.agents />
+						<Icon.splitRight />
 						{views}
 					</span>
 				)}
-				<span className="sp" />
 				{dir && <span className="path">{dir}</span>}
+				<span className="sp" />
 			</div>
 			<Suspense fallback={<div className="cm-host" />}>
 				<CodeMirrorHost doc={doc} paneId={paneId} onSave={() => void editor.save(doc.path)} />

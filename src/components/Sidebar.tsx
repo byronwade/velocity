@@ -126,6 +126,7 @@ function Explorer() {
 					aria-current={selected ? 'true' : undefined}
 					onClick={() => openFileInActivePane(editor, n.path)}
 				>
+					<span className="tw" aria-hidden />
 					<Icon.file />
 					<span className="nm">{n.name}</span>
 				</button>
