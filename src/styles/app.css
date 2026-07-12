@@ -306,6 +306,27 @@ svg { display: block; }
 .chrome-bar .url .host { color: var(--faint); flex: none; font-size: 11px; }
 .browser-view { flex: 1; min-height: 0; background: #fff; position: relative; }
 .browser-view .frame { width: 100%; height: 100%; border: 0; display: block; }
+
+/* browser tab strip */
+.bx-tabs { display: flex; align-items: center; gap: 3px; height: 34px; flex: none; padding: 0 6px; background: var(--sunk); border-bottom: 1px solid var(--line); overflow-x: auto; }
+.bx-tab { display: flex; align-items: center; gap: 7px; height: 26px; padding: 0 6px 0 9px; border-radius: 7px; font-size: 12px; color: var(--muted); cursor: pointer; max-width: 180px; min-width: 0; flex: 0 1 auto; user-select: none; }
+.bx-tab:hover { background: color-mix(in srgb, var(--fg) 5%, transparent); color: var(--fg); }
+.bx-tab.active { background: var(--panel); color: var(--fg); box-shadow: 0 0 0 1px var(--line); }
+.bx-tab > svg { width: 13px; height: 13px; flex: none; color: var(--muted); }
+.bx-tab .bt-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bx-tab .bt-x { width: 17px; height: 17px; border-radius: 5px; display: grid; place-items: center; color: var(--faint); flex: none; opacity: 0; transition: opacity var(--dur); }
+.bx-tab:hover .bt-x, .bx-tab.active .bt-x { opacity: 1; }
+.bx-tab .bt-x:hover { background: color-mix(in srgb, var(--fg) 12%, transparent); color: var(--fg); }
+.bx-tab .bt-x svg { width: 11px; height: 11px; }
+.bx-newtab { width: 26px; height: 26px; border-radius: 7px; color: var(--faint); display: grid; place-items: center; flex: none; }
+.bx-newtab:hover { background: color-mix(in srgb, var(--fg) 6%, transparent); color: var(--fg); }
+.bx-newtab svg { width: 15px; height: 15px; }
+.fav { width: 13px; height: 13px; border-radius: 3px; flex: none; }
+/* bookmarks bar */
+.bx-marks { display: flex; align-items: center; gap: 1px; height: 30px; flex: none; padding: 0 7px; background: var(--panel-2); border-bottom: 1px solid var(--line); overflow-x: auto; }
+.bx-mark { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border-radius: 6px; font-size: 11.5px; color: var(--muted); white-space: nowrap; flex: none; }
+.bx-mark:hover { background: color-mix(in srgb, var(--fg) 6%, transparent); color: var(--fg); }
+.bx-mark .fav { width: 11px; height: 11px; }
 .web { width: 100%; height: 100%; overflow: auto; background: var(--panel); }
 .web .hero { padding: 52px 40px; text-align: center; background: linear-gradient(180deg, color-mix(in srgb, var(--brand) 13%, transparent), transparent); }
 .web .hero h1 { font-size: 34px; letter-spacing: -0.03em; margin: 0 0 12px; font-weight: 700; }
