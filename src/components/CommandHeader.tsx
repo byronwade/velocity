@@ -14,8 +14,6 @@ const PEOPLE = [
 
 export function CommandHeader() {
 	const toggleSidebar = useShell((s) => s.toggleSidebar);
-	const setTheme = useShell((s) => s.setTheme);
-	const theme = useShell((s) => s.theme);
 	const tabs = useShell((s) => s.tabs);
 	const activeTabId = useShell((s) => s.activeTabId);
 	const [sheet, setSheet] = useState<null | 'invite' | 'share'>(null);
@@ -30,7 +28,6 @@ export function CommandHeader() {
 			{/* left · view + tools */}
 			<div className="hgroup">
 				<button className="ib" title="Toggle sidebar" aria-label="Toggle sidebar" onClick={toggleSidebar}><Icon.sidebar /></button>
-				<span className="brandmark" aria-hidden />
 				<ModeDropdown activeMode={mode} />
 				<button className="ib" title="Command palette (⌘K)" aria-label="Command palette"><Icon.command /></button>
 				<button className="ib" title="Search (⌘P)" aria-label="Search"><Icon.search /></button>
@@ -55,14 +52,6 @@ export function CommandHeader() {
 				</div>
 				<button className="btn ghost" onClick={() => setSheet('invite')}><Icon.invite />Invite</button>
 				<button className="btn brand" onClick={() => setSheet('share')}><Icon.share />Share</button>
-				<button
-					className="ib"
-					aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-					aria-pressed={theme === 'dark'}
-					onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-				>
-					{theme === 'dark' ? <Icon.moon /> : <Icon.sun />}
-				</button>
 			</div>
 
 			{sheet && <ShareSheet kind={sheet} onClose={() => setSheet(null)} />}

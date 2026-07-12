@@ -60,7 +60,7 @@ function buildTree(files: string[], dirs: string[]): TreeNode[] {
 	return root.children;
 }
 
-function Explorer() {
+export function Explorer() {
 	const { fs, editor } = useServices();
 	const [files, setFiles] = useState<string[]>([]);
 	const [dirs, setDirs] = useState<string[]>([]);

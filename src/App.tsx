@@ -1,9 +1,8 @@
 import { useEffect } from 'react';
 import { useShell } from './lib/store';
 import { leaves, findLeafByPane } from './lib/tree';
-import { TabStrip } from './components/TabStrip';
+import { ArcSidebar } from './components/ArcSidebar';
 import { CommandHeader } from './components/CommandHeader';
-import { Sidebar } from './components/Sidebar';
 import { StatusBar } from './components/StatusBar';
 import { SplitView } from './components/SplitView';
 import { PaneChrome } from './components/PaneChrome';
@@ -81,16 +80,15 @@ export function App() {
 	}, [activeExists, tab.tree]);
 
 	return (
-		<div className={`app${sidebarCollapsed ? ' nosidebar' : ''}${fullBrowser ? ' nochrome' : ''}`}>
-			<TabStrip />
-			<CommandHeader />
-			<div className="body">
-				<Sidebar />
-				<div className="stage">
+		<div className={`app arc${sidebarCollapsed ? ' nosidebar' : ''}${fullBrowser ? ' nofiles' : ''}`}>
+			<ArcSidebar />
+			<div className="arc-main">
+				<CommandHeader />
+				<div className="arc-stage">
 					{maximizedLeaf ? <PaneChrome pane={maximizedLeaf.pane} /> : <SplitView key={tab.id} node={tab.tree} />}
 				</div>
+				<StatusBar />
 			</div>
-			<StatusBar />
 		</div>
 	);
 }
