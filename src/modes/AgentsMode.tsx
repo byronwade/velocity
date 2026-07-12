@@ -1,13 +1,13 @@
 // ---------------------------------------------------------------------------
-// Agents — the AI-first surface. The composer drives a real agent (AgentService)
-// whose tool calls operate this workspace: run commands, create/open files,
-// scaffold apps, search. Tool cards stream in as the agent works. The "model" is
-// a local backend today; swapping it for Claude is a one-line container change.
+// Agents — an agent composer in the Cursor 2.x mold: rich markdown responses,
+// streaming tool cards, a "Files Changed" review card for real edits, and a
+// polished follow-up bar with a model selector. Every action is real (see
+// services/agent.ts); the review card lists the files the agent actually wrote.
 // ---------------------------------------------------------------------------
 
 import { useEffect, useRef, useState } from 'react';
 import { useServices } from '../services/container';
-import { useAgentThread, type AgentMessage, type ToolCall } from '../services/agent';
+import { useAgentThread, type AgentMessage, type FileChange, type ToolCall } from '../services/agent';
 import { Icon, type IconName } from '../lib/icons';
 
 const TOOL_ICON: Record<string, IconName> = {
@@ -19,19 +19,65 @@ const TOOL_ICON: Record<string, IconName> = {
 	plan: 'sparkle',
 };
 
-/** Minimal inline formatter: `code` spans and • bullet lines. */
-function Prose({ text }: { text: string }) {
+function basename(path: string): string {
+	const i = path.lastIndexOf('/');
+	return i === -1 ? path : path.slice(i + 1);
+}
+
+/** Inline formatting: `code` and **bold**. */
+function renderInline(text: string, key: number) {
+	const parts = text.split(/(`[^`]+`|\*\*[^*]+\*\*)/g);
 	return (
-		<>
-			{text.split('\n').map((line, i) => (
-				<p key={i} className={line.startsWith('•') ? 'bul' : undefined}>
-					{line.split(/(`[^`]+`)/g).map((seg, j) =>
-						seg.startsWith('`') && seg.endsWith('`') ? <code key={j}>{seg.slice(1, -1)}</code> : <span key={j}>{seg}</span>,
-					)}
-				</p>
-			))}
-		</>
+		<span key={key}>
+			{parts.map((seg, j) => {
+				if (seg.startsWith('`') && seg.endsWith('`')) {
+					return <code key={j}>{seg.slice(1, -1)}</code>;
+				}
+				if (seg.startsWith('**') && seg.endsWith('**')) {
+					return <strong key={j}>{seg.slice(2, -2)}</strong>;
+				}
+				return <span key={j}>{seg}</span>;
+			})}
+		</span>
 	);
+}
+
+/** Block-level markdown: headings, bullet lists, paragraphs. */
+function Prose({ text }: { text: string }) {
+	const lines = text.split('\n');
+	const blocks: React.ReactNode[] = [];
+	let bullets: string[] = [];
+	const flush = () => {
+		if (bullets.length) {
+			blocks.push(
+				<ul key={`u${blocks.length}`}>
+					{bullets.map((b, i) => (
+						<li key={i}>{renderInline(b, i)}</li>
+					))}
+				</ul>,
+			);
+			bullets = [];
+		}
+	};
+	for (const raw of lines) {
+		const line = raw.trimEnd();
+		if (/^[-•]\s+/.test(line)) {
+			bullets.push(line.replace(/^[-•]\s+/, ''));
+		} else if (/^###\s+/.test(line)) {
+			flush();
+			blocks.push(<h4 key={blocks.length}>{renderInline(line.replace(/^###\s+/, ''), 0)}</h4>);
+		} else if (/^##\s+/.test(line)) {
+			flush();
+			blocks.push(<h3 key={blocks.length}>{renderInline(line.replace(/^##\s+/, ''), 0)}</h3>);
+		} else if (line.trim() === '') {
+			flush();
+		} else {
+			flush();
+			blocks.push(<p key={blocks.length}>{renderInline(line, 0)}</p>);
+		}
+	}
+	flush();
+	return <>{blocks}</>;
 }
 
 function ToolCardView({ tc }: { tc: ToolCall }) {
@@ -42,6 +88,33 @@ function ToolCardView({ tc }: { tc: ToolCall }) {
 			<span className="tlabel">{tc.label}</span>
 			<span className="tstat">{tc.status === 'running' ? <span className="spin" /> : tc.status === 'error' ? '!' : <Icon.check />}</span>
 			{tc.output && <pre className="tout">{tc.output}</pre>}
+		</div>
+	);
+}
+
+function ChangesCard({ files }: { files: FileChange[] }) {
+	const [expanded, setExpanded] = useState(false);
+	const shown = expanded ? files : files.slice(0, 4);
+	return (
+		<div className="changes-card">
+			<div className="cc-head">
+				<span>{files.length} File{files.length === 1 ? '' : 's'} Changed</span>
+				<span className="cc-review">Review</span>
+			</div>
+			{shown.map((f, i) => (
+				<div className="cc-row" key={i} title={f.path}>
+					<Icon.file />
+					<span className="cc-name">{basename(f.path)}</span>
+					<span className="cc-stat">
+						<span className="add">+{f.added}</span> <span className="del">−{f.removed}</span>
+					</span>
+				</div>
+			))}
+			{files.length > 4 && (
+				<button className="cc-more" onClick={() => setExpanded((e) => !e)}>
+					{expanded ? 'Show less' : `Show ${files.length - 4} more`}
+				</button>
+			)}
 		</div>
 	);
 }
@@ -63,7 +136,15 @@ function MessageView({ m }: { m: AgentMessage }) {
 				<ToolCardView key={tc.id} tc={tc} />
 			))}
 			{m.text && <div className="prose"><Prose text={m.text} /></div>}
+			{m.changes && m.changes.length > 0 && <ChangesCard files={m.changes} />}
 			{m.pending && !m.text && m.tools.length === 0 && <div className="typing"><i /><i /><i /></div>}
+			{!m.pending && m.text && (
+				<div className="msg-actions">
+					<button title="Good response"><Icon.thumbUp /></button>
+					<button title="Bad response"><Icon.thumbDown /></button>
+					<button title="Copy" onClick={() => navigator.clipboard?.writeText(m.text)}><Icon.copy /></button>
+				</div>
+			)}
 		</div>
 	);
 }
@@ -90,6 +171,11 @@ export function AgentsMode({ paneId }: { paneId: string }) {
 		void agent.send(paneId, t);
 	}
 
+	// Aggregate the most recent turn's file changes for the composer chip.
+	const lastChanges = [...thread].reverse().find((m) => m.changes && m.changes.length)?.changes;
+	const added = lastChanges?.reduce((s, f) => s + f.added, 0) ?? 0;
+	const removed = lastChanges?.reduce((s, f) => s + f.removed, 0) ?? 0;
+
 	return (
 		<div className="mode agents">
 			<div className="agent-thread" ref={scrollRef}>
@@ -97,12 +183,19 @@ export function AgentsMode({ paneId }: { paneId: string }) {
 					<MessageView key={m.id} m={m} />
 				))}
 			</div>
-			<div className="composer">
-				<div className="in">
+
+			<div className="agent-composer">
+				{lastChanges && (
+					<div className="agent-chips">
+						<span className="achip"><Icon.diff />Changes <b className="add">+{added}</b> <b className="del">−{removed}</b></span>
+					</div>
+				)}
+				<div className="ac-bar">
+					<button className="ac-plus" title="Add context" aria-label="Add context"><Icon.plus /></button>
 					<textarea
 						rows={1}
 						value={input}
-						placeholder="Ask the agent to build, run, open, or explain…"
+						placeholder="Send follow-up…"
 						onChange={(e) => setInput(e.target.value)}
 						onKeyDown={(e) => {
 							if (e.key === 'Enter' && !e.shiftKey) {
@@ -111,13 +204,16 @@ export function AgentsMode({ paneId }: { paneId: string }) {
 							}
 						}}
 					/>
-					<div className="r">
-						<span className="chip">Agent</span>
-						<span className="chip">Local</span>
-						<button className="send" aria-label="Send" disabled={busy || !input.trim()} onClick={send}>
-							<Icon.send />
-						</button>
-					</div>
+					<button className="ac-model" title="Model">Velocity · Local <Icon.chevron /></button>
+					<button className="ac-mic" title="Voice" aria-label="Voice"><Icon.mic /></button>
+				</div>
+				<div className="ac-foot">
+					<Icon.git />
+					<span>main</span>
+					<span className="dot">·</span>
+					<span>Local agent</span>
+					<span className="sp" />
+					<span className={busy ? 'work' : undefined}>{busy ? 'working…' : 'ready'}</span>
 				</div>
 			</div>
 		</div>

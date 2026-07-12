@@ -25,10 +25,17 @@ export interface AgentContext {
 	shell: Shell;
 }
 
+export interface FileChange {
+	path: string;
+	added: number;
+	removed: number;
+}
+
 export type AgentEvent =
 	| { type: 'text'; text: string }
 	| { type: 'tool'; id: string; tool: string; label: string }
-	| { type: 'tool-done'; id: string; status?: 'done' | 'error'; output?: string };
+	| { type: 'tool-done'; id: string; status?: 'done' | 'error'; output?: string }
+	| { type: 'changes'; files: FileChange[] };
 
 export interface AgentBackend {
 	name: string;
@@ -74,8 +81,9 @@ export class LocalAgent implements AgentBackend {
 			const g = generate(text);
 			const write = uid('tool');
 			yield { type: 'tool', id: write, tool: 'write', label: `Write ${Object.keys(g.files).length} files → builds/${g.slug}/` };
+			const changes: FileChange[] = [];
 			for (const [path, content] of Object.entries(g.files)) {
-				await ctx.fs.writeFile(path, content);
+				changes.push(await writeTracked(ctx.fs, path, content));
 			}
 			yield { type: 'tool-done', id: write };
 			const entry = `builds/${g.slug}/index.html`;
@@ -83,7 +91,8 @@ export class LocalAgent implements AgentBackend {
 			yield { type: 'tool', id: open, tool: 'open', label: `Open ${entry}` };
 			openFileInActivePane(ctx.editor, entry);
 			yield { type: 'tool-done', id: open };
-			yield { type: 'text', text: `Done — generated a ${g.kind} into \`builds/${g.slug}/\`. Open the Builder tab to preview it live, or edit the files here.` };
+			yield { type: 'changes', files: changes };
+			yield { type: 'text', text: `## Done\nGenerated a **${g.kind}** into \`builds/${g.slug}/\`. Open the Builder tab to preview it live, or edit the files right here.` };
 			return;
 		}
 
@@ -109,9 +118,10 @@ export class LocalAgent implements AgentBackend {
 			const content = m[2] ? `${m[2].trim()}\n` : '';
 			const id = uid('tool');
 			yield { type: 'tool', id, tool: 'write', label: `Create ${path}` };
-			await ctx.fs.writeFile(path, content);
+			const change = await writeTracked(ctx.fs, path, content);
 			openFileInActivePane(ctx.editor, path);
 			yield { type: 'tool-done', id };
+			yield { type: 'changes', files: [change] };
 			yield { type: 'text', text: `Created \`${path}\` and opened it in the editor.` };
 			return;
 		}
@@ -173,6 +183,15 @@ function summarize(path: string, src: string): string {
 	return parts.join(' ');
 }
 
+/** Write a file and report the diff stats (new lines added, prior lines removed). */
+async function writeTracked(fs: IFileSystem, path: string, content: string): Promise<FileChange> {
+	const p = normalizePath(path);
+	const existed = await fs.exists(p);
+	const removed = existed ? (await fs.readFile(p)).split('\n').length : 0;
+	await fs.writeFile(p, content);
+	return { path: p, added: content.replace(/\n$/, '').split('\n').length, removed: existed ? removed : 0 };
+}
+
 async function grep(fs: IFileSystem, term: string): Promise<string[]> {
 	const files = await fs.list();
 	const hits: string[] = [];
@@ -204,6 +223,7 @@ export interface AgentMessage {
 	role: 'user' | 'assistant';
 	text: string;
 	tools: ToolCall[];
+	changes?: FileChange[];
 	pending?: boolean;
 }
 
@@ -289,6 +309,8 @@ export class AgentService {
 				tc.status = ev.status ?? 'done';
 				tc.output = ev.output;
 			}
+		} else if (ev.type === 'changes') {
+			msg.changes = [...(msg.changes ?? []), ...ev.files];
 		}
 	}
 

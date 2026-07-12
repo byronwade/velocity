@@ -211,6 +211,56 @@ svg { display: block; }
 .typing i:nth-child(3) { animation-delay: 0.4s; }
 @keyframes blink { 0%, 60%, 100% { opacity: 0.3; } 30% { opacity: 1; } }
 
+/* agents — rich markdown */
+.msg.res .prose h3 { font-size: 15px; font-weight: 650; letter-spacing: -0.01em; margin: 14px 0 6px; }
+.msg.res .prose h4 { font-size: 13px; font-weight: 650; margin: 12px 0 5px; }
+.msg.res .prose h3:first-child, .msg.res .prose h4:first-child, .msg.res .prose p:first-child { margin-top: 0; }
+.msg.res .prose ul { margin: 4px 0 8px; padding-left: 18px; }
+.msg.res .prose li { margin: 2px 0; }
+.msg.res .prose strong { font-weight: 650; }
+.msg-actions { display: flex; gap: 1px; margin-top: 8px; }
+.msg-actions button { width: 26px; height: 26px; border-radius: 6px; color: var(--faint); display: grid; place-items: center; }
+.msg-actions button:hover { background: color-mix(in srgb, var(--fg) 7%, transparent); color: var(--fg); }
+.msg-actions svg { width: 14px; height: 14px; }
+
+/* agents — Files Changed review card */
+.changes-card { border: 1px solid var(--line); border-radius: 12px; margin: 12px 0 4px; overflow: hidden; background: var(--panel); }
+.cc-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 13px; font-size: 12.5px; font-weight: 600; border-bottom: 1px solid var(--line); }
+.cc-review { color: var(--muted); font-weight: 500; font-size: 12px; }
+.cc-row { display: flex; align-items: center; gap: 9px; padding: 7px 13px; font-size: 12.5px; }
+.cc-row:hover { background: color-mix(in srgb, var(--fg) 4%, transparent); }
+.cc-row svg { width: 14px; height: 14px; color: var(--muted); flex: none; }
+.cc-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cc-stat { font-family: var(--mono); font-size: 11.5px; flex: none; }
+.cc-stat .add, .achip .add { color: var(--good); }
+.cc-stat .del, .achip .del { color: var(--danger); }
+.cc-more { width: 100%; text-align: left; padding: 8px 13px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); }
+.cc-more:hover { color: var(--fg); background: color-mix(in srgb, var(--fg) 4%, transparent); }
+
+/* agents — Cursor-style follow-up composer */
+.agent-composer { flex: none; padding: 10px 14px 12px; border-top: 1px solid var(--line); }
+.agent-chips { display: flex; gap: 6px; margin-bottom: 8px; }
+.achip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 8px; color: var(--muted); background: var(--panel); }
+.achip svg { width: 12px; height: 12px; }
+.achip b { font-family: var(--mono); font-weight: 600; }
+.ac-bar { display: flex; align-items: center; gap: 6px; border: 1px solid var(--line-2); border-radius: 12px; background: var(--panel-2); padding: 6px 8px 6px 8px; }
+.ac-bar:focus-within { border-color: color-mix(in srgb, var(--fg) 45%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--fg) 10%, transparent); }
+.ac-plus { width: 28px; height: 28px; border-radius: 8px; color: var(--muted); display: grid; place-items: center; flex: none; }
+.ac-plus:hover { background: color-mix(in srgb, var(--fg) 8%, transparent); color: var(--fg); }
+.ac-plus svg { width: 16px; height: 16px; }
+.ac-bar textarea { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: 13px; resize: none; outline: none; min-height: 20px; max-height: 120px; padding: 4px 2px; }
+.ac-model { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--muted); padding: 5px 9px; border-radius: 8px; flex: none; white-space: nowrap; }
+.ac-model:hover { background: color-mix(in srgb, var(--fg) 7%, transparent); color: var(--fg); }
+.ac-model svg { width: 11px; height: 11px; }
+.ac-mic { width: 28px; height: 28px; border-radius: 8px; color: var(--muted); display: grid; place-items: center; flex: none; }
+.ac-mic:hover { background: color-mix(in srgb, var(--fg) 8%, transparent); color: var(--fg); }
+.ac-mic svg { width: 15px; height: 15px; }
+.ac-foot { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 11px; color: var(--faint); }
+.ac-foot svg { width: 12px; height: 12px; }
+.ac-foot .dot { opacity: 0.6; }
+.ac-foot .sp { flex: 1; }
+.ac-foot .work { color: var(--brand); }
+
 /* editor (Live Editor — real CodeMirror 6) */
 .editor { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
 .editor-tabbar { height: 30px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 10px 0 8px; border-bottom: 1px solid var(--line); background: transparent; }
