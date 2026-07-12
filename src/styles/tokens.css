@@ -1,0 +1,78 @@
+/* Velocity design tokens — one system, light + dark + high-contrast.
+   Neutral surfaces with a single confident accent for primary actions.
+   `color-scheme` is declared per theme so native controls (buttons, inputs,
+   scrollbars, caret) render the correct chrome from first paint and can never
+   desync from the `data-theme` attribute. */
+
+:root {
+	color-scheme: light;
+	--brand: #5b5bd6;
+	--accent: #3b82f6;
+	--good: #1f7d49;
+	--warn: #c98a2f;
+	--danger: #d05a5a;
+	--live: #e0457b;
+
+	/* light (default) */
+	--shell: #f4f5f7;
+	--panel: #ffffff;
+	--panel-2: #fafbfc;
+	--sunk: #eef0f2;
+	--rail: #eceef0;
+	--fg: #1a1c20;
+	--muted: #666b74;
+	--faint: #767c85;
+	--fg-rgb: 26, 28, 32;
+	--line: rgba(26, 28, 32, 0.10);
+	--line-2: rgba(26, 28, 32, 0.16);
+
+	--code-bg: #f6f7f9;
+	--user-bubble: #eef0f2;
+
+	--k: #8250df; --s: #0a7d3e; --n: #b3611d; --c: #8a9099; --ty: #1a7f8e; --f: #0a56c2;
+
+	--r-lg: 12px; --r-md: 9px; --r-sm: 6px;
+	--h-tab: 38px; --h-header: 46px; --h-status: 24px;
+
+	--sans: ui-sans-serif, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+	--mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+
+	--ease: cubic-bezier(0.32, 0.72, 0, 1);
+	--dur: 160ms;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme="light"]) {
+		color-scheme: dark;
+		--good: #4ec98a;
+		--shell: #0f0f11; --panel: #17181b; --panel-2: #1c1d21; --sunk: #111214; --rail: #131417;
+		--fg: #e8e9ec; --muted: #9a9ea6; --faint: #8b9099; --fg-rgb: 232, 233, 236;
+		--line: rgba(232, 233, 236, 0.10); --line-2: rgba(232, 233, 236, 0.16);
+		--code-bg: #141518; --user-bubble: #26272b;
+		--k: #c297ff; --s: #7ee787; --n: #ffa657; --c: #7d8590; --ty: #79c0ff; --f: #79c0ff;
+	}
+}
+
+:root[data-theme="dark"] {
+	color-scheme: dark;
+	--good: #4ec98a;
+	--shell: #0f0f11; --panel: #17181b; --panel-2: #1c1d21; --sunk: #111214; --rail: #131417;
+	--fg: #e8e9ec; --muted: #9a9ea6; --faint: #8b9099; --fg-rgb: 232, 233, 236;
+	--line: rgba(232, 233, 236, 0.10); --line-2: rgba(232, 233, 236, 0.16);
+	--code-bg: #141518; --user-bubble: #26272b;
+	--k: #c297ff; --s: #7ee787; --n: #ffa657; --c: #7d8590; --ty: #79c0ff; --f: #79c0ff;
+}
+
+:root[data-theme="light"] {
+	color-scheme: light;
+	--good: #1f7d49;
+	--shell: #f4f5f7; --panel: #fff; --panel-2: #fafbfc; --sunk: #eef0f2; --rail: #eceef0;
+	--fg: #1a1c20; --muted: #666b74; --faint: #767c85; --fg-rgb: 26, 28, 32;
+	--line: rgba(26, 28, 32, 0.10); --line-2: rgba(26, 28, 32, 0.16);
+	--code-bg: #f6f7f9; --user-bubble: #eef0f2;
+	--k: #8250df; --s: #0a7d3e; --n: #b3611d; --c: #8a9099; --ty: #1a7f8e; --f: #0a56c2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	:root { --dur: 0ms; }
+}
