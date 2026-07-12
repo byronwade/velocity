@@ -15,7 +15,10 @@ import { useServices } from './container';
 
 export class EditorService {
 	private docs = new Map<string, TextDocument>(); // path -> shared document
-	private paneToPath = new Map<string, string>(); // paneId -> path
+	private paneToPath = new Map<string, string>(); // paneId -> committed path
+	private panePending = new Map<string, string>(); // paneId -> path currently loading
+	private paneSeq = new Map<string, number>(); // paneId -> latest bind sequence
+	private bindSeq = 0; // monotonic; guards against stale/cancelled binds
 	private listeners = new Set<() => void>();
 	private rev = 0;
 
@@ -49,32 +52,53 @@ export class EditorService {
 	}
 
 	pathForPane(paneId: string): string | undefined {
-		return this.paneToPath.get(paneId);
+		// The pending (still-loading) path counts as bound, so a fresh pane isn't
+		// treated as empty and a split during load still has a file to inherit.
+		return this.paneToPath.get(paneId) ?? this.panePending.get(paneId);
 	}
 
-	/** Open `path` and show it in `paneId`. */
+	/**
+	 * Open `path` and show it in `paneId`. Cancellation-safe: a newer bindPane or
+	 * a releasePane for the same pane invalidates this one, so a load that
+	 * resolves after the pane moved on (or closed) is discarded rather than
+	 * writing a stale/dead binding. Matters once the FS is a real async backend.
+	 */
 	async bindPane(paneId: string, path: string): Promise<TextDocument> {
-		const doc = await this.open(path);
+		const seq = ++this.bindSeq;
+		const p = normalizePath(path);
+		this.paneSeq.set(paneId, seq);
+		this.panePending.set(paneId, p);
+		this.bump();
+		const doc = await this.open(p);
+		if (this.paneSeq.get(paneId) !== seq) {
+			return doc; // superseded by a newer bind, or the pane was released
+		}
 		this.paneToPath.set(paneId, doc.path);
+		if (this.panePending.get(paneId) === p) {
+			this.panePending.delete(paneId);
+		}
 		this.bump();
 		return doc;
 	}
 
 	/** Copy one pane's open file to another (used when a pane is split). */
 	inheritBinding(fromPaneId: string, toPaneId: string): void {
-		const p = this.paneToPath.get(fromPaneId);
+		const p = this.pathForPane(fromPaneId);
 		if (p) {
-			this.paneToPath.set(toPaneId, p);
-			this.bump();
+			void this.bindPane(toPaneId, p);
 		}
 	}
 
 	/** Release a pane's binding on close; garbage-collect orphaned clean docs. */
 	releasePane(paneId: string): void {
-		if (!this.paneToPath.delete(paneId)) {
-			return;
+		// Dropping the seq entry invalidates any in-flight bind for this pane
+		// (its resolution will find no matching seq and discard itself).
+		this.paneSeq.delete(paneId);
+		this.panePending.delete(paneId);
+		const had = this.paneToPath.delete(paneId);
+		if (had) {
+			this.gc();
 		}
-		this.gc();
 		this.bump();
 	}
 

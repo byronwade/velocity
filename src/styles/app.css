@@ -192,7 +192,7 @@ svg { display: block; }
 .editor-tab { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 9px; border-radius: 6px; font-size: 12px; color: var(--fg); background: color-mix(in srgb, var(--fg) 6%, transparent); }
 .editor-tab svg { width: 13px; height: 13px; color: var(--muted); }
 .editor-tab .nm { font-weight: 550; letter-spacing: -0.01em; }
-.editor-tab .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-left: 1px; }
+.editor-tab .dot { width: 7px; height: 7px; border-radius: 50%; background: color-mix(in srgb, var(--fg) 65%, transparent); margin-left: 1px; }
 .editor-tabbar .shared { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--live); font-weight: 600; }
 .editor-tabbar .shared svg { width: 13px; height: 13px; }
 .editor-tabbar .sp { flex: 1; }
