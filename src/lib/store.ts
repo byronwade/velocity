@@ -127,12 +127,14 @@ export const useShell = create<ShellState>((set) => ({
 	setPaneMode: (paneId, mode) => set((s) => withActiveTab(s, (t) => ({ ...t, tree: setPaneModeOp(t.tree, paneId, mode), activePaneId: paneId }))),
 
 	splitPane: (paneId, axis) =>
-		set((s) =>
-			withActiveTab(s, (t) => {
+		set((s) => ({
+			...withActiveTab(s, (t) => {
 				const { tree, newPaneId } = splitPaneOp(t.tree, paneId, axis);
 				return { ...t, tree, activePaneId: newPaneId };
 			}),
-		),
+			// Exit maximize on a structural change so the new pane is visible.
+			maximizedPaneId: null,
+		})),
 
 	closePane: (paneId) =>
 		set((s) => {

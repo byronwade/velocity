@@ -43,7 +43,7 @@ export function App() {
 			if (e.key === 't') { e.preventDefault(); s.addTab(); }
 			else if (e.key === 'w') { e.preventDefault(); s.closeTab(s.activeTabId); }
 			else if (e.key === 'Enter') { e.preventDefault(); s.toggleMaximizePane(tab.activePaneId); }
-			else if (e.key === '\\') { e.preventDefault(); s.splitPane(tab.activePaneId, e.shiftKey ? 'col' : 'row'); }
+			else if (e.code === 'Backslash') { e.preventDefault(); s.splitPane(tab.activePaneId, e.shiftKey ? 'col' : 'row'); }
 			else if (e.key >= '1' && e.key <= '9') {
 				e.preventDefault();
 				// ⌘1–5 switch the active pane's mode; if a tab exists at that index with no such mode, jump tab instead.
