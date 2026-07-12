@@ -17,6 +17,12 @@ export interface IFileSystem {
 	exists(path: string): Promise<boolean>;
 	/** All file paths, sorted. Directories are implied by the path segments. */
 	list(): Promise<string[]>;
+	/** Create an (possibly empty) directory, and its ancestors. */
+	mkdir(path: string): Promise<void>;
+	/** Delete a file, or a directory and everything under it. */
+	delete(path: string): Promise<void>;
+	/** All directory paths — those implied by files plus any created empty. */
+	directories(): Promise<string[]>;
 	/** Subscribe to structural changes (create/delete/rename). Returns an unsubscribe. */
 	onChange(listener: () => void): () => void;
 }
@@ -26,8 +32,19 @@ export function normalizePath(path: string): string {
 	return path.replace(/\\/g, '/').replace(/^\.?\/+/, '').replace(/\/+/g, '/');
 }
 
+/** Every ancestor directory of a file/dir path, e.g. 'a/b/c.ts' -> ['a', 'a/b']. */
+function ancestors(path: string): string[] {
+	const parts = path.split('/');
+	const out: string[] = [];
+	for (let i = 1; i < parts.length; i++) {
+		out.push(parts.slice(0, i).join('/'));
+	}
+	return out;
+}
+
 export class InMemoryFileSystem implements IFileSystem {
 	private files = new Map<string, string>();
+	private emptyDirs = new Set<string>();
 	private listeners = new Set<() => void>();
 
 	constructor(seed: Record<string, string> = SEED_FILES) {
@@ -49,6 +66,10 @@ export class InMemoryFileSystem implements IFileSystem {
 		const p = normalizePath(path);
 		const isNew = !this.files.has(p);
 		this.files.set(p, content);
+		// A newly-created file can retire an empty-dir marker it now populates.
+		for (const dir of ancestors(p)) {
+			this.emptyDirs.delete(dir);
+		}
 		// Only a create changes the tree; a content overwrite does not.
 		if (isNew) {
 			this.emit();
@@ -56,11 +77,70 @@ export class InMemoryFileSystem implements IFileSystem {
 	}
 
 	async exists(path: string): Promise<boolean> {
-		return this.files.has(normalizePath(path));
+		const p = normalizePath(path);
+		return this.files.has(p) || this.isDir(p);
 	}
 
 	async list(): Promise<string[]> {
 		return [...this.files.keys()].sort((a, b) => a.localeCompare(b));
+	}
+
+	async mkdir(path: string): Promise<void> {
+		const p = normalizePath(path);
+		if (!p || this.isDir(p) || this.files.has(p)) {
+			return;
+		}
+		this.emptyDirs.add(p);
+		this.emit();
+	}
+
+	async delete(path: string): Promise<void> {
+		const p = normalizePath(path);
+		let changed = false;
+		if (this.files.delete(p)) {
+			changed = true;
+		}
+		// Remove a directory and everything beneath it.
+		const prefix = `${p}/`;
+		for (const f of [...this.files.keys()]) {
+			if (f.startsWith(prefix)) {
+				this.files.delete(f);
+				changed = true;
+			}
+		}
+		for (const d of [...this.emptyDirs]) {
+			if (d === p || d.startsWith(prefix)) {
+				this.emptyDirs.delete(d);
+				changed = true;
+			}
+		}
+		if (changed) {
+			this.emit();
+		}
+	}
+
+	async directories(): Promise<string[]> {
+		const dirs = new Set<string>(this.emptyDirs);
+		for (const f of this.files.keys()) {
+			for (const dir of ancestors(f)) {
+				dirs.add(dir);
+			}
+		}
+		return [...dirs].sort((a, b) => a.localeCompare(b));
+	}
+
+	/** True if `path` names a directory (implied by a file, or an empty dir). */
+	private isDir(path: string): boolean {
+		if (this.emptyDirs.has(path)) {
+			return true;
+		}
+		const prefix = `${path}/`;
+		for (const f of this.files.keys()) {
+			if (f.startsWith(prefix)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	onChange(listener: () => void): () => void {

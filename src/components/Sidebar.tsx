@@ -20,23 +20,37 @@ interface TreeNode {
 	children: TreeNode[];
 }
 
-/** Build a nested folder tree from flat, sorted file paths. */
-function buildTree(paths: string[]): TreeNode[] {
+/** Ensure a directory node (and its ancestors) exists in the tree; return it. */
+function ensureDir(root: TreeNode, path: string): TreeNode {
+	let node = root;
+	let acc = '';
+	for (const part of path.split('/')) {
+		acc = acc ? `${acc}/${part}` : part;
+		let child = node.children.find((c) => c.name === part && c.dir);
+		if (!child) {
+			child = { name: part, path: acc, dir: true, children: [] };
+			node.children.push(child);
+		}
+		node = child;
+	}
+	return node;
+}
+
+/** Build a nested tree from flat file paths plus any (possibly empty) dirs. */
+function buildTree(files: string[], dirs: string[]): TreeNode[] {
 	const root: TreeNode = { name: '', path: '', dir: true, children: [] };
-	for (const p of paths) {
-		const parts = p.split('/');
-		let node = root;
-		let acc = '';
-		parts.forEach((part, i) => {
-			acc = acc ? `${acc}/${part}` : part;
-			const isFile = i === parts.length - 1;
-			let child = node.children.find((c) => c.name === part && c.dir === !isFile);
-			if (!child) {
-				child = { name: part, path: acc, dir: !isFile, children: [] };
-				node.children.push(child);
-			}
-			node = child;
-		});
+	for (const d of dirs) {
+		if (d) {
+			ensureDir(root, d);
+		}
+	}
+	for (const p of files) {
+		const slash = p.lastIndexOf('/');
+		const parent = slash === -1 ? root : ensureDir(root, p.slice(0, slash));
+		const name = slash === -1 ? p : p.slice(slash + 1);
+		if (!parent.children.some((c) => c.name === name && !c.dir)) {
+			parent.children.push({ name, path: p, dir: false, children: [] });
+		}
 	}
 	const sort = (n: TreeNode) => {
 		n.children.sort((a, b) => (a.dir === b.dir ? a.name.localeCompare(b.name) : a.dir ? -1 : 1));
@@ -48,7 +62,8 @@ function buildTree(paths: string[]): TreeNode[] {
 
 function Explorer() {
 	const { fs, editor } = useServices();
-	const [paths, setPaths] = useState<string[]>([]);
+	const [files, setFiles] = useState<string[]>([]);
+	const [dirs, setDirs] = useState<string[]>([]);
 	const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
 	const activePaneId = useShell((s) => (s.tabs.find((t) => t.id === s.activeTabId) ?? s.tabs[0]).activePaneId);
 	const openPath = usePanePath(activePaneId);
@@ -56,9 +71,10 @@ function Explorer() {
 	useEffect(() => {
 		let alive = true;
 		const load = () => {
-			void fs.list().then((p) => {
+			void Promise.all([fs.list(), fs.directories()]).then(([f, d]) => {
 				if (alive) {
-					setPaths(p);
+					setFiles(f);
+					setDirs(d);
 				}
 			});
 		};
@@ -70,7 +86,7 @@ function Explorer() {
 		};
 	}, [fs]);
 
-	const tree = useMemo(() => buildTree(paths), [paths]);
+	const tree = useMemo(() => buildTree(files, dirs), [files, dirs]);
 
 	function toggle(path: string) {
 		setCollapsed((prev) => {
