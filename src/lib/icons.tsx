@@ -54,6 +54,7 @@ export const Icon = {
 	thumbDown: (p: P) => (<svg {...base(p)}><path d="M17 13V4h3a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1zM17 13l-4 8a2 2 0 0 1-2-2v-3H6a2 2 0 0 1-2-2.3l1.3-6A2 2 0 0 1 7.3 4H17" /></svg>),
 	copy: (p: P) => (<svg {...base(p)}><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>),
 	diff: (p: P) => (<svg {...base(p)}><path d="M12 3v6M9 6h6M5 21h6M12 15v6" /><path d="M19 13l2 2-2 2" /></svg>),
+	home: (p: P) => (<svg {...base(p)}><path d="M3 10.5 12 3l9 7.5" /><path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5" /></svg>),
 };
 
 export type IconName = keyof typeof Icon;

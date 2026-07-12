@@ -67,6 +67,11 @@ export function App() {
 	const tab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
 	const maximizedLeaf = maximizedPaneId ? findLeafByPane(tab.tree, maximizedPaneId) : undefined;
 
+	// A single, full-page Browser reads as a browser, not an IDE — hide the rail
+	// and Explorer (Arc-style) and let the page own the whole surface.
+	const shown = maximizedLeaf ? [maximizedLeaf] : leaves(tab.tree);
+	const fullBrowser = shown.length === 1 && shown[0].pane.mode === 'browser';
+
 	// Guard: if the persisted active pane no longer exists, fall back to the first leaf.
 	const activeExists = leaves(tab.tree).some((l) => l.pane.id === tab.activePaneId);
 	useEffect(() => {
@@ -76,7 +81,7 @@ export function App() {
 	}, [activeExists, tab.tree]);
 
 	return (
-		<div className={`app${sidebarCollapsed ? ' nosidebar' : ''}`}>
+		<div className={`app${sidebarCollapsed ? ' nosidebar' : ''}${fullBrowser ? ' nochrome' : ''}`}>
 			<TabStrip />
 			<CommandHeader />
 			<div className="body">

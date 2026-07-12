@@ -10,17 +10,9 @@ import { useEffect, useMemo, useReducer, useState } from 'react';
 import { useServices } from '../services/container';
 import { useShell } from '../lib/store';
 import { leaves } from '../lib/tree';
-import { BROWSER_HOME, hostColor, normalizeUrl, titleFor } from '../services/browser';
+import { BROWSER_HOME, normalizeUrl, titleFor } from '../services/browser';
 import { startPage } from './browserStart';
 import { Icon } from '../lib/icons';
-
-const BOOKMARKS: Array<[string, string]> = [
-	['Example', 'https://example.com'],
-	['Wikipedia', 'https://en.wikipedia.org'],
-	['MDN', 'https://developer.mozilla.org'],
-	['Hacker News', 'https://news.ycombinator.com'],
-	['GitHub', 'https://github.com'],
-];
 
 export function BrowserMode({ paneId }: { paneId: string }) {
 	const { browser } = useServices();
@@ -88,11 +80,12 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 
 	return (
 		<div className="mode browser">
-			<div className="chrome-bar">
-				<button className="ib sm" title="Back" aria-label="Back" disabled={state.index === 0} onClick={back}><Icon.back /></button>
-				<button className="ib sm" title="Forward" aria-label="Forward" disabled={state.index >= state.history.length - 1} onClick={forward}><Icon.forward /></button>
-				<button className="ib sm" title="Reload" aria-label="Reload" onClick={() => setLoadKey((k) => k + 1)}><Icon.reload /></button>
-				<button className="ib sm" title="Home" aria-label="Home" onClick={() => navigate(BROWSER_HOME)}><Icon.builder /></button>
+			<div className="browser-cmd">
+				<div className="bc-left">
+					<button className="ib sm" title="Back" aria-label="Back" disabled={state.index === 0} onClick={back}><Icon.back /></button>
+					<button className="ib sm" title="Forward" aria-label="Forward" disabled={state.index >= state.history.length - 1} onClick={forward}><Icon.forward /></button>
+					<button className="ib sm" title="Reload" aria-label="Reload" onClick={() => setLoadKey((k) => k + 1)}><Icon.reload /></button>
+				</div>
 				<form
 					className="url"
 					onSubmit={(e) => {
@@ -103,15 +96,9 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 					{isStart ? <Icon.search /> : <Icon.lock />}
 					<input value={urlInput} spellCheck={false} placeholder="Search or enter address" aria-label="Address" onChange={(e) => setUrlInput(e.target.value)} />
 				</form>
-			</div>
-
-			<div className="bx-marks">
-				{BOOKMARKS.map(([name, url]) => (
-					<button className="bx-mark" key={url} title={url} onClick={() => navigate(url)}>
-						<span className="fav" style={{ background: hostColor(url) }} />
-						{name}
-					</button>
-				))}
+				<div className="bc-right">
+					<button className="ib sm" title="Home" aria-label="Home" onClick={() => navigate(BROWSER_HOME)}><Icon.home /></button>
+				</div>
 			</div>
 
 			<div className="browser-view">

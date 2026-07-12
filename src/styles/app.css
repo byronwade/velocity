@@ -295,23 +295,27 @@ svg { display: block; }
 .term-foot svg { width: 12px; height: 12px; }
 .term-foot .sp { flex: 1; }
 
-/* browser (real iframe) + preview */
-.mode.browser { width: 100%; height: 100%; display: flex; flex-direction: column; min-height: 0; }
-.chrome-bar { height: 38px; flex: none; display: flex; align-items: center; gap: 4px; padding: 0 8px; border-bottom: 1px solid var(--line); background: var(--panel-2); }
-.chrome-bar .ib.sm:disabled { opacity: 0.35; cursor: default; }
-.chrome-bar .url { flex: 1; display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 12px; margin: 0 4px; background: var(--sunk); border-radius: 8px; font-size: 12px; color: var(--muted); min-width: 0; }
-.chrome-bar .url:focus-within { outline: 2px solid color-mix(in srgb, var(--accent) 60%, transparent); outline-offset: 0; background: var(--panel); }
-.chrome-bar .url svg { width: 12px; height: 12px; color: var(--good); flex: none; }
-.chrome-bar .url input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: 12px; outline: none; }
-.chrome-bar .url .host { color: var(--faint); flex: none; font-size: 11px; }
+/* browser (real iframe) — Arc-style: centered address, page as a card */
+.mode.browser { width: 100%; height: 100%; display: flex; flex-direction: column; min-height: 0; background: var(--shell); }
+.browser-cmd { height: 46px; flex: none; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; padding: 0 12px; }
+.browser-cmd .bc-left { display: flex; align-items: center; gap: 1px; justify-self: start; }
+.browser-cmd .bc-right { display: flex; align-items: center; gap: 1px; justify-self: end; }
+.browser-cmd .ib.sm:disabled { opacity: 0.3; cursor: default; }
+.browser-cmd .url { width: min(560px, 62vw); display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 13px; background: var(--sunk); border-radius: 9px; font-size: 12.5px; color: var(--muted); min-width: 0; justify-self: center; transition: background var(--dur); }
+.browser-cmd .url:focus-within { background: var(--panel); box-shadow: 0 0 0 1px var(--line-2), 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+.browser-cmd .url svg { width: 12px; height: 12px; color: var(--faint); flex: none; }
+.browser-cmd .url input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: 12.5px; outline: none; text-align: center; }
+.browser-cmd .url:focus-within input { text-align: left; }
 .browser-view { flex: 1; min-height: 0; background: #fff; position: relative; }
 .browser-view .frame { width: 100%; height: 100%; border: 0; display: block; }
 
-/* bookmarks bar */
-.fav { width: 11px; height: 11px; border-radius: 3px; flex: none; }
-.bx-marks { display: flex; align-items: center; gap: 1px; height: 30px; flex: none; padding: 0 7px; background: var(--panel-2); border-bottom: 1px solid var(--line); overflow-x: auto; }
-.bx-mark { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border-radius: 6px; font-size: 11.5px; color: var(--muted); white-space: nowrap; flex: none; }
-.bx-mark:hover { background: color-mix(in srgb, var(--fg) 6%, transparent); color: var(--fg); }
+/* Arc "card": when the browser owns the whole surface, float the page. */
+.app.nochrome .sidebar { display: none; }
+.app.nochrome .pane { background: var(--shell); }
+.app.nochrome .pane.active::after { display: none; }
+.app.nochrome .pane-head { display: none; }
+.app.nochrome .browser-view { margin: 0 10px 10px; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12); }
+.app.nochrome .browser-view .frame { border-radius: 12px; }
 .web { width: 100%; height: 100%; overflow: auto; background: var(--panel); }
 .web .hero { padding: 52px 40px; text-align: center; background: linear-gradient(180deg, color-mix(in srgb, var(--brand) 13%, transparent), transparent); }
 .web .hero h1 { font-size: 34px; letter-spacing: -0.03em; margin: 0 0 12px; font-weight: 700; }
