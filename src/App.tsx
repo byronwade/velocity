@@ -9,6 +9,7 @@ import { SplitView } from './components/SplitView';
 import { PaneChrome } from './components/PaneChrome';
 import { MODES } from './lib/types';
 import { getServices } from './services/container';
+import { closeTabWithCleanup } from './lib/closeTab';
 
 export function App() {
 	const theme = useShell((s) => s.theme);
@@ -42,7 +43,7 @@ export function App() {
 			const s = useShell.getState();
 			const tab = s.tabs.find((t) => t.id === s.activeTabId) ?? s.tabs[0];
 			if (e.key === 't') { e.preventDefault(); s.addTab(); }
-			else if (e.key === 'w') { e.preventDefault(); s.closeTab(s.activeTabId); }
+			else if (e.key === 'w') { e.preventDefault(); closeTabWithCleanup(s.activeTabId); }
 			else if (e.key === 'Enter') { e.preventDefault(); s.toggleMaximizePane(tab.activePaneId); }
 			else if (e.code === 'Backslash') {
 				e.preventDefault();

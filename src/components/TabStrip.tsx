@@ -3,6 +3,7 @@ import { useShell } from '../lib/store';
 import { MODE_DEFS } from '../modes/registry';
 import { Icon } from '../lib/icons';
 import { leaves } from '../lib/tree';
+import { closeTabWithCleanup } from '../lib/closeTab';
 import type { Tab } from '../lib/types';
 
 /** The dominant mode of a tab = the mode of its active pane (drives the tab glyph). */
@@ -15,7 +16,7 @@ export function TabStrip() {
 	const tabs = useShell((s) => s.tabs);
 	const activeTabId = useShell((s) => s.activeTabId);
 	const setActiveTab = useShell((s) => s.setActiveTab);
-	const closeTab = useShell((s) => s.closeTab);
+	const closeTab = closeTabWithCleanup;
 	const addTab = useShell((s) => s.addTab);
 	const tabRefs = useRef<Record<string, HTMLDivElement | null>>({});
 

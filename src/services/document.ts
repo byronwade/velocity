@@ -9,7 +9,7 @@
 // the next edit — the honest, working core that a network CRDT later replaces.
 // ---------------------------------------------------------------------------
 
-import { Annotation, type ChangeSet, Text } from '@codemirror/state';
+import { Annotation, type ChangeSet, Text, Transaction } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
 
 /**
@@ -73,7 +73,9 @@ export class TextDocument {
 		this._version++;
 		for (const v of this.views) {
 			if (v !== origin) {
-				v.dispatch({ changes, annotations: fromDocument.of(true) });
+				// Keep a peer's edit out of THIS view's undo history — otherwise
+				// undo in one pane would revert another pane's typing.
+				v.dispatch({ changes, annotations: [fromDocument.of(true), Transaction.addToHistory.of(false)] });
 			}
 		}
 		this.emit();

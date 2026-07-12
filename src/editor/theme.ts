@@ -69,11 +69,16 @@ const chrome = EditorView.theme({
 		borderLeftColor: 'var(--accent)',
 		borderLeftWidth: '2px',
 	},
-	'.cm-selectionBackground, .cm-content ::selection': {
-		backgroundColor: 'rgba(var(--fg-rgb), 0.14)',
-	},
-	'&.cm-focused .cm-selectionBackground': {
+	'.cm-content ::selection': {
 		backgroundColor: 'rgba(var(--fg-rgb), 0.20)',
+	},
+	// Match the base theme's selector depth so the token overlay wins the cascade
+	// in BOTH themes (a shallower rule loses to CodeMirror's built-in focused rule).
+	'& .cm-selectionLayer .cm-selectionBackground': {
+		backgroundColor: 'rgba(var(--fg-rgb), 0.16)',
+	},
+	'&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground': {
+		backgroundColor: 'rgba(var(--fg-rgb), 0.24)',
 	},
 	'.cm-matchingBracket, &.cm-focused .cm-matchingBracket': {
 		backgroundColor: 'rgba(var(--fg-rgb), 0.12)',
