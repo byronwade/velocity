@@ -149,18 +149,30 @@ function MessageView({ m }: { m: AgentMessage }) {
 	);
 }
 
-export function AgentsMode({ paneId }: { paneId: string }) {
-	const { agent } = useServices();
-	const { thread, busy } = useAgentThread(paneId);
-	const [input, setInput] = useState('');
+/** The scrollable conversation for an agent brain (keyed by `brainKey`). */
+export function AgentThread({ brainKey }: { brainKey: string }) {
+	const { thread, busy } = useAgentThread(brainKey);
 	const scrollRef = useRef<HTMLDivElement>(null);
-
 	useEffect(() => {
 		const el = scrollRef.current;
 		if (el) {
 			el.scrollTop = el.scrollHeight;
 		}
 	}, [thread, busy]);
+	return (
+		<div className="agent-thread" ref={scrollRef}>
+			{thread.map((m) => (
+				<MessageView key={m.id} m={m} />
+			))}
+		</div>
+	);
+}
+
+/** The persistent composer that drives an agent brain. */
+export function AgentComposer({ brainKey }: { brainKey: string }) {
+	const { agent } = useServices();
+	const { thread, busy } = useAgentThread(brainKey);
+	const [input, setInput] = useState('');
 
 	function send() {
 		const t = input.trim();
@@ -168,54 +180,54 @@ export function AgentsMode({ paneId }: { paneId: string }) {
 			return;
 		}
 		setInput('');
-		void agent.send(paneId, t);
+		void agent.send(brainKey, t);
 	}
 
-	// Aggregate the most recent turn's file changes for the composer chip.
 	const lastChanges = [...thread].reverse().find((m) => m.changes && m.changes.length)?.changes;
 	const added = lastChanges?.reduce((s, f) => s + f.added, 0) ?? 0;
 	const removed = lastChanges?.reduce((s, f) => s + f.removed, 0) ?? 0;
 
 	return (
-		<div className="mode agents">
-			<div className="agent-thread" ref={scrollRef}>
-				{thread.map((m) => (
-					<MessageView key={m.id} m={m} />
-				))}
+		<div className="agent-composer">
+			{lastChanges && (
+				<div className="agent-chips">
+					<span className="achip"><Icon.diff />Changes <b className="add">+{added}</b> <b className="del">−{removed}</b></span>
+				</div>
+			)}
+			<div className="ac-bar">
+				<button className="ac-plus" title="Add context" aria-label="Add context"><Icon.plus /></button>
+				<textarea
+					rows={1}
+					value={input}
+					placeholder="Ask the agent to build, run, open, or explain…"
+					onChange={(e) => setInput(e.target.value)}
+					onKeyDown={(e) => {
+						if (e.key === 'Enter' && !e.shiftKey) {
+							e.preventDefault();
+							send();
+						}
+					}}
+				/>
+				<button className="ac-model" title="Model">Velocity · Local <Icon.chevron /></button>
+				<button className="ac-mic" title="Voice" aria-label="Voice"><Icon.mic /></button>
 			</div>
+			<div className="ac-foot">
+				<Icon.git />
+				<span>main</span>
+				<span className="dot">·</span>
+				<span>Local agent</span>
+				<span className="sp" />
+				<span className={busy ? 'work' : undefined}>{busy ? 'working…' : 'ready'}</span>
+			</div>
+		</div>
+	);
+}
 
-			<div className="agent-composer">
-				{lastChanges && (
-					<div className="agent-chips">
-						<span className="achip"><Icon.diff />Changes <b className="add">+{added}</b> <b className="del">−{removed}</b></span>
-					</div>
-				)}
-				<div className="ac-bar">
-					<button className="ac-plus" title="Add context" aria-label="Add context"><Icon.plus /></button>
-					<textarea
-						rows={1}
-						value={input}
-						placeholder="Send follow-up…"
-						onChange={(e) => setInput(e.target.value)}
-						onKeyDown={(e) => {
-							if (e.key === 'Enter' && !e.shiftKey) {
-								e.preventDefault();
-								send();
-							}
-						}}
-					/>
-					<button className="ac-model" title="Model">Velocity · Local <Icon.chevron /></button>
-					<button className="ac-mic" title="Voice" aria-label="Voice"><Icon.mic /></button>
-				</div>
-				<div className="ac-foot">
-					<Icon.git />
-					<span>main</span>
-					<span className="dot">·</span>
-					<span>Local agent</span>
-					<span className="sp" />
-					<span className={busy ? 'work' : undefined}>{busy ? 'working…' : 'ready'}</span>
-				</div>
-			</div>
+export function AgentsMode({ paneId }: { paneId: string }) {
+	return (
+		<div className="mode agents">
+			<AgentThread brainKey={paneId} />
+			<AgentComposer brainKey={paneId} />
 		</div>
 	);
 }

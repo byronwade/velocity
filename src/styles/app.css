@@ -445,3 +445,70 @@ svg { display: block; }
 .arc-newproj { display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 10px; border-radius: 8px; color: var(--faint); font-size: 12px; margin-top: 6px; }
 .arc-newproj:hover { background: color-mix(in srgb, var(--fg) 5%, transparent); color: var(--fg); }
 .arc-newproj svg { width: 14px; height: 14px; }
+
+/* ============================ v0 layout ============================ */
+.app.v0 { flex-direction: row; background: var(--shell); }
+
+/* far-left project rail */
+.prail { width: 56px; flex: none; display: flex; flex-direction: column; align-items: center; padding: 9px 0 10px; }
+.prail .traffic { padding: 2px 0 10px; }
+.prail-list { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.pbtn { position: relative; width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; color: #fff; font-weight: 650; font-size: 14px; background: var(--pc, var(--brand)); transition: border-radius var(--dur) var(--ease), transform var(--dur); }
+.pbtn:hover { border-radius: 14px; }
+.pbtn.on { box-shadow: 0 0 0 2px var(--shell), 0 0 0 4px color-mix(in srgb, var(--pc) 60%, transparent); }
+.pbtn.on::before { content: ""; position: absolute; left: -9px; top: 50%; transform: translateY(-50%); width: 3px; height: 18px; border-radius: 0 3px 3px 0; background: var(--fg); }
+.pbtn.add { background: color-mix(in srgb, var(--fg) 6%, transparent); color: var(--muted); }
+.pbtn.add:hover { background: color-mix(in srgb, var(--fg) 10%, transparent); color: var(--fg); }
+.pbtn.add svg { width: 16px; height: 16px; }
+.prail .grow { flex: 1; }
+.prail-foot { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.prail-foot .who { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #7c5cff, #d94fb0); color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 600; margin-top: 5px; cursor: pointer; }
+
+/* agent brain (left) */
+.brain { width: 424px; flex: none; display: flex; flex-direction: column; min-height: 0; }
+.brain-head { height: 46px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 8px 0 6px; }
+.brain-head .pdot { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+.brain-head .bname { font-weight: 650; font-size: 13px; letter-spacing: -0.01em; }
+.brain-head .bbranch { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); font-size: 11.5px; }
+.brain-head .bbranch svg { width: 12px; height: 12px; }
+.brain-head .sp { flex: 1; }
+.brain-head .bviews { display: flex; gap: 1px; background: color-mix(in srgb, var(--fg) 5%, transparent); border-radius: 9px; padding: 2px; }
+.brain-head .bviews button { padding: 4px 10px; border-radius: 7px; font-size: 11.5px; color: var(--muted); font-weight: 550; transition: background var(--dur), color var(--dur); }
+.brain-head .bviews button.on { background: var(--panel); color: var(--fg); box-shadow: var(--elev-1); }
+.brain-body { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.brain .agent-thread { flex: 1; min-height: 0; overflow: auto; padding: 12px 14px 8px; }
+.brain .agent-thread > * { max-width: 100%; margin: 0 0 6px; }
+.brain-files { flex: 1; min-height: 0; display: flex; flex-direction: column; padding-top: 4px; }
+.brain-files .tree { flex: 1; }
+.brain-changes { flex: 1; min-height: 0; overflow: auto; padding: 6px 8px; }
+.brain-changes .cc-head { padding: 8px 8px 6px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.brain-empty { margin: auto; text-align: center; color: var(--faint); font-size: 12.5px; line-height: 1.8; padding: 24px; }
+
+/* apps (right) */
+.apps { flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 0; }
+.apps-head { height: 46px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 12px 0 4px; }
+.apps-tabs { display: flex; align-items: center; gap: 3px; min-width: 0; overflow-x: auto; }
+.atab { display: flex; align-items: center; gap: 7px; height: 30px; padding: 0 6px 0 10px; border-radius: 9px; font-size: 12.5px; color: var(--muted); cursor: pointer; max-width: 190px; min-width: 0; flex: 0 1 auto; user-select: none; }
+.atab:hover { background: color-mix(in srgb, var(--fg) 5%, transparent); color: var(--fg); }
+.atab.active { background: var(--panel); color: var(--fg); box-shadow: var(--elev-1); }
+.atab .glyph { width: 14px; height: 14px; color: var(--faint); flex: none; }
+.atab.active .glyph { color: var(--brand); }
+.atab .glyph svg { width: 14px; height: 14px; }
+.atab .tt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.atab .x { width: 17px; height: 17px; border-radius: 5px; display: grid; place-items: center; color: var(--faint); flex: none; opacity: 0; transition: opacity var(--dur); }
+.atab:hover .x, .atab.active .x { opacity: 1; }
+.atab .x:hover { background: color-mix(in srgb, var(--fg) 12%, transparent); color: var(--fg); }
+.atab .x svg { width: 11px; height: 11px; }
+.addwrap { position: relative; flex: none; }
+.atab-add { width: 28px; height: 28px; border-radius: 8px; color: var(--faint); display: grid; place-items: center; }
+.atab-add:hover { background: color-mix(in srgb, var(--fg) 6%, transparent); color: var(--fg); }
+.atab-add svg { width: 15px; height: 15px; }
+.addmenu { position: absolute; top: 34px; left: 0; z-index: 60; background: var(--panel); border: 1px solid var(--line); border-radius: 13px; box-shadow: var(--elev-2); padding: 5px; width: 248px; }
+.addmenu button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 9px; border-radius: 9px; text-align: left; }
+.addmenu button:hover { background: color-mix(in srgb, var(--fg) 6%, transparent); }
+.addmenu .ic { width: 28px; height: 28px; border-radius: 8px; background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand); display: grid; place-items: center; flex: none; }
+.addmenu .ic svg { width: 15px; height: 15px; }
+.addmenu .t { font-size: 12.5px; font-weight: 600; }
+.addmenu .d { font-size: 11px; color: var(--muted); }
+.apps-head .sp { flex: 1; }
+.apps-stage { flex: 1; min-height: 0; margin: 0 10px 10px; border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--elev-2); background: var(--panel); }

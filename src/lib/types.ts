@@ -9,6 +9,9 @@ export type Mode = 'agents' | 'editor' | 'terminal' | 'browser' | 'builder';
 
 export const MODES: Mode[] = ['agents', 'editor', 'terminal', 'browser', 'builder'];
 
+/** The modes an "app" tab can be — the agent is the persistent brain, not an app. */
+export const APP_MODES: Mode[] = ['editor', 'terminal', 'browser', 'builder'];
+
 /** Split direction. `row` = side-by-side (vertical divider); `col` = stacked (horizontal divider). */
 export type Axis = 'row' | 'col';
 

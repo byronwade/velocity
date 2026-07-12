@@ -8,7 +8,7 @@ import { create } from 'zustand';
 import type { Axis, Mode, Project, Tab, Theme } from './types';
 import { closePane as closePaneOp, makeLeaf, setPaneMode as setPaneModeOp, setRatio as setRatioOp, splitPane as splitPaneOp, uid } from './tree';
 
-const PERSIST_KEY = 'velocity.shell.v2';
+const PERSIST_KEY = 'velocity.shell.v3';
 const PROJECT_COLORS = ['#5b5bd6', '#3fae6a', '#e8863c', '#d0567f', '#4a90d9', '#7b5bd6'];
 
 interface PersistShape {
@@ -23,10 +23,11 @@ interface PersistShape {
 interface ShellState extends PersistShape {
 	maximizedPaneId: string | null;
 
-	// projects (tab groups)
+	// projects (each is a workspace with its own agent brain + app tabs)
 	addProject: (name?: string) => void;
 	renameProject: (id: string, name: string) => void;
 	toggleProject: (id: string) => void;
+	setActiveProject: (projectId: string) => void;
 
 	// tabs
 	addTab: (mode?: Mode, projectId?: string) => void;
@@ -49,7 +50,7 @@ interface ShellState extends PersistShape {
 	setTheme: (theme: Theme) => void;
 }
 
-function newTab(mode: Mode = 'agents', title = 'New tab', projectId = ''): Tab {
+function newTab(mode: Mode = 'editor', title = 'New tab', projectId = ''): Tab {
 	const leaf = makeLeaf(mode);
 	return { id: uid('tab'), title, tree: leaf, activePaneId: leaf.pane.id, projectId };
 }
@@ -58,14 +59,12 @@ function newProject(name: string, color: string): Project {
 	return { id: uid('proj'), name, color };
 }
 
-/** A welcome tab that showcases the recursive split: Agents beside (Editor over Terminal). */
-function demoTab(projectId: string): Tab {
-	const agents = makeLeaf('agents');
+/** An app tab that shows a split (Editor over Terminal) — splits still work per app. */
+function workspaceTab(projectId: string): Tab {
 	const editor = makeLeaf('editor');
 	const terminal = makeLeaf('terminal');
-	const right = { id: uid('split'), kind: 'split' as const, axis: 'col' as const, ratio: 0.62, a: editor, b: terminal };
-	const tree = { id: uid('split'), kind: 'split' as const, axis: 'row' as const, ratio: 0.42, a: agents, b: right };
-	return { id: uid('tab'), title: 'streamline · workspace', tree, activePaneId: agents.pane.id, projectId };
+	const tree = { id: uid('split'), kind: 'split' as const, axis: 'col' as const, ratio: 0.68, a: editor, b: terminal };
+	return { id: uid('tab'), title: 'App.tsx', tree, activePaneId: editor.pane.id, projectId };
 }
 
 function load(): PersistShape | null {
@@ -87,7 +86,7 @@ function load(): PersistShape | null {
 const seed: PersistShape = load() ?? (() => {
 	const p1 = newProject('streamline', PROJECT_COLORS[0]);
 	const p2 = newProject('contextds', PROJECT_COLORS[1]);
-	const tabs = [demoTab(p1.id), newTab('browser', 'localhost:3000', p1.id), newTab('builder', 'New app', p2.id)];
+	const tabs = [workspaceTab(p1.id), newTab('browser', 'localhost:3000', p1.id), newTab('builder', 'New app', p2.id)];
 	return { projects: [p1, p2], tabs, activeTabId: tabs[0].id, collapsedProjects: [], sidebarCollapsed: false, theme: 'dark' as Theme };
 })();
 
@@ -103,18 +102,28 @@ export const useShell = create<ShellState>((set) => ({
 	addProject: (name = 'New project') =>
 		set((s) => {
 			const p = newProject(name, PROJECT_COLORS[s.projects.length % PROJECT_COLORS.length]);
-			const t = newTab('agents', 'New session', p.id);
+			const t = newTab('editor', 'Editor', p.id);
 			return { projects: [...s.projects, p], tabs: [...s.tabs, t], activeTabId: t.id, maximizedPaneId: null };
 		}),
 	renameProject: (id, name) => set((s) => ({ projects: s.projects.map((p) => (p.id === id ? { ...p, name } : p)) })),
 	toggleProject: (id) =>
 		set((s) => ({ collapsedProjects: s.collapsedProjects.includes(id) ? s.collapsedProjects.filter((x) => x !== id) : [...s.collapsedProjects, id] })),
+	setActiveProject: (projectId) =>
+		set((s) => {
+			const first = s.tabs.find((t) => t.projectId === projectId);
+			if (first) {
+				return { activeTabId: first.id, maximizedPaneId: null };
+			}
+			const t = newTab('editor', 'Editor', projectId);
+			return { tabs: [...s.tabs, t], activeTabId: t.id, maximizedPaneId: null };
+		}),
 
-	addTab: (mode = 'agents', projectId) =>
+	addTab: (mode = 'editor', projectId) =>
 		set((s) => {
 			const active = s.tabs.find((t) => t.id === s.activeTabId);
 			const pid = projectId ?? active?.projectId ?? s.projects[0]?.id ?? '';
-			const t = newTab(mode, mode === 'agents' ? 'New session' : 'New tab', pid);
+			const titles: Record<string, string> = { editor: 'Editor', terminal: 'Terminal', browser: 'New tab', builder: 'New app', agents: 'Chat' };
+			const t = newTab(mode, titles[mode] ?? 'New tab', pid);
 			return { tabs: [...s.tabs, t], activeTabId: t.id, maximizedPaneId: null };
 		}),
 
@@ -122,14 +131,18 @@ export const useShell = create<ShellState>((set) => ({
 
 	closeTab: (tabId) =>
 		set((s) => {
-			if (s.tabs.length === 1) {
-				const pid = s.tabs[0].projectId || s.projects[0]?.id || '';
-				const t = newTab('agents', 'New session', pid);
-				return { tabs: [t], activeTabId: t.id };
+			const closing = s.tabs.find((t) => t.id === tabId);
+			const pid = closing?.projectId ?? '';
+			const siblings = s.tabs.filter((t) => t.projectId === pid && t.id !== tabId);
+			// Closing the last tab in a project leaves a fresh editor so the project isn't empty.
+			if (siblings.length === 0) {
+				const t = newTab('editor', 'Editor', pid);
+				const tabs = [...s.tabs.filter((x) => x.id !== tabId), t];
+				return { tabs, activeTabId: s.activeTabId === tabId ? t.id : s.activeTabId, maximizedPaneId: null };
 			}
-			const idx = s.tabs.findIndex((t) => t.id === tabId);
 			const tabs = s.tabs.filter((t) => t.id !== tabId);
-			const activeTabId = s.activeTabId === tabId ? tabs[Math.max(0, idx - 1)].id : s.activeTabId;
+			// If the active tab closed, prefer a sibling in the same project.
+			const activeTabId = s.activeTabId === tabId ? siblings[0].id : s.activeTabId;
 			return { tabs, activeTabId, maximizedPaneId: null };
 		}),
 
