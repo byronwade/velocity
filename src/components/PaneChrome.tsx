@@ -8,7 +8,7 @@ export function PaneChrome({ pane }: { pane: Pane }) {
 	const def = MODE_DEFS[pane.mode];
 	const Glyph = Icon[def.icon];
 	const Content = def.Content;
-	const { editor, shell, browser } = useServices();
+	const { editor, shell, browser, agent } = useServices();
 	const activePaneId = useShell((s) => (s.tabs.find((t) => t.id === s.activeTabId) ?? s.tabs[0]).activePaneId);
 	const setActivePane = useShell((s) => s.setActivePane);
 	const splitPane = useShell((s) => s.splitPane);
@@ -29,6 +29,7 @@ export function PaneChrome({ pane }: { pane: Pane }) {
 		editor.releasePane(pane.id);
 		shell.release(pane.id);
 		browser.release(pane.id);
+		agent.release(pane.id);
 		closePane(pane.id);
 	}
 

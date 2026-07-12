@@ -12,6 +12,7 @@ import { InMemoryFileSystem, type IFileSystem } from './filesystem';
 import { EditorService } from './editorService';
 import { ShellService } from './shell';
 import { BrowserService } from './browser';
+import { AgentService, LocalAgent } from './agent';
 import { noCollab, type CollabExtensionFactory } from './collab';
 
 export interface Services {
@@ -19,6 +20,7 @@ export interface Services {
 	editor: EditorService;
 	shell: ShellService;
 	browser: BrowserService;
+	agent: AgentService;
 	/** The collaboration seam. Swap for a CRDT factory to enable network sync. */
 	collab: CollabExtensionFactory;
 }
@@ -26,7 +28,10 @@ export interface Services {
 export function createServices(): Services {
 	const fs = new InMemoryFileSystem();
 	const editor = new EditorService(fs);
-	return { fs, editor, shell: new ShellService(fs, editor), browser: new BrowserService(), collab: noCollab };
+	const shell = new ShellService(fs, editor);
+	// Swap `new LocalAgent()` for a Claude API backend to make the agent a model.
+	const agent = new AgentService(fs, editor, shell, new LocalAgent());
+	return { fs, editor, shell, browser: new BrowserService(), agent, collab: noCollab };
 }
 
 let singleton: Services | null = null;
