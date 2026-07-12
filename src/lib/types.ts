@@ -41,6 +41,15 @@ export interface Tab {
 	tree: Node;
 	/** The focused leaf's pane id — the mode dropdown and contextual actions target this pane. */
 	activePaneId: string;
+	/** The project this tab is scoped under (its tab group in the sidebar). */
+	projectId: string;
+}
+
+/** A project groups tabs (an Arc "space" / a repo) and scopes the workspace. */
+export interface Project {
+	readonly id: string;
+	name: string;
+	color: string;
 }
 
 export type Theme = 'light' | 'dark';
