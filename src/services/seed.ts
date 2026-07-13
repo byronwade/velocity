@@ -143,6 +143,24 @@ export function TodoItem({ todo }: { todo: Todo }) {
 }
 `,
 
+	'db/schema.sql': `-- Velocity sample schema. The Database studio parses this file for its
+-- schema, then runs real SELECT / INSERT queries against an in-memory store.
+
+CREATE TABLE users (
+  id         INTEGER PRIMARY KEY,
+  email      TEXT,
+  name       TEXT,
+  created_at TEXT
+);
+
+CREATE TABLE todos (
+  id      INTEGER PRIMARY KEY,
+  user_id INTEGER,
+  title   TEXT,
+  done    INTEGER
+);
+`,
+
 	'src/lib/store.ts': `import { create } from 'zustand';
 import type { Todo } from './types';
 

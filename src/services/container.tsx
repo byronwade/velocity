@@ -15,6 +15,7 @@ import { BrowserService } from './browser';
 import { AgentService, LocalAgent } from './agent';
 import { GraphService } from './graph';
 import { ReviewService } from './review';
+import { DbService } from './db';
 import { noCollab, type CollabExtensionFactory } from './collab';
 
 export interface Services {
@@ -27,6 +28,8 @@ export interface Services {
 	graph: GraphService;
 	/** The working-tree diff (vs the project baseline) — the review studio. */
 	review: ReviewService;
+	/** The relational store (schema from .sql files) — the database studio. */
+	db: DbService;
 	/** The collaboration seam. Swap for a CRDT factory to enable network sync. */
 	collab: CollabExtensionFactory;
 }
@@ -39,7 +42,8 @@ export function createServices(): Services {
 	const agent = new AgentService(fs, editor, shell, new LocalAgent());
 	const graph = new GraphService(fs);
 	const review = new ReviewService(fs);
-	return { fs, editor, shell, browser: new BrowserService(), agent, graph, review, collab: noCollab };
+	const db = new DbService(fs);
+	return { fs, editor, shell, browser: new BrowserService(), agent, graph, review, db, collab: noCollab };
 }
 
 let singleton: Services | null = null;
