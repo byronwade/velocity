@@ -55,6 +55,12 @@ export const Icon = {
 	copy: (p: P) => (<svg {...base(p)}><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>),
 	diff: (p: P) => (<svg {...base(p)}><path d="M12 3v6M9 6h6M5 21h6M12 15v6" /><path d="M19 13l2 2-2 2" /></svg>),
 	home: (p: P) => (<svg {...base(p)}><path d="M3 10.5 12 3l9 7.5" /><path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5" /></svg>),
+	database: (p: P) => (<svg {...base(p)}><ellipse cx="12" cy="5" rx="8" ry="3" /><path d="M4 5v6a8 3 0 0 0 16 0V5M4 11v6a8 3 0 0 0 16 0v-6" /></svg>),
+	beaker: (p: P) => (<svg {...base(p)}><path d="M9 3h6M10 3v6l-5.2 9.4A2 2 0 0 0 6.5 21h11a2 2 0 0 0 1.7-2.6L14 9V3" /><path d="M7.5 14h9" /></svg>),
+	activity: (p: P) => (<svg {...base(p)}><path d="M3 12h4l3 8 4-16 3 8h4" /></svg>),
+	grid: (p: P) => (<svg {...base(p)}><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>),
+	layers: (p: P) => (<svg {...base(p)}><path d="M12 2 2 7l10 5 10-5-10-5z" /><path d="M2 12l10 5 10-5M2 17l10 5 10-5" /></svg>),
+	dock: (p: P) => (<svg {...base(p)}><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M15 4v16" /></svg>),
 };
 
 export type IconName = keyof typeof Icon;

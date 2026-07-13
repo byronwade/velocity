@@ -10,6 +10,8 @@ import { MapView } from './MapView';
 import { useAgentThread } from '../services/agent';
 import { useServices } from '../services/container';
 import { Icon } from '../lib/icons';
+import type { CockpitMode } from '../lib/types';
+import type { GraphKind } from '../lib/graph';
 
 type View = 'chat' | 'files' | 'map' | 'changes';
 
@@ -45,10 +47,26 @@ function ChangesView({ brainKey }: { brainKey: string }) {
 	);
 }
 
+// The cockpit mode sets the brain's default lens; the view tabs still override.
+const MODE_VIEW: Record<CockpitMode, View> = {
+	home: 'map', build: 'files', design: 'map', browse: 'chat', data: 'map',
+	test: 'map', ship: 'map', observe: 'changes', agents: 'chat', library: 'map',
+};
+// When a mode's lens is the map, focus it on that mode's kinds.
+const MODE_FOCUS: Partial<Record<CockpitMode, GraphKind[]>> = {
+	design: ['route', 'component'], data: ['table'], test: ['test'],
+	ship: ['deployment'], library: ['component'],
+};
+
 export function AgentPanel() {
 	const activeTab = useShell((s) => s.tabs.find((t) => t.id === s.activeTabId) ?? s.tabs[0]);
 	const project = useShell((s) => s.projects.find((p) => p.id === activeTab?.projectId));
+	const projects = useShell((s) => s.projects);
+	const setActiveProject = useShell((s) => s.setActiveProject);
+	const addProject = useShell((s) => s.addProject);
+	const cockpitMode = useShell((s) => s.cockpitMode);
 	const [view, setView] = useState<View>('chat');
+	const [wsOpen, setWsOpen] = useState(false);
 	const brainKey = `proj:${project?.id ?? 'none'}`;
 	const { graph } = useServices();
 
@@ -59,11 +77,43 @@ export function AgentPanel() {
 		}
 	}, [graph, project?.name]);
 
+	// The chosen operating mode drives the brain's lens.
+	useEffect(() => {
+		setView(MODE_VIEW[cockpitMode]);
+	}, [cockpitMode]);
+
+	// Dismiss the workspace menu on outside click.
+	useEffect(() => {
+		if (!wsOpen) return;
+		const close = (e: MouseEvent) => { if (!(e.target as HTMLElement).closest('.wsswitch')) setWsOpen(false); };
+		document.addEventListener('mousedown', close);
+		return () => document.removeEventListener('mousedown', close);
+	}, [wsOpen]);
+
+	const mapFocus = MODE_FOCUS[cockpitMode];
+
 	return (
 		<section className="brain">
 			<div className="brain-head">
-				<span className="pdot" style={{ background: project?.color }} />
-				<b className="bname">{project?.name ?? 'Project'}</b>
+				<div className="wsswitch">
+					<button className="wsbtn" onClick={() => setWsOpen((o) => !o)} aria-expanded={wsOpen} title="Switch workspace">
+						<span className="pdot" style={{ background: project?.color }} />
+						<b className="bname">{project?.name ?? 'Project'}</b>
+						<Icon.chevron />
+					</button>
+					{wsOpen && (
+						<div className="wsmenu">
+							{projects.map((p) => (
+								<button key={p.id} className={p.id === project?.id ? 'on' : ''} onClick={() => { setActiveProject(p.id); setWsOpen(false); }}>
+									<span className="pdot" style={{ background: p.color }} />
+									<span className="wsname">{p.name}</span>
+									{p.id === project?.id && <Icon.check />}
+								</button>
+							))}
+							<button className="wsadd" onClick={() => { addProject(); setWsOpen(false); }}><Icon.plus />New workspace</button>
+						</div>
+					)}
+				</div>
 				<span className="bbranch"><Icon.git />main</span>
 				<span className="sp" />
 				<div className="bviews" role="tablist" aria-label="Agent views">
@@ -77,7 +127,7 @@ export function AgentPanel() {
 			<div className="brain-body">
 				{view === 'chat' && <AgentThread brainKey={brainKey} />}
 				{view === 'files' && <div className="brain-files"><Explorer /></div>}
-				{view === 'map' && <MapView />}
+				{view === 'map' && <MapView focus={mapFocus} />}
 				{view === 'changes' && <ChangesView brainKey={brainKey} />}
 			</div>
 			<AgentComposer brainKey={brainKey} />

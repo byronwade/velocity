@@ -55,4 +55,12 @@ export interface Project {
 	color: string;
 }
 
+/** The cockpit's operating modes — the far-left global rail. Each is a lens over
+ *  the one project graph, not a separate app. */
+export type CockpitMode =
+	| 'home' | 'build' | 'design' | 'browse' | 'data'
+	| 'test' | 'ship' | 'observe' | 'agents' | 'library';
+
+export const COCKPIT_MODES: CockpitMode[] = ['home', 'build', 'design', 'browse', 'data', 'test', 'ship', 'observe', 'agents', 'library'];
+
 export type Theme = 'light' | 'dark';

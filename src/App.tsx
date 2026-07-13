@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useShell } from './lib/store';
 import { leaves } from './lib/tree';
-import { ProjectRail } from './components/ProjectRail';
+import { ModeRail } from './components/ModeRail';
 import { AgentPanel } from './components/AgentPanel';
 import { AppsPanel } from './components/AppsPanel';
+import { AgentDock } from './components/AgentDock';
 import { CommandPalette } from './components/CommandPalette';
 import { APP_MODES } from './lib/types';
 import { getServices } from './services/container';
@@ -97,10 +98,11 @@ export function App() {
 
 	return (
 		<div className="app v0" style={{ ['--pc' as string]: projectColor, ['--brain-w' as string]: `${brainWidth}px` }}>
-			<ProjectRail />
+			<ModeRail />
 			<AgentPanel />
 			<BrainResizer />
 			<AppsPanel />
+			<AgentDock />
 			<CommandPalette />
 		</div>
 	);

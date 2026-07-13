@@ -33,10 +33,11 @@ function KindIcon({ kind }: { kind: GraphKind }) {
 	return <Glyph />;
 }
 
-export function MapView() {
+export function MapView({ focus }: { focus?: GraphKind[] }) {
 	const graph = useGraph();
 	const { editor } = useServices();
-	const groups = useMemo(() => groupByKind(graph), [graph]);
+	const allGroups = useMemo(() => groupByKind(graph), [graph]);
+	const groups = focus ? allGroups.filter((g) => focus.includes(g.kind)) : allGroups.filter((g) => g.kind !== 'project');
 	const [selectedId, setSelectedId] = useState<string | null>(null);
 
 	const selected = selectedId ? connected(graph, selectedId) : null;
@@ -85,8 +86,12 @@ export function MapView() {
 				</div>
 			)}
 
+			{focus && groups.length === 0 && (
+				<div className="brain-empty">Nothing here yet.<br />The agent will populate this as the project grows.</div>
+			)}
+
 			<div className="map-groups">
-				{groups.filter((g) => g.kind !== 'project').map((g) => (
+				{groups.map((g) => (
 					<div className="map-group" key={g.kind}>
 						<div className="mg-head"><KindIcon kind={g.kind} /><span>{KIND_LABEL[g.kind]}</span><span className="mg-count">{g.nodes.length}</span></div>
 						<div className="mg-nodes">
