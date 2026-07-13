@@ -61,6 +61,20 @@ export function App() {
 			useShell.getState().setTheme(q);
 		}
 	}, []);
+
+	// Warm the CodeMirror chunk during idle so the first file open is instant
+	// instead of paying the lazy-load cost inline. requestIdleCallback where
+	// available (falls back to a timer on Safari).
+	useEffect(() => {
+		const warm = () => { void import('./editor/CodeMirrorHost'); };
+		const ric = window.requestIdleCallback;
+		if (ric) {
+			const id = ric(warm, { timeout: 2500 });
+			return () => window.cancelIdleCallback?.(id);
+		}
+		const id = window.setTimeout(warm, 900);
+		return () => window.clearTimeout(id);
+	}, []);
 	useEffect(() => {
 		document.documentElement.setAttribute('data-theme', theme);
 		document.documentElement.style.colorScheme = theme;
