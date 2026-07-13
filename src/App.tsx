@@ -7,6 +7,7 @@ import { CommandPalette } from './components/CommandPalette';
 import { CommandBar } from './components/CommandBar';
 import { QuickOpen } from './components/QuickOpen';
 import { ShortcutHelp } from './components/ShortcutHelp';
+import { TodoIndex } from './components/TodoIndex';
 import { APP_MODES } from './lib/types';
 import { getServices } from './services/container';
 import { closeTabWithCleanup } from './lib/closeTab';
@@ -142,6 +143,7 @@ export function App() {
 			<CommandPalette />
 			<QuickOpen />
 			<ShortcutHelp />
+			<TodoIndex />
 		</div>
 	);
 }

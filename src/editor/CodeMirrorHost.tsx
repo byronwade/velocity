@@ -189,8 +189,20 @@ export function CodeMirrorHost({ doc, paneId, onSave, onCursor }: { doc: TextDoc
 			view.dispatch({ effects: prefsCompartment.reconfigure(prefsExtensions(getEditorPrefs())) });
 		});
 
+		// Jump to a 1-based line when asked (e.g. from the TODO index / search).
+		const onGoto = (e: Event) => {
+			const { path, line } = (e as CustomEvent<{ path: string; line: number }>).detail;
+			if (path !== doc.path) return;
+			const n = Math.max(1, Math.min(view.state.doc.lines, line));
+			const info = view.state.doc.line(n);
+			view.dispatch({ selection: { anchor: info.from }, effects: EditorView.scrollIntoView(info.from, { y: 'center' }) });
+			view.focus();
+		};
+		window.addEventListener('velocity:goto-line', onGoto as EventListener);
+
 		return () => {
 			unsub();
+			window.removeEventListener('velocity:goto-line', onGoto as EventListener);
 			doc.detach(view);
 			view.destroy();
 		};

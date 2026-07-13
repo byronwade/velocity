@@ -24,6 +24,7 @@ const GROUPS: Group[] = [
 			{ keys: [MOD, 'E'], label: 'Recent files' },
 			{ keys: [MOD, 'J'], label: 'Focus the agent command bar' },
 			{ keys: [MOD, '/'], label: 'Keyboard shortcuts (this panel)' },
+			{ keys: [MOD, '⇧', 'M'], label: 'TODO / FIXME index' },
 			{ keys: [MOD, 'B'], label: 'Toggle the side panel' },
 		],
 	},

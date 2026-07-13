@@ -136,6 +136,16 @@ export function CommandPalette() {
 			run: () => setEditorPrefs({ formatOnSave: !getEditorPrefs().formatOnSave }),
 		});
 
+		out.push({
+			id: 'open-todo-index',
+			title: 'Show TODO / FIXME index',
+			subtitle: 'Project-wide markers · ⌘⇧M',
+			keywords: 'todo fixme hack xxx note markers tasks',
+			icon: 'check',
+			group: 'Go to',
+			run: () => window.dispatchEvent(new Event('velocity:todos')),
+		});
+
 		// 6) System commands. Reset discards persisted edits and re-seeds — the
 		// escape hatch now that the workspace survives reloads.
 		out.push({
