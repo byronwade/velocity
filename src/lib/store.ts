@@ -20,6 +20,7 @@ interface PersistShape {
 	brainWidth: number;
 	cockpitMode: CockpitMode;
 	dockCollapsed: boolean;
+	shelfCollapsed: boolean;
 	theme: Theme;
 }
 
@@ -53,6 +54,7 @@ interface ShellState extends PersistShape {
 	setBrainWidth: (w: number) => void;
 	setCockpitMode: (mode: CockpitMode) => void;
 	toggleDock: () => void;
+	toggleShelf: () => void;
 	setTheme: (theme: Theme) => void;
 }
 
@@ -93,10 +95,13 @@ const seed: PersistShape = load() ?? (() => {
 	const p1 = newProject('streamline', PROJECT_COLORS[0]);
 	const p2 = newProject('contextds', PROJECT_COLORS[1]);
 	const tabs = [workspaceTab(p1.id), newTab('browser', 'localhost:3000', p1.id), newTab('builder', 'New app', p2.id)];
-	return { projects: [p1, p2], tabs, activeTabId: tabs[0].id, collapsedProjects: [], sidebarCollapsed: false, brainWidth: 424, cockpitMode: 'build' as CockpitMode, dockCollapsed: false, theme: 'dark' as Theme };
+	return { projects: [p1, p2], tabs, activeTabId: tabs[0].id, collapsedProjects: [], sidebarCollapsed: false, brainWidth: 424, cockpitMode: 'build' as CockpitMode, dockCollapsed: false, shelfCollapsed: true, theme: 'dark' as Theme };
 })();
 if (!seed.cockpitMode) {
 	seed.cockpitMode = 'build';
+}
+if (seed.shelfCollapsed === undefined) {
+	seed.shelfCollapsed = true;
 }
 if (!seed.brainWidth) {
 	seed.brainWidth = 424;
@@ -199,13 +204,14 @@ export const useShell = create<ShellState>((set) => ({
 	setBrainWidth: (w) => set({ brainWidth: Math.max(320, Math.min(680, Math.round(w))) }),
 	setCockpitMode: (mode) => set({ cockpitMode: mode }),
 	toggleDock: () => set((s) => ({ dockCollapsed: !s.dockCollapsed })),
+	toggleShelf: () => set((s) => ({ shelfCollapsed: !s.shelfCollapsed })),
 	setTheme: (theme) => set({ theme }),
 }));
 
 // Persist a minimal slice on change.
 useShell.subscribe((s) => {
 	try {
-		const data: PersistShape = { projects: s.projects, tabs: s.tabs, activeTabId: s.activeTabId, collapsedProjects: s.collapsedProjects, sidebarCollapsed: s.sidebarCollapsed, brainWidth: s.brainWidth, cockpitMode: s.cockpitMode, dockCollapsed: s.dockCollapsed, theme: s.theme };
+		const data: PersistShape = { projects: s.projects, tabs: s.tabs, activeTabId: s.activeTabId, collapsedProjects: s.collapsedProjects, sidebarCollapsed: s.sidebarCollapsed, brainWidth: s.brainWidth, cockpitMode: s.cockpitMode, dockCollapsed: s.dockCollapsed, shelfCollapsed: s.shelfCollapsed, theme: s.theme };
 		localStorage.setItem(PERSIST_KEY, JSON.stringify(data));
 	} catch {
 		/* ignore quota / private-mode errors */

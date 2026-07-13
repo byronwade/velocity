@@ -11,6 +11,7 @@ import { Icon } from '../lib/icons';
 import { SplitView } from './SplitView';
 import { PaneChrome } from './PaneChrome';
 import { ShareSheet } from './ShareSheet';
+import { ActivityShelf } from './ActivityShelf';
 import { closeTabWithCleanup } from '../lib/closeTab';
 
 const PEOPLE = [
@@ -106,6 +107,7 @@ export function AppsPanel() {
 			<div className="apps-stage">
 				{maximizedLeaf ? <PaneChrome pane={maximizedLeaf.pane} /> : <SplitView key={activeTab.id} node={activeTab.tree} />}
 			</div>
+			<ActivityShelf />
 			{sheet && <ShareSheet kind={sheet} onClose={() => setSheet(null)} />}
 		</section>
 	);
