@@ -50,7 +50,7 @@ export function AgentPanel() {
 	const brainKey = `proj:${project?.id ?? 'none'}`;
 
 	return (
-		<section className="brain">
+		<section className="brain" style={{ ['--glow' as string]: project?.color ?? 'var(--brand)' }}>
 			<div className="brain-head">
 				<span className="pdot" style={{ background: project?.color }} />
 				<b className="bname">{project?.name ?? 'Project'}</b>

@@ -239,13 +239,13 @@ svg { display: block; }
 .cc-more:hover { color: var(--fg); background: color-mix(in srgb, var(--fg) 4%, transparent); }
 
 /* agents — Cursor-style follow-up composer */
-.agent-composer { flex: none; padding: 10px 14px 12px; border-top: 1px solid var(--line); }
+.agent-composer { flex: none; padding: 8px 14px 12px; }
 .agent-chips { display: flex; gap: 6px; margin-bottom: 8px; }
 .achip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 8px; color: var(--muted); background: var(--panel); }
 .achip svg { width: 12px; height: 12px; }
 .achip b { font-family: var(--mono); font-weight: 600; }
-.ac-bar { display: flex; align-items: center; gap: 6px; border: 1px solid var(--line-2); border-radius: 12px; background: var(--panel-2); padding: 6px 8px 6px 8px; }
-.ac-bar:focus-within { border-color: color-mix(in srgb, var(--fg) 45%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--fg) 10%, transparent); }
+.ac-bar { display: flex; align-items: center; gap: 6px; border-radius: 13px; background: color-mix(in srgb, var(--fg) 5%, transparent); padding: 6px 8px; box-shadow: var(--elev-1); transition: background var(--dur); }
+.ac-bar:focus-within { background: var(--panel); box-shadow: var(--elev-1), 0 0 0 2px color-mix(in srgb, var(--brand) 30%, transparent); }
 .ac-plus { width: 28px; height: 28px; border-radius: 8px; color: var(--muted); display: grid; place-items: center; flex: none; }
 .ac-plus:hover { background: color-mix(in srgb, var(--fg) 8%, transparent); color: var(--fg); }
 .ac-plus svg { width: 16px; height: 16px; }
@@ -453,28 +453,32 @@ svg { display: block; }
 .prail { width: 56px; flex: none; display: flex; flex-direction: column; align-items: center; padding: 9px 0 10px; }
 .prail .traffic { padding: 2px 0 10px; }
 .prail-list { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.pbtn { position: relative; width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; color: #fff; font-weight: 650; font-size: 14px; background: var(--pc, var(--brand)); transition: border-radius var(--dur) var(--ease), transform var(--dur); }
-.pbtn:hover { border-radius: 14px; }
-.pbtn.on { box-shadow: 0 0 0 2px var(--shell), 0 0 0 4px color-mix(in srgb, var(--pc) 60%, transparent); }
-.pbtn.on::before { content: ""; position: absolute; left: -9px; top: 50%; transform: translateY(-50%); width: 3px; height: 18px; border-radius: 0 3px 3px 0; background: var(--fg); }
-.pbtn.add { background: color-mix(in srgb, var(--fg) 6%, transparent); color: var(--muted); }
-.pbtn.add:hover { background: color-mix(in srgb, var(--fg) 10%, transparent); color: var(--fg); }
+.pbtn { position: relative; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 650; font-size: 14px; background: var(--pc, var(--brand)); opacity: 0.58; transition: border-radius var(--dur) var(--ease), opacity var(--dur), box-shadow var(--dur); }
+.pbtn:hover { opacity: 1; border-radius: 14px; }
+.pbtn.on { opacity: 1; border-radius: 14px; box-shadow: 0 5px 16px color-mix(in srgb, var(--pc) 45%, transparent); }
+.pbtn.on::before { content: ""; position: absolute; left: -8px; top: 50%; transform: translateY(-50%); width: 3px; height: 20px; border-radius: 0 3px 3px 0; background: var(--fg); }
+.pbtn.add { opacity: 1; border-radius: 12px; background: color-mix(in srgb, var(--fg) 6%, transparent); color: var(--muted); }
+.pbtn.add:hover { background: color-mix(in srgb, var(--fg) 10%, transparent); color: var(--fg); border-radius: 14px; }
 .pbtn.add svg { width: 16px; height: 16px; }
 .prail .grow { flex: 1; }
 .prail-foot { display: flex; flex-direction: column; align-items: center; gap: 3px; }
 .prail-foot .who { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #7c5cff, #d94fb0); color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 600; margin-top: 5px; cursor: pointer; }
 
 /* agent brain (left) */
-.brain { width: 424px; flex: none; display: flex; flex-direction: column; min-height: 0; }
+.brain { position: relative; width: 424px; flex: none; display: flex; flex-direction: column; min-height: 0; }
+/* Ambient workspace glow — the active project's color, soft and immersive. */
+.brain::before { content: ""; position: absolute; top: -80px; left: -60px; width: 360px; height: 260px; background: radial-gradient(closest-side, color-mix(in srgb, var(--glow, var(--brand)) 15%, transparent), transparent); filter: blur(36px); pointer-events: none; z-index: 0; }
+.brain > * { position: relative; z-index: 1; }
 .brain-head { height: 46px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 8px 0 6px; }
 .brain-head .pdot { width: 9px; height: 9px; border-radius: 3px; flex: none; }
 .brain-head .bname { font-weight: 650; font-size: 13px; letter-spacing: -0.01em; }
 .brain-head .bbranch { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); font-size: 11.5px; }
 .brain-head .bbranch svg { width: 12px; height: 12px; }
 .brain-head .sp { flex: 1; }
-.brain-head .bviews { display: flex; gap: 1px; background: color-mix(in srgb, var(--fg) 5%, transparent); border-radius: 9px; padding: 2px; }
-.brain-head .bviews button { padding: 4px 10px; border-radius: 7px; font-size: 11.5px; color: var(--muted); font-weight: 550; transition: background var(--dur), color var(--dur); }
-.brain-head .bviews button.on { background: var(--panel); color: var(--fg); box-shadow: var(--elev-1); }
+.brain-head .bviews { display: flex; gap: 2px; }
+.brain-head .bviews button { padding: 4px 10px; border-radius: 8px; font-size: 12px; color: var(--faint); font-weight: 550; transition: background var(--dur), color var(--dur); }
+.brain-head .bviews button:hover { color: var(--fg); background: color-mix(in srgb, var(--fg) 5%, transparent); }
+.brain-head .bviews button.on { color: var(--fg); background: color-mix(in srgb, var(--fg) 8%, transparent); }
 .brain-body { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
 .brain .agent-thread { flex: 1; min-height: 0; overflow: auto; padding: 12px 14px 8px; }
 .brain .agent-thread > * { max-width: 100%; margin: 0 0 6px; }
