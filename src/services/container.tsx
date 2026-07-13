@@ -19,6 +19,7 @@ import { DbService } from './db';
 import { ObservabilityService } from './observability';
 import { DesignService } from './design';
 import { DeployService } from './deploy';
+import { MissionService } from './mission';
 import { noCollab, type CollabExtensionFactory } from './collab';
 
 export interface Services {
@@ -39,6 +40,8 @@ export interface Services {
 	design: DesignService;
 	/** Build artifacts + per-environment deploy state — the ship studio. */
 	deploy: DeployService;
+	/** The swarm orchestrator — objective → task graph → real operations. */
+	mission: MissionService;
 	/** The collaboration seam. Swap for a CRDT factory to enable network sync. */
 	collab: CollabExtensionFactory;
 }
@@ -56,7 +59,11 @@ export function createServices(): Services {
 	observability.install();
 	const design = new DesignService(fs);
 	const deploy = new DeployService(fs);
-	return { fs, editor, shell, browser: new BrowserService(), agent, graph, review, db, observability, design, deploy, collab: noCollab };
+	// The orchestrator drives the other services via a lazy getter (no self-ref).
+	let services: Services;
+	const mission = new MissionService(() => services);
+	services = { fs, editor, shell, browser: new BrowserService(), agent, graph, review, db, observability, design, deploy, mission, collab: noCollab };
+	return services;
 }
 
 let singleton: Services | null = null;

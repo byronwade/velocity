@@ -945,3 +945,49 @@ svg { display: block; }
 .home-jump { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 8px 10px; }
 .home-jump button { font-size: 12px; color: var(--muted); background: color-mix(in srgb, var(--fg) 5%, transparent); border-radius: 8px; padding: 6px 12px; transition: background var(--dur), color var(--dur); }
 .home-jump button:hover { color: var(--fg); background: color-mix(in srgb, var(--fg) 9%, transparent); }
+
+/* ---------------------------------------------------------------------------
+   Mission Control — the swarm's task graph
+   --------------------------------------------------------------------------- */
+.mc { height: 100%; min-height: 0; overflow: auto; padding: 14px 16px 20px; }
+.mc-compose { display: flex; gap: 8px; margin-bottom: 16px; }
+.mc-compose input { flex: 1; min-width: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--panel-2); color: var(--fg); font: inherit; font-size: 13px; padding: 10px 13px; outline: none; }
+.mc-compose input:focus { border-color: var(--line-2); }
+.mc-start { display: inline-flex; align-items: center; gap: 7px; background: var(--fg); color: var(--panel); font-size: 12.5px; font-weight: 600; padding: 8px 15px; border-radius: 9px; flex: none; }
+.mc-start svg { width: 13px; height: 13px; }
+.mc-start:active { transform: scale(0.97); }
+.mc-empty { height: 60%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 8px; color: var(--muted); }
+.mc-empty svg { width: 26px; height: 26px; color: var(--faint); }
+.mc-empty-sub { max-width: 360px; font-size: 12.5px; color: var(--faint); line-height: 1.6; }
+.mc-head { margin-bottom: 14px; }
+.mc-obj { font-size: 15px; font-weight: 650; letter-spacing: -0.01em; color: var(--fg); }
+.mc-meta { font-size: 12px; color: var(--faint); margin-top: 2px; }
+.mc-meta b { color: var(--muted); font-variant-numeric: tabular-nums; }
+.mc-tasks { display: flex; flex-direction: column; }
+.mc-task { display: flex; gap: 12px; }
+.mc-rail { flex: none; width: 14px; display: flex; flex-direction: column; align-items: center; position: relative; }
+.mc-rail::before { content: ""; position: absolute; top: 0; bottom: 0; width: 2px; background: var(--line); }
+.mc-task:first-child .mc-rail::before { top: 14px; }
+.mc-task:last-child .mc-rail::before { bottom: calc(100% - 14px); }
+.mc-node { width: 11px; height: 11px; border-radius: 50%; margin-top: 9px; background: var(--panel); box-shadow: 0 0 0 2px var(--line-2); z-index: 1; }
+.mc-task.s-done .mc-node { background: #3fae6a; box-shadow: 0 0 0 2px color-mix(in srgb, #3fae6a 40%, transparent); }
+.mc-task.s-running .mc-node { background: var(--fg); box-shadow: 0 0 0 2px color-mix(in srgb, var(--fg) 35%, transparent); animation: glow-breathe 1.4s ease-in-out infinite; }
+.mc-task.s-awaiting-approval .mc-node { background: #b08b2e; box-shadow: 0 0 0 2px color-mix(in srgb, #b08b2e 40%, transparent); }
+.mc-body { flex: 1; min-width: 0; padding: 2px 0 14px; }
+.mc-top { display: flex; align-items: center; gap: 9px; }
+.mc-spec { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.03em; font-weight: 650; color: var(--muted); flex: none; }
+.mc-spec svg { width: 12px; height: 12px; color: var(--faint); }
+.mc-title { font-size: 13px; color: var(--fg); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mc-status { margin-left: auto; display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--faint); flex: none; }
+.mc-status.st-done { color: #3fae6a; }
+.mc-status.st-running { color: var(--fg); }
+.mc-status.st-awaiting-approval { color: #b08b2e; }
+.mc-evidence { margin-top: 5px; font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
+.mc-approve { margin-top: 9px; display: inline-flex; align-items: center; gap: 6px; background: var(--fg); color: var(--panel); font-size: 11.5px; font-weight: 600; padding: 6px 12px; border-radius: 8px; }
+.mc-approve svg { width: 12px; height: 12px; }
+.mc-approve:active { transform: scale(0.97); }
+
+/* approval inbox — dock footer */
+.adock-foot.pending { color: #b08b2e; width: 100%; text-align: left; }
+.adock-foot.pending:hover { background: color-mix(in srgb, #b08b2e 10%, transparent); }
+.adock-foot.pending svg { color: #b08b2e; }

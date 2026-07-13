@@ -16,6 +16,7 @@ import { DesignStudio } from './DesignStudio';
 import { TestStudio } from './TestStudio';
 import { DeploymentStudio } from './DeploymentStudio';
 import { HomeDashboard } from './HomeDashboard';
+import { MissionControl } from './MissionControl';
 import type { ComponentType } from 'react';
 
 export interface ModeDef {
@@ -40,6 +41,7 @@ export const MODE_DEFS: Record<Mode, ModeDef> = {
 	test: { id: 'test', name: 'Test', blurb: 'Real checks over the live workspace', icon: 'beaker', Content: TestStudio, actions: ['Run all', 'Filter'] },
 	ship: { id: 'ship', name: 'Ship', blurb: 'Deploy builds to environments', icon: 'rocket', Content: DeploymentStudio, actions: ['Deploy', 'Rollback', 'Envs'] },
 	home: { id: 'home', name: 'Home', blurb: 'Project overview at a glance', icon: 'home', Content: HomeDashboard, actions: [] },
+	mission: { id: 'mission', name: 'Mission Control', blurb: 'Orchestrated task graph', icon: 'agents', Content: MissionControl, actions: ['New mission', 'Approvals'] },
 };
 
 export { Icon };

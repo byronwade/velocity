@@ -9,6 +9,7 @@
 import { useSyncExternalStore } from 'react';
 import { useShell } from '../lib/store';
 import { useServices } from '../services/container';
+import { useMission } from '../services/mission';
 import { Icon } from '../lib/icons';
 
 interface WorkerState {
@@ -33,6 +34,8 @@ export function AgentDock() {
 	const toggleDock = useShell((s) => s.toggleDock);
 	const setActiveProject = useShell((s) => s.setActiveProject);
 	const setCockpitMode = useShell((s) => s.setCockpitMode);
+	const mission = useMission();
+	const pending = mission?.tasks.filter((t) => t.status === 'awaiting-approval').length ?? 0;
 
 	const workers: WorkerState[] = projects.map((p) => {
 		const key = `proj:${p.id}`;
@@ -105,10 +108,17 @@ export function AgentDock() {
 					</button>
 				))}
 			</div>
-			<div className="adock-foot">
-				<Icon.check />
-				<span>No approvals pending</span>
-			</div>
+			{pending > 0 ? (
+				<button className="adock-foot pending" onClick={() => setCockpitMode('agents')}>
+					<Icon.lock />
+					<span>{pending} approval{pending === 1 ? '' : 's'} pending</span>
+				</button>
+			) : (
+				<div className="adock-foot">
+					<Icon.check />
+					<span>No approvals pending</span>
+				</div>
+			)}
 		</aside>
 	);
 }
