@@ -21,6 +21,7 @@ const GROUPS: Group[] = [
 		items: [
 			{ keys: [MOD, 'K'], label: 'Command palette' },
 			{ keys: [MOD, 'P'], label: 'Quick open file' },
+			{ keys: [MOD, 'E'], label: 'Recent files' },
 			{ keys: [MOD, 'J'], label: 'Focus the agent command bar' },
 			{ keys: [MOD, '/'], label: 'Keyboard shortcuts (this panel)' },
 			{ keys: [MOD, 'B'], label: 'Toggle the side panel' },

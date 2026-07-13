@@ -5,6 +5,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useServices } from '../services/container';
 import { openFileInActivePane } from '../lib/openFile';
+import { getRecent, recentRank } from '../lib/recentFiles';
 import { Icon } from '../lib/icons';
 
 function basename(p: string): string {
@@ -42,7 +43,10 @@ export function QuickOpen() {
 
 	useEffect(() => {
 		const onKey = (e: KeyboardEvent) => {
-			if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'p' && !e.shiftKey) {
+			const mod = e.metaKey || e.ctrlKey;
+			// ⌘P (all files) and ⌘E (recent files) both open the switcher; with no
+			// query typed, results lead with your most-recently-used files either way.
+			if (mod && (e.key.toLowerCase() === 'p' || e.key.toLowerCase() === 'e') && !e.shiftKey) {
 				e.preventDefault();
 				setOpen((o) => !o);
 			} else if (e.key === 'Escape') {
@@ -63,9 +67,19 @@ export function QuickOpen() {
 
 	const results = useMemo(() => {
 		const q = query.trim().toLowerCase();
+		// Empty query: lead with recently-used files (newest first), then the rest
+		// of the tree. This is what makes ⌘P/⌘E feel like a recent-files switcher.
+		if (!q) {
+			const set = new Set(files);
+			const recents = getRecent().filter((p) => set.has(p));
+			const recentSet = new Set(recents);
+			return [...recents, ...files.filter((p) => !recentSet.has(p))].slice(0, 40);
+		}
+		// Typed query: fuzzy score, with a small tie-breaking nudge toward recents.
 		return files
 			.map((p) => ({ p, s: score(p, q) }))
 			.filter((r): r is { p: string; s: number } => r.s !== null)
+			.map((r) => ({ p: r.p, s: r.s - (recentRank(r.p) < 8 ? (8 - recentRank(r.p)) * 0.5 : 0) }))
 			.sort((a, b) => a.s - b.s)
 			.slice(0, 40)
 			.map((r) => r.p);
@@ -89,7 +103,7 @@ export function QuickOpen() {
 					<input
 						ref={inputRef}
 						value={query}
-						placeholder="Go to file…"
+						placeholder="Go to file… (recent files first)"
 						onChange={(e) => setQuery(e.target.value)}
 						onKeyDown={(e) => {
 							if (e.key === 'ArrowDown') { e.preventDefault(); setCursor((c) => Math.min(results.length - 1, c + 1)); }
