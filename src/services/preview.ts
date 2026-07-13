@@ -75,6 +75,78 @@ render();
 </html>`;
 }
 
+/** Build a self-contained HTML doc that links + runs the transpiled modules.
+ *  React/ReactDOM are vendored from the app's own origin (no CDN); zustand is a
+ *  tiny inline shim. Classic JSX compiles to `React.createElement`, resolved
+ *  from the global React UMD — so workspace files need no React import. */
+function runtimeHtml(entry: string, registry: Record<string, string>, css: string): string {
+	const json = (v: unknown) => JSON.stringify(v).replace(/<\/(script)/gi, '<\\/$1');
+	return `<!doctype html>
+<html lang="en"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>html,body{margin:0}${css}</style></head>
+<body><div id="root"></div>
+<script src="/vendor/react.js"></script>
+<script src="/vendor/react-dom.js"></script>
+<script>
+(function () {
+  var REG = ${json(registry)};
+  var entry = ${json(entry)};
+  function createStore(createState) {
+    var state, listeners = new Set();
+    var setState = function (partial, replace) {
+      var n = typeof partial === 'function' ? partial(state) : partial;
+      state = replace ? n : Object.assign({}, state, n);
+      listeners.forEach(function (l) { l(); });
+    };
+    var getState = function () { return state; };
+    var subscribe = function (l) { listeners.add(l); return function () { listeners.delete(l); }; };
+    var api = { setState: setState, getState: getState, getInitialState: getState, subscribe: subscribe };
+    state = createState(setState, getState, api);
+    var useBoundStore = function (selector) {
+      var sel = selector || getState;
+      return React.useSyncExternalStore(subscribe, function () { return sel(state); }, function () { return sel(state); });
+    };
+    Object.assign(useBoundStore, api);
+    return useBoundStore;
+  }
+  var zustand = { create: function (cs) { return cs ? createStore(cs) : createStore; }, createStore: createStore };
+  var externals = { 'react': window.React, 'react-dom': window.ReactDOM, 'react-dom/client': window.ReactDOM, 'zustand': zustand };
+  var cache = {};
+  function resolve(from, spec) {
+    if (spec.charAt(0) !== '.') return spec;
+    var base = from.split('/').slice(0, -1);
+    spec.split('/').forEach(function (p) { if (p === '.' || p === '') return; else if (p === '..') base.pop(); else base.push(p); });
+    var path = base.join('/');
+    var cands = [path, path + '.tsx', path + '.ts', path + '.jsx', path + '.js', path + '/index.tsx', path + '/index.ts', path + '/index.jsx', path + '/index.js'];
+    for (var i = 0; i < cands.length; i++) if (cands[i] in REG) return cands[i];
+    return path;
+  }
+  function run(path) {
+    if (cache[path]) return cache[path].exports;
+    var code = REG[path];
+    var module = { exports: {} };
+    cache[path] = module;
+    if (code == null) return module.exports;
+    var require = function (spec) {
+      var r = resolve(path, spec);
+      if (externals[r]) return externals[r];
+      if (r in REG) return run(r);
+      return {};
+    };
+    try {
+      new Function('require', 'module', 'exports', 'React', code)(require, module, module.exports, window.React);
+    } catch (e) {
+      document.body.innerHTML = '<pre style="padding:16px;font:13px ui-monospace,monospace;color:#c0392b">Runtime error in ' + path + '\\n' + (e && e.stack || e) + '</pre>';
+      throw e;
+    }
+    return module.exports;
+  }
+  try { run(entry); } catch (e) { /* already surfaced */ }
+})();
+</script>
+</body></html>`;
+}
+
 export class PreviewService {
 	private html = '';
 	private rev = 0;
@@ -113,14 +185,43 @@ export class PreviewService {
 		if (built.length) {
 			try {
 				return await this.fs.readFile(built[built.length - 1]);
-			} catch { /* fall through to seed */ }
+			} catch { /* fall through */ }
 		}
-		// Otherwise render the seed app, styled by the workspace's own CSS.
+
+		const css = await this.collectCss(files);
+
+		// Try to compile and RUN the real workspace React/TSX. sucrase transpiles
+		// each module to CJS; a tiny in-iframe module system links them and pulls
+		// React/etc. from a pinned ESM CDN via an import — the actual app runs.
+		const CODE = ['.tsx', '.ts', '.jsx', '.js'];
+		const entry = ['src/main.tsx', 'src/main.ts', 'src/index.tsx', 'src/main.jsx', 'src/App.tsx'].find((e) => files.includes(e));
+		const codeFiles = files.filter((f) => CODE.some((e) => f.endsWith(e)));
+		if (entry && codeFiles.length) {
+			try {
+				const { transform } = await import('sucrase');
+				const registry: Record<string, string> = {};
+				for (const f of codeFiles) {
+					try {
+						const src = await this.fs.readFile(f);
+						registry[f] = transform(src, { transforms: ['typescript', 'jsx', 'imports'], jsxRuntime: 'classic', filePath: f, production: true }).code;
+					} catch { /* skip a file that fails to compile */ }
+				}
+				if (registry[entry]) {
+					return runtimeHtml(entry, registry, css);
+				}
+			} catch { /* sucrase unavailable — fall through to the static render */ }
+		}
+
+		// Fallback: render the seed app statically, styled by the workspace CSS.
+		return renderSeedApp(css);
+	}
+
+	private async collectCss(files: string[]): Promise<string> {
 		let css = '';
 		for (const f of files.filter((p) => p.endsWith('.css'))) {
 			try { css += (await this.fs.readFile(f)) + '\n'; } catch { /* skip */ }
 		}
-		return renderSeedApp(css);
+		return css;
 	}
 
 	readonly subscribe = (l: () => void): (() => void) => {
