@@ -46,6 +46,11 @@ function subscribe(l: () => void): () => void {
 	return () => listeners.delete(l);
 }
 
+/** Subscribe to any pref change; returns an unsubscribe. */
+export function subscribeEditorPrefs(l: () => void): () => void {
+	return subscribe(l);
+}
+
 export function useEditorPrefs(): EditorPrefs {
 	return useSyncExternalStore(subscribe, getEditorPrefs, getEditorPrefs);
 }

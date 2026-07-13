@@ -1501,6 +1501,24 @@ svg { display: block; }
 .mem-clear { font-size: 12px; color: var(--danger); padding: 4px 8px; border-radius: 6px; }
 .mem-clear:hover { background: color-mix(in srgb, var(--danger) 12%, transparent); }
 
+/* editor settings panel */
+.esettings { width: min(440px, 92vw); display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--elev-3); overflow: hidden; padding-bottom: 8px; }
+.eset-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 18px; }
+.eset-row + .eset-row { border-top: 1px solid var(--line); }
+.eset-label { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.eset-label b { font-size: 13px; font-weight: 600; color: var(--fg); }
+.eset-label span { font-size: 11.5px; color: var(--muted); }
+.eset-seg { display: inline-flex; background: var(--sunk); border: 1px solid var(--line); border-radius: 8px; padding: 2px; gap: 2px; flex: none; }
+.eset-seg button { min-width: 30px; padding: 4px 8px; border-radius: 6px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.eset-seg button:hover { color: var(--fg); }
+.eset-seg button.on { background: var(--panel); color: var(--fg); box-shadow: var(--elev-1); }
+.eset-toggle { width: 38px; height: 22px; border-radius: 999px; background: color-mix(in srgb, var(--fg) 15%, transparent); padding: 2px; flex: none; transition: background 0.15s var(--ease); }
+.eset-toggle span { display: block; width: 18px; height: 18px; border-radius: 50%; background: var(--fg); transform: translateX(0); transition: transform 0.15s var(--ease); box-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+.eset-toggle.on { background: var(--brand); }
+/* On the near-white brand track, the knob switches to the dark panel color so it
+   stays visible — matching the app's brand-button convention. */
+.eset-toggle.on span { background: var(--panel); transform: translateX(16px); }
+
 /* keyboard shortcut cheatsheet (⌘/) */
 .kbd-help { width: min(680px, 94vw); max-height: 82vh; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--elev-3); overflow: hidden; }
 .kbd-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 10px; }

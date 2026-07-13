@@ -9,7 +9,7 @@
 // ---------------------------------------------------------------------------
 
 import { useEffect, useRef } from 'react';
-import { EditorState } from '@codemirror/state';
+import { Compartment, EditorState } from '@codemirror/state';
 import {
 	crosshairCursor,
 	drawSelection,
@@ -31,8 +31,23 @@ import { useServices } from '../services/container';
 import { editorTheme } from './theme';
 import { languageForPath } from './languages';
 import { formatSource } from '../services/format';
-import { getEditorPrefs } from '../services/editorPrefs';
+import { getEditorPrefs, subscribeEditorPrefs, type EditorPrefs } from '../services/editorPrefs';
 import { richEditing } from './richEditing';
+
+// Reconfigurable slice for user editor preferences (font size, tab width, word
+// wrap). One Compartment marker is reused across views; each view reconfigures
+// its own state when prefs change.
+const prefsCompartment = new Compartment();
+
+function prefsExtensions(prefs: EditorPrefs) {
+	return [
+		EditorState.tabSize.of(prefs.tabSize),
+		// Target .cm-scroller (more specific than the base theme's `&` rule) so the
+		// user's font size always wins regardless of theme-injection order.
+		EditorView.theme({ '.cm-scroller': { fontSize: `${prefs.fontSize}px` } }),
+		prefs.wordWrap ? EditorView.lineWrapping : [],
+	];
+}
 
 /** Format the view's buffer with Prettier and replace it, keeping the cursor at
  *  roughly the same document offset. No-ops for unsupported files or if the
@@ -162,13 +177,20 @@ export function CodeMirrorHost({ doc, paneId, onSave, onCursor }: { doc: TextDoc
 		const view = new EditorView({
 			state: EditorState.create({
 				doc: doc.text,
-				extensions: [baseExtensions, saveKeymap, cursorReporter, languageForPath(doc.path), editorTheme, collab(doc, paneId), forward],
+				extensions: [baseExtensions, saveKeymap, cursorReporter, languageForPath(doc.path), editorTheme, prefsCompartment.of(prefsExtensions(getEditorPrefs())), collab(doc, paneId), forward],
 			}),
 			parent,
 		});
 		doc.attach(view);
 
+		// Live-apply preference changes (font size / tab size / word wrap) to this
+		// view without recreating it.
+		const unsub = subscribeEditorPrefs(() => {
+			view.dispatch({ effects: prefsCompartment.reconfigure(prefsExtensions(getEditorPrefs())) });
+		});
+
 		return () => {
+			unsub();
 			doc.detach(view);
 			view.destroy();
 		};
