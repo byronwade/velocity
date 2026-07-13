@@ -106,9 +106,9 @@ export function AgentsMenu() {
 
 	return (
 		<div className="amenu" ref={wrapRef}>
-			<button className={`amenu-trigger${open ? ' on' : ''}`} onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label="Agents">
+			<button className={`amenu-trigger${open ? ' on' : ''}`} onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label="Agent workers" title="Agent workers">
 				<Icon.agents />
-				<span className="amenu-label">Agents</span>
+				{workingCount > 0 && <span className="amenu-label">{workingCount} working</span>}
 				{workingCount > 0 && <span className="amenu-live" title={`${workingCount} working`} />}
 				{pending > 0 && <span className="amenu-badge">{pending}</span>}
 				<Icon.chevron />
