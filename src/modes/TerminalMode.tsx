@@ -72,6 +72,19 @@ export function TerminalMode({ paneId }: { paneId: string }) {
 	}
 
 	function onKey(e: React.KeyboardEvent<HTMLInputElement>) {
+		// Ctrl+L clears the screen; Ctrl+C cancels the current line (like a shell).
+		if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'l') {
+			e.preventDefault();
+			setLines([]);
+			return;
+		}
+		if (e.ctrlKey && e.key.toLowerCase() === 'c') {
+			e.preventDefault();
+			setLines((prev) => [...prev, { kind: 'in', text: `${sh.promptPath()} $ ${input}^C` }]);
+			setInput('');
+			setHistIdx(-1);
+			return;
+		}
 		if (e.key === 'Enter') {
 			e.preventDefault();
 			void submit();
