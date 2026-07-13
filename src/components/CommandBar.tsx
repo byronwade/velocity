@@ -12,6 +12,7 @@ import { useServices } from '../services/container';
 import { useAgentThread } from '../services/agent';
 import { AgentThread } from '../modes/AgentsMode';
 import { ModelPicker } from './ModelPicker';
+import { getActiveEditor } from '../editor/activeView';
 import { Icon } from '../lib/icons';
 
 export function CommandBar() {
@@ -28,6 +29,16 @@ export function CommandBar() {
 	const lastAsst = [...thread].reverse().find((m) => m.role === 'assistant');
 	const runningTool = lastAsst?.tools.find((t) => t.status === 'running');
 	const activity = runningTool ? runningTool.label : busy ? 'Thinking…' : '';
+
+	// Attach context: reference the file open in the editor (like @-mentions), so
+	// the agent knows which file you mean. Falls back to a bare "@" to type one.
+	function addContext() {
+		const path = getActiveEditor()?.path;
+		const ref = path ? `@${path} ` : '@';
+		setInput((v) => (!v || v.endsWith(' ') ? v : v + ' ') + ref);
+		if (hasHistory) setOpen(true);
+		taRef.current?.focus();
+	}
 
 	// Collapse the thread panel on Escape.
 	useEffect(() => {
@@ -83,7 +94,7 @@ export function CommandBar() {
 				)}
 
 				<div className="cbar-input">
-					<button className="cbar-plus" title="Add context / plugins" aria-label="Add context"><Icon.plus /></button>
+					<button className="cbar-plus" title="Attach the current file as context" aria-label="Add context" onClick={addContext}><Icon.plus /></button>
 					<textarea
 						ref={taRef}
 						rows={1}
