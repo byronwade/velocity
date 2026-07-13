@@ -279,7 +279,7 @@ export class AgentService {
 		} catch (e) {
 			this.apply(paneId, asst.id, { type: 'text', text: `\n\n_Error: ${e instanceof Error ? e.message : String(e)}_` });
 		}
-		asst.pending = false;
+		this.patch(paneId, asst.id, (m) => ({ ...m, pending: false }));
 		this.busy.delete(paneId);
 		this.bump();
 	}
@@ -290,28 +290,40 @@ export class AgentService {
 		this.shells.release(`agent:${paneId}`);
 	}
 
-	private apply(paneId: string, msgId: string, ev: AgentEvent): void {
+	/** Immutably replace one message in a thread: new message object + new
+	 *  array, untouched messages keep their reference. This lets the UI wrap
+	 *  each message in React.memo so only the changed (streaming) message
+	 *  re-renders, not the whole conversation. */
+	private patch(paneId: string, msgId: string, fn: (m: AgentMessage) => AgentMessage): void {
 		const t = this.threads.get(paneId);
 		if (!t) {
 			return;
 		}
-		const msg = t.find((x) => x.id === msgId);
-		if (!msg) {
+		const idx = t.findIndex((x) => x.id === msgId);
+		if (idx === -1) {
 			return;
 		}
-		if (ev.type === 'text') {
-			msg.text = msg.text ? `${msg.text}\n\n${ev.text}` : ev.text;
-		} else if (ev.type === 'tool') {
-			msg.tools.push({ id: ev.id, tool: ev.tool, label: ev.label, status: 'running' });
-		} else if (ev.type === 'tool-done') {
-			const tc = msg.tools.find((x) => x.id === ev.id);
-			if (tc) {
-				tc.status = ev.status ?? 'done';
-				tc.output = ev.output;
+		const arr = t.slice();
+		arr[idx] = fn(t[idx]);
+		this.threads.set(paneId, arr);
+	}
+
+	private apply(paneId: string, msgId: string, ev: AgentEvent): void {
+		this.patch(paneId, msgId, (msg) => {
+			if (ev.type === 'text') {
+				return { ...msg, text: msg.text ? `${msg.text}\n\n${ev.text}` : ev.text };
 			}
-		} else if (ev.type === 'changes') {
-			msg.changes = [...(msg.changes ?? []), ...ev.files];
-		}
+			if (ev.type === 'tool') {
+				return { ...msg, tools: [...msg.tools, { id: ev.id, tool: ev.tool, label: ev.label, status: 'running' as const }] };
+			}
+			if (ev.type === 'tool-done') {
+				return { ...msg, tools: msg.tools.map((tc) => tc.id === ev.id ? { ...tc, status: ev.status ?? 'done', output: ev.output } : tc) };
+			}
+			if (ev.type === 'changes') {
+				return { ...msg, changes: [...(msg.changes ?? []), ...ev.files] };
+			}
+			return msg;
+		});
 	}
 
 	readonly subscribe = (l: () => void): (() => void) => {

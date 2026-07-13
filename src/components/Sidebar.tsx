@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { Icon, type IconName } from '../lib/icons';
 import { useServices } from '../services/container';
 import { usePanePath } from '../services/editorService';
@@ -60,6 +60,61 @@ function buildTree(files: string[], dirs: string[]): TreeNode[] {
 	return root.children;
 }
 
+// One file row. Memoized on primitive/stable props — switching the open file
+// only re-renders the two rows whose `selected` flips, not the whole tree.
+const FileRow = memo(function FileRow({ node, depth, selected, onOpen }: {
+	node: TreeNode; depth: number; selected: boolean; onOpen: (path: string) => void;
+}) {
+	return (
+		<button
+			className={`row file${selected ? ' sel' : ''}`}
+			style={{ paddingLeft: `${8 + depth * 14}px` }}
+			title={node.path}
+			aria-current={selected ? 'true' : undefined}
+			onClick={() => onOpen(node.path)}
+		>
+			<span className="tw" aria-hidden />
+			<Icon.file />
+			<span className="nm">{node.name}</span>
+		</button>
+	);
+});
+
+// One directory row (the button only; children are rendered by the level).
+const DirRow = memo(function DirRow({ node, depth, collapsed, onToggle }: {
+	node: TreeNode; depth: number; collapsed: boolean; onToggle: (path: string) => void;
+}) {
+	return (
+		<button className="row dir" style={{ paddingLeft: `${8 + depth * 14}px` }} onClick={() => onToggle(node.path)} aria-expanded={!collapsed}>
+			<span className={`tw${collapsed ? '' : ' open'}`}><Icon.chevron /></span>
+			<Icon.files />
+			<span className="nm">{node.name}</span>
+		</button>
+	);
+});
+
+/** Recursive level. Re-renders on collapse/selection changes, but its memoized
+ *  row children skip work when their own props are unchanged. */
+function Level({ nodes, depth, collapsed, openPath, onToggle, onOpen }: {
+	nodes: TreeNode[]; depth: number; collapsed: Set<string>; openPath: string | undefined;
+	onToggle: (path: string) => void; onOpen: (path: string) => void;
+}): React.ReactElement {
+	return (
+		<>
+			{nodes.map((n) => n.dir ? (
+				<div key={n.path}>
+					<DirRow node={n} depth={depth} collapsed={collapsed.has(n.path)} onToggle={onToggle} />
+					{!collapsed.has(n.path) && (
+						<Level nodes={n.children} depth={depth + 1} collapsed={collapsed} openPath={openPath} onToggle={onToggle} onOpen={onOpen} />
+					)}
+				</div>
+			) : (
+				<FileRow key={n.path} node={n} depth={depth} selected={n.path === openPath} onOpen={onOpen} />
+			))}
+		</>
+	);
+}
+
 export function Explorer() {
 	const { fs, editor } = useServices();
 	const [files, setFiles] = useState<string[]>([]);
@@ -88,7 +143,8 @@ export function Explorer() {
 
 	const tree = useMemo(() => buildTree(files, dirs), [files, dirs]);
 
-	function toggle(path: string) {
+	// Stable callbacks so the memoized rows never invalidate on re-render.
+	const toggle = useCallback((path: string) => {
 		setCollapsed((prev) => {
 			const next = new Set(prev);
 			if (next.has(path)) {
@@ -98,43 +154,14 @@ export function Explorer() {
 			}
 			return next;
 		});
-	}
+	}, []);
+	const openFile = useCallback((path: string) => openFileInActivePane(editor, path), [editor]);
 
-	function render(nodes: TreeNode[], depth: number): React.ReactNode {
-		return nodes.map((n) => {
-			const pad = { paddingLeft: `${8 + depth * 14}px` };
-			if (n.dir) {
-				const isCollapsed = collapsed.has(n.path);
-				return (
-					<div key={n.path}>
-						<button className="row dir" style={pad} onClick={() => toggle(n.path)} aria-expanded={!isCollapsed}>
-							<span className={`tw${isCollapsed ? '' : ' open'}`}><Icon.chevron /></span>
-							<Icon.files />
-							<span className="nm">{n.name}</span>
-						</button>
-						{!isCollapsed && render(n.children, depth + 1)}
-					</div>
-				);
-			}
-			const selected = n.path === openPath;
-			return (
-				<button
-					key={n.path}
-					className={`row file${selected ? ' sel' : ''}`}
-					style={pad}
-					title={n.path}
-					aria-current={selected ? 'true' : undefined}
-					onClick={() => openFileInActivePane(editor, n.path)}
-				>
-					<span className="tw" aria-hidden />
-					<Icon.file />
-					<span className="nm">{n.name}</span>
-				</button>
-			);
-		});
-	}
-
-	return <div className="tree">{render(tree, 0)}</div>;
+	return (
+		<div className="tree">
+			<Level nodes={tree} depth={0} collapsed={collapsed} openPath={openPath} onToggle={toggle} onOpen={openFile} />
+		</div>
+	);
 }
 
 export function Sidebar() {

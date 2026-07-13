@@ -5,7 +5,7 @@
 // services/agent.ts); the review card lists the files the agent actually wrote.
 // ---------------------------------------------------------------------------
 
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { useServices } from '../services/container';
 import { useAgentThread, type AgentMessage, type FileChange, type ToolCall } from '../services/agent';
 import { Icon, type IconName } from '../lib/icons';
@@ -119,7 +119,10 @@ function ChangesCard({ files }: { files: FileChange[] }) {
 	);
 }
 
-function MessageView({ m }: { m: AgentMessage }) {
+// Memoized: with the agent service updating messages immutably, only the
+// message whose object identity changed (the streaming one) re-renders — the
+// rest of the conversation is skipped.
+const MessageView = memo(function MessageView({ m }: { m: AgentMessage }) {
 	if (m.role === 'user') {
 		return (
 			<div className="msg req">
@@ -147,7 +150,7 @@ function MessageView({ m }: { m: AgentMessage }) {
 			)}
 		</div>
 	);
-}
+});
 
 /** The scrollable conversation for an agent brain (keyed by `brainKey`). */
 export function AgentThread({ brainKey }: { brainKey: string }) {
