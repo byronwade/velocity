@@ -45,6 +45,9 @@ export function HeaderMenu() {
 					<button className="hmenu-row" onClick={openPalette}>
 						<Icon.command /><span>Command palette</span><kbd>⌘K</kbd>
 					</button>
+					<button className="hmenu-row" onClick={() => { setOpen(false); window.dispatchEvent(new Event('velocity:shortcuts')); }}>
+						<Icon.command /><span>Keyboard shortcuts</span><kbd>⌘/</kbd>
+					</button>
 					<button className="hmenu-row" onClick={() => { setOpen(false); setMemoryOpen(true); }}><Icon.sparkle /><span>Agent memory</span></button>
 					<button className="hmenu-row"><Icon.settings /><span>Settings</span></button>
 					<div className="hmenu-sep" />

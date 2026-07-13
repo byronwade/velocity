@@ -25,7 +25,7 @@ import {
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { bracketMatching, foldGutter, foldKeymap, indentOnInput } from '@codemirror/language';
 import { autocompletion, closeBrackets, closeBracketsKeymap, completionKeymap } from '@codemirror/autocomplete';
-import { highlightSelectionMatches, searchKeymap, gotoLine } from '@codemirror/search';
+import { highlightSelectionMatches, searchKeymap, gotoLine, selectNextOccurrence, selectSelectionMatches } from '@codemirror/search';
 import { fromDocument, type TextDocument } from '../services/document';
 import { useServices } from '../services/container';
 import { editorTheme } from './theme';
@@ -94,6 +94,10 @@ export function CodeMirrorHost({ doc, paneId, onSave, onCursor }: { doc: TextDoc
 				},
 			},
 			{ key: 'Mod-g', preventDefault: true, run: gotoLine },
+			// Multi-cursor: ⌘D adds the next occurrence of the current word/selection
+			// to the selection; ⌘⇧L selects every occurrence at once.
+			{ key: 'Mod-d', preventDefault: true, run: selectNextOccurrence },
+			{ key: 'Mod-Shift-l', preventDefault: true, run: selectSelectionMatches },
 		]);
 
 		// Report cursor line/column + selection to the status bar.

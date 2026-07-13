@@ -787,6 +787,24 @@ svg { display: block; }
 .cmdk-sub { margin-left: auto; padding-left: 12px; color: var(--faint); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 45%; flex: none; }
 @media (prefers-reduced-motion: reduce) { .cmdk-scrim, .cmdk { animation: none; } }
 
+/* Quick Open (⌘P) — fuzzy file switcher, styled after the command palette. */
+.qopen-scrim { position: fixed; inset: 0; z-index: 210; display: flex; align-items: flex-start; justify-content: center; padding-top: 12vh; background: color-mix(in srgb, #000 38%, transparent); backdrop-filter: blur(3px); animation: fade-in 0.12s var(--ease) both; }
+.qopen { width: min(620px, 92vw); max-height: 62vh; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line-2); border-radius: 16px; box-shadow: var(--elev-2); overflow: hidden; animation: menu-in 0.14s var(--ease) both; }
+.qopen-input { display: flex; align-items: center; gap: 10px; padding: 13px 15px; border-bottom: 1px solid var(--line); }
+.qopen-input svg { width: 16px; height: 16px; color: var(--faint); flex: none; }
+.qopen-input input { flex: 1; background: transparent; border: 0; outline: none; color: var(--fg); font-size: 15px; }
+.qopen-input input::placeholder { color: var(--faint); }
+.qopen-input kbd { font-family: var(--mono); font-size: 10.5px; color: var(--faint); background: color-mix(in srgb, var(--fg) 6%, transparent); border-radius: 5px; padding: 3px 6px; }
+.qopen-list { overflow: auto; padding: 6px; }
+.qopen-empty { padding: 22px; text-align: center; color: var(--faint); font-size: 13px; }
+.qopen-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border-radius: 9px; text-align: left; color: var(--fg); font-size: 13px; }
+.qopen-row svg { width: 15px; height: 15px; color: var(--faint); flex: none; }
+.qopen-row.on { background: color-mix(in srgb, var(--fg) 8%, transparent); }
+.qopen-row.on svg { color: var(--fg); }
+.qopen-name { flex: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 50%; }
+.qopen-dir { margin-left: auto; padding-left: 12px; color: var(--faint); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: rtl; }
+@media (prefers-reduced-motion: reduce) { .qopen-scrim, .qopen { animation: none; } }
+
 /* ---------------------------------------------------------------------------
    Cockpit — global mode rail (far left) + agent dock (right)
    --------------------------------------------------------------------------- */
@@ -1467,3 +1485,22 @@ svg { display: block; }
 .mem-foot { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
 .mem-clear { font-size: 12px; color: var(--danger); padding: 4px 8px; border-radius: 6px; }
 .mem-clear:hover { background: color-mix(in srgb, var(--danger) 12%, transparent); }
+
+/* keyboard shortcut cheatsheet (⌘/) */
+.kbd-help { width: min(680px, 94vw); max-height: 82vh; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--elev-3); overflow: hidden; }
+.kbd-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 10px; }
+.kbd-head > span { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 650; color: var(--fg); }
+.kbd-head svg { width: 15px; height: 15px; color: var(--brand); }
+.kbd-search { display: flex; align-items: center; gap: 8px; margin: 0 16px 12px; padding: 8px 11px; border: 1px solid var(--line); border-radius: 9px; background: var(--sunk); }
+.kbd-search svg { width: 15px; height: 15px; color: var(--faint); flex: none; }
+.kbd-search input { flex: 1; background: transparent; border: 0; outline: none; color: var(--fg); font: inherit; font-size: 13px; }
+.kbd-search input::placeholder { color: var(--faint); }
+.kbd-cols { flex: 1; min-height: 0; overflow: auto; padding: 0 16px 16px; column-count: 2; column-gap: 26px; }
+@media (max-width: 560px) { .kbd-cols { column-count: 1; } }
+.kbd-group { break-inside: avoid; margin-bottom: 16px; }
+.kbd-group-name { font-size: 10.5px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--faint); font-weight: 650; padding: 4px 0 6px; }
+.kbd-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 5px 0; }
+.kbd-label { font-size: 12.5px; color: var(--fg); min-width: 0; }
+.kbd-keys { display: inline-flex; gap: 4px; flex: none; }
+.kbd-keys kbd { font-family: var(--mono); font-size: 10.5px; line-height: 1; color: var(--muted); background: color-mix(in srgb, var(--fg) 7%, transparent); border: 1px solid var(--line); border-radius: 5px; padding: 3px 5px; min-width: 16px; text-align: center; }
+.kbd-empty { padding: 24px; text-align: center; font-size: 12.5px; color: var(--faint); }
