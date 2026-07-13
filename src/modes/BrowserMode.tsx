@@ -27,7 +27,9 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 	const [loadKey, setLoadKey] = useState(0);
 	const [loading, setLoading] = useState(false);
 	const [menuOpen, setMenuOpen] = useState(false);
+	const [zoom, setZoom] = useState(1);
 	const inputRef = useRef<HTMLInputElement>(null);
+	const zoomBy = (d: number) => setZoom((z) => Math.max(0.25, Math.min(3, Math.round((z + d) * 100) / 100)));
 	const current = state.history[state.index];
 	const [urlInput, setUrlInput] = useState(current === BROWSER_HOME ? '' : current);
 	useSyncExternalStore(browser.subscribe, browser.getSnapshot);
@@ -115,8 +117,14 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 	// Chrome-style keyboard shortcuts, scoped to the browser pane.
 	function onKeyDown(e: React.KeyboardEvent) {
 		const mod = e.metaKey || e.ctrlKey;
-		if (mod && e.key.toLowerCase() === 'l') { e.preventDefault(); inputRef.current?.focus(); inputRef.current?.select(); }
-		else if (mod && e.key.toLowerCase() === 'r') { e.preventDefault(); setLoadKey((k) => k + 1); }
+		const k = e.key.toLowerCase();
+		if (mod && k === 'l') { e.preventDefault(); inputRef.current?.focus(); inputRef.current?.select(); }
+		else if ((mod && k === 'r') || e.key === 'F5') { e.preventDefault(); setLoadKey((n) => n + 1); }
+		else if (e.altKey && e.key === 'ArrowLeft') { e.preventDefault(); back(); }
+		else if (e.altKey && e.key === 'ArrowRight') { e.preventDefault(); forward(); }
+		else if (mod && (k === '=' || k === '+')) { e.preventDefault(); zoomBy(0.1); }
+		else if (mod && k === '-') { e.preventDefault(); zoomBy(-0.1); }
+		else if (mod && k === '0') { e.preventDefault(); setZoom(1); }
 	}
 
 	return (
@@ -136,6 +144,9 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 					<button type="button" className={`cr-star${bookmarked ? ' on' : ''}`} title={bookmarked ? 'Remove bookmark' : 'Bookmark this tab'} aria-label="Bookmark this tab" aria-pressed={bookmarked} onClick={() => browser.toggleBookmark(current)}><Icon.star /></button>
 				</form>
 				<div className="cr-actions">
+					{zoom !== 1 && (
+						<button className="cr-zoom" title="Reset zoom (⌘0)" aria-label="Reset zoom" onClick={() => setZoom(1)}>{Math.round(zoom * 100)}%</button>
+					)}
 					<button className="cr-icb" title="Home" aria-label="Home" onClick={() => navigate(BROWSER_HOME)}><Icon.home /></button>
 					{isExternal && <a className="cr-icb" title="Open in a new tab" aria-label="Open externally" href={current} target="_blank" rel="noreferrer noopener"><Icon.share /></a>}
 					<span className="cr-avatar" title="Profile" aria-hidden>B</span>
@@ -147,6 +158,17 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 								<button disabled={isStart} onClick={() => { void navigator.clipboard?.writeText(current); setMenuOpen(false); }}><Icon.share />Copy URL</button>
 								<button disabled={isStart} onClick={() => { browser.toggleBookmark(current); setMenuOpen(false); }}><Icon.star />{bookmarked ? 'Remove bookmark' : 'Bookmark'}</button>
 								{isExternal && <button onClick={() => { window.open(current, '_blank', 'noopener'); setMenuOpen(false); }}><Icon.share />Open in new tab</button>}
+								<div className="cr-menu-sep" />
+								<div className="cr-menu-zoom">
+									<span>Zoom</span>
+									<button title="Zoom out" onClick={() => zoomBy(-0.1)}><Icon.minus /></button>
+									<b>{Math.round(zoom * 100)}%</b>
+									<button title="Zoom in" onClick={() => zoomBy(0.1)}><Icon.plus /></button>
+								</div>
+								{state.history.length > 1 && <div className="cr-menu-sep" />}
+								{state.history.slice(0, state.index).reverse().slice(0, 5).map((h, i) => (
+									<button key={`h-${i}`} className="cr-menu-hist" title={h} onClick={() => { navigate(h); setMenuOpen(false); }}><Icon.back /><span>{h === BROWSER_HOME ? 'New tab' : titleFor(h)}</span></button>
+								))}
 								<div className="cr-menu-sep" />
 								<button onClick={() => { navigate(BROWSER_HOME); setMenuOpen(false); }}><Icon.home />New tab page</button>
 							</div>
@@ -164,7 +186,7 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 				))}
 			</div>
 
-			<div className="browser-view">
+			<div className="browser-view" style={{ zoom }}>
 				{loading && <div className="cr-progress" aria-hidden />}
 				{isStart && (
 					<iframe key={`start-${theme}-${loadKey}`} className="frame" title="New tab" srcDoc={startPage(theme)} sandbox="allow-scripts" onLoad={() => setLoading(false)} />

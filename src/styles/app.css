@@ -499,6 +499,15 @@ svg { display: block; }
 .cr-menu button:disabled { opacity: 0.4; }
 .cr-menu button svg { width: 14px; height: 14px; color: var(--muted); flex: none; }
 .cr-menu-sep { height: 1px; background: var(--line); margin: 5px 4px; }
+.cr-zoom { padding: 3px 8px; border-radius: 999px; font-size: 11.5px; font-variant-numeric: tabular-nums; color: var(--muted); border: 1px solid var(--line); margin-right: 2px; }
+.cr-zoom:hover { background: color-mix(in srgb, var(--fg) 7%, transparent); color: var(--fg); }
+.cr-menu-zoom { display: flex; align-items: center; gap: 6px; padding: 5px 9px; font-size: 12.5px; color: var(--fg); }
+.cr-menu-zoom span { flex: 1; }
+.cr-menu-zoom b { min-width: 40px; text-align: center; font-variant-numeric: tabular-nums; font-weight: 500; color: var(--muted); }
+.cr-menu-zoom button { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 6px; color: var(--muted); }
+.cr-menu-zoom button:hover { background: color-mix(in srgb, var(--fg) 8%, transparent); color: var(--fg); }
+.cr-menu-zoom button svg { width: 13px; height: 13px; }
+.cr-menu-hist span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .browser-view { flex: 1; min-height: 0; background: #fff; position: relative; }
 .browser-view .frame { width: 100%; height: 100%; border: 0; display: block; }
