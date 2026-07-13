@@ -4,12 +4,14 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useShell } from '../lib/store';
+import { MemoryPanel } from './MemoryPanel';
 import { Icon } from '../lib/icons';
 
 export function HeaderMenu() {
 	const theme = useShell((s) => s.theme);
 	const setTheme = useShell((s) => s.setTheme);
 	const [open, setOpen] = useState(false);
+	const [memoryOpen, setMemoryOpen] = useState(false);
 	const ref = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
@@ -43,11 +45,13 @@ export function HeaderMenu() {
 					<button className="hmenu-row" onClick={openPalette}>
 						<Icon.command /><span>Command palette</span><kbd>⌘K</kbd>
 					</button>
+					<button className="hmenu-row" onClick={() => { setOpen(false); setMemoryOpen(true); }}><Icon.sparkle /><span>Agent memory</span></button>
 					<button className="hmenu-row"><Icon.settings /><span>Settings</span></button>
 					<div className="hmenu-sep" />
 					<button className="hmenu-row"><Icon.invite /><span>Sign out</span></button>
 				</div>
 			)}
+			{memoryOpen && <MemoryPanel onClose={() => setMemoryOpen(false)} />}
 		</div>
 	);
 }

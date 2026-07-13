@@ -261,6 +261,7 @@ const GREETING: AgentMessage = {
 /** Compaction thresholds: fold older turns once a thread grows past this. */
 const CONTEXT_LIMIT_CHARS = 24000; // ≈ 6k tokens
 const KEEP_RECENT = 6;
+const THREADS_KEY = 'velocity.agent.threads.v1';
 
 export class AgentService {
 	private threads = new Map<string, AgentMessage[]>();
@@ -268,6 +269,7 @@ export class AgentService {
 	private queues = new Map<string, string[]>();
 	private listeners = new Set<() => void>();
 	private rev = 0;
+	private saveTimer: ReturnType<typeof setTimeout> | null = null;
 
 	constructor(
 		private fs: IFileSystem,
@@ -276,7 +278,39 @@ export class AgentService {
 		public backend: AgentBackend,
 		/** Resolves the active backend at send time (e.g. Local vs Ollama). */
 		private resolve?: () => AgentBackend,
-	) {}
+	) {
+		this.load();
+	}
+
+	/** Restore persisted conversations (sanitizing any mid-stream state). */
+	private load(): void {
+		try {
+			const raw = localStorage.getItem(THREADS_KEY);
+			if (!raw) return;
+			const data = JSON.parse(raw) as Record<string, AgentMessage[]>;
+			for (const [k, msgs] of Object.entries(data)) {
+				if (Array.isArray(msgs)) {
+					this.threads.set(k, msgs.map((m) => ({ ...m, pending: false, tools: (m.tools ?? []).map((t) => ({ ...t, status: t.status === 'running' ? 'done' : t.status })) })));
+				}
+			}
+		} catch { /* ignore */ }
+	}
+
+	/** Persist conversations (debounced — bump() fires often during streaming). */
+	private save(): void {
+		if (this.saveTimer !== null) return;
+		this.saveTimer = setTimeout(() => {
+			this.saveTimer = null;
+			try { localStorage.setItem(THREADS_KEY, JSON.stringify(Object.fromEntries(this.threads))); } catch { /* quota */ }
+		}, 500);
+	}
+
+	/** Clear a conversation back to the greeting. */
+	reset(paneId: string): void {
+		this.threads.set(paneId, [GREETING]);
+		this.queues.delete(paneId);
+		this.bump();
+	}
 
 	thread(paneId: string): AgentMessage[] {
 		let t = this.threads.get(paneId);
@@ -421,6 +455,7 @@ export class AgentService {
 
 	private bump(): void {
 		this.rev++;
+		this.save();
 		for (const l of this.listeners) {
 			l();
 		}

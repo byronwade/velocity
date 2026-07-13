@@ -66,6 +66,7 @@ export function CommandBar() {
 								<span className="cbar-ctx-bar"><i style={{ width: `${context.pct}%` }} /></span>
 								{context.pct}%
 							</span>
+							<button className="cbar-collapse" title="New chat" onClick={() => agent.reset(brainKey)}><Icon.plus /></button>
 							<button className="cbar-collapse" title="Collapse" onClick={() => setOpen(false)}><Icon.chevron /></button>
 						</div>
 						<AgentThread brainKey={brainKey} />
