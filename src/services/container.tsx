@@ -13,6 +13,7 @@ import { EditorService } from './editorService';
 import { ShellService } from './shell';
 import { BrowserService } from './browser';
 import { AgentService, LocalAgent } from './agent';
+import { GraphService } from './graph';
 import { noCollab, type CollabExtensionFactory } from './collab';
 
 export interface Services {
@@ -21,6 +22,8 @@ export interface Services {
 	shell: ShellService;
 	browser: BrowserService;
 	agent: AgentService;
+	/** The shared project graph — the spine every other view reads from. */
+	graph: GraphService;
 	/** The collaboration seam. Swap for a CRDT factory to enable network sync. */
 	collab: CollabExtensionFactory;
 }
@@ -31,7 +34,8 @@ export function createServices(): Services {
 	const shell = new ShellService(fs, editor);
 	// Swap `new LocalAgent()` for a Claude API backend to make the agent a model.
 	const agent = new AgentService(fs, editor, shell, new LocalAgent());
-	return { fs, editor, shell, browser: new BrowserService(), agent, collab: noCollab };
+	const graph = new GraphService(fs);
+	return { fs, editor, shell, browser: new BrowserService(), agent, graph, collab: noCollab };
 }
 
 let singleton: Services | null = null;

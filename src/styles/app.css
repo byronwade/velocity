@@ -564,3 +564,66 @@ svg { display: block; }
 .cm-skeleton::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, color-mix(in srgb, var(--fg) 5%, transparent) 50%, transparent 70%); background-size: 220% 100%; animation: shimmer 1.3s infinite linear; }
 @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 @media (prefers-reduced-motion: reduce) { .cm-skeleton::after { animation: none; } }
+
+/* ---------------------------------------------------------------------------
+   Living architecture map — a view over the shared project graph
+   --------------------------------------------------------------------------- */
+.mapview { flex: 1; min-height: 0; overflow: auto; padding: 6px 10px 14px; }
+.map-head { display: flex; align-items: center; gap: 7px; padding: 8px 4px 10px; color: var(--muted); font-size: 12px; }
+.map-head svg { width: 14px; height: 14px; color: var(--pc, var(--brand)); }
+
+.map-focus { border: 1px solid var(--line-2); border-radius: 12px; background: var(--panel-2); margin-bottom: 12px; overflow: hidden; }
+.mf-head { display: flex; align-items: center; justify-content: space-between; padding: 8px 8px 8px 10px; border-bottom: 1px solid var(--line); }
+.mchip { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 600; color: var(--fg); min-width: 0; }
+.mchip svg { width: 14px; height: 14px; color: var(--pc, var(--brand)); flex: none; }
+.mf-clear { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; color: var(--faint); flex: none; }
+.mf-clear:hover { background: color-mix(in srgb, var(--fg) 7%, transparent); color: var(--fg); }
+.mf-clear svg { width: 13px; height: 13px; }
+.mf-empty { padding: 12px; color: var(--faint); font-size: 12px; }
+.mf-list { list-style: none; margin: 0; padding: 4px; }
+.mf-row { display: flex; align-items: center; gap: 8px; width: 100%; padding: 6px 8px; border-radius: 8px; text-align: left; color: var(--fg); font-size: 12.5px; }
+.mf-row:hover { background: color-mix(in srgb, var(--fg) 5%, transparent); }
+.mf-verb { font-size: 10.5px; letter-spacing: 0.02em; text-transform: uppercase; color: var(--faint); min-width: 62px; flex: none; }
+.mf-ic { display: grid; place-items: center; color: var(--muted); flex: none; }
+.mf-ic svg { width: 13px; height: 13px; }
+.mf-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.map-groups { display: flex; flex-direction: column; gap: 12px; }
+.map-group { }
+.mg-head { display: flex; align-items: center; gap: 7px; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--faint); font-weight: 650; padding: 0 4px 7px; }
+.mg-head svg { width: 13px; height: 13px; color: var(--muted); }
+.mg-count { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--faint); text-transform: none; letter-spacing: 0; }
+.mg-nodes { display: flex; flex-wrap: wrap; gap: 6px; }
+.mnode { max-width: 100%; font-size: 12px; color: var(--muted); background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 5px 10px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: background var(--dur), color var(--dur), border-color var(--dur), transform 90ms var(--ease); }
+.mnode:hover { color: var(--fg); border-color: var(--line-2); }
+.mnode:active { transform: scale(0.97); }
+.mnode.on { color: var(--fg); border-color: color-mix(in srgb, var(--pc, var(--brand)) 55%, transparent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--pc, var(--brand)) 30%, transparent); }
+/* per-kind accent dots */
+.mnode.k-route { border-left: 2px solid #4a90d9; }
+.mnode.k-component { border-left: 2px solid #7b5bd6; }
+.mnode.k-endpoint { border-left: 2px solid #3fae6a; }
+.mnode.k-table { border-left: 2px solid #e8863c; }
+.mnode.k-test { border-left: 2px solid #d0567f; }
+.mnode.k-agent { border-left: 2px solid var(--pc, var(--brand)); }
+
+/* ---------------------------------------------------------------------------
+   Universal command input (⌘K)
+   --------------------------------------------------------------------------- */
+.cmdk-scrim { position: fixed; inset: 0; z-index: 200; display: flex; align-items: flex-start; justify-content: center; padding-top: 12vh; background: color-mix(in srgb, #000 38%, transparent); backdrop-filter: blur(3px); animation: fade-in 0.12s var(--ease) both; }
+.cmdk { width: min(640px, 92vw); max-height: 62vh; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line-2); border-radius: 16px; box-shadow: var(--elev-2); overflow: hidden; animation: menu-in 0.14s var(--ease) both; }
+.cmdk-input { display: flex; align-items: center; gap: 10px; padding: 13px 15px; border-bottom: 1px solid var(--line); }
+.cmdk-input svg { width: 17px; height: 17px; color: var(--faint); flex: none; }
+.cmdk-input input { flex: 1; background: transparent; border: 0; outline: none; color: var(--fg); font-size: 15px; }
+.cmdk-input input::placeholder { color: var(--faint); }
+.cmdk-input kbd { font-family: var(--mono); font-size: 10.5px; color: var(--faint); background: color-mix(in srgb, var(--fg) 6%, transparent); border-radius: 5px; padding: 3px 6px; }
+.cmdk-list { overflow: auto; padding: 6px; }
+.cmdk-empty { padding: 22px; text-align: center; color: var(--faint); font-size: 13px; }
+.cmdk-group { font-size: 10.5px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--faint); font-weight: 650; padding: 9px 10px 4px; }
+.cmdk-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border-radius: 9px; text-align: left; color: var(--fg); font-size: 13px; }
+.cmdk-row.on { background: color-mix(in srgb, var(--pc, var(--brand)) 14%, transparent); }
+.cmdk-ic { display: grid; place-items: center; color: var(--muted); flex: none; }
+.cmdk-ic svg { width: 15px; height: 15px; }
+.cmdk-row.on .cmdk-ic { color: var(--pc, var(--brand)); }
+.cmdk-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cmdk-sub { margin-left: auto; padding-left: 12px; color: var(--faint); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 45%; flex: none; }
+@media (prefers-reduced-motion: reduce) { .cmdk-scrim, .cmdk { animation: none; } }

@@ -4,6 +4,7 @@ import { leaves } from './lib/tree';
 import { ProjectRail } from './components/ProjectRail';
 import { AgentPanel } from './components/AgentPanel';
 import { AppsPanel } from './components/AppsPanel';
+import { CommandPalette } from './components/CommandPalette';
 import { APP_MODES } from './lib/types';
 import { getServices } from './services/container';
 import { closeTabWithCleanup } from './lib/closeTab';
@@ -100,6 +101,7 @@ export function App() {
 			<AgentPanel />
 			<BrainResizer />
 			<AppsPanel />
+			<CommandPalette />
 		</div>
 	);
 }

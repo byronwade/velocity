@@ -2,14 +2,16 @@
 // A view switcher shows different lenses on the project (Chat · Files · Changes)
 // while the composer stays pinned at the bottom. The agent is scoped per project.
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useShell } from '../lib/store';
 import { AgentThread, AgentComposer } from '../modes/AgentsMode';
 import { Explorer } from './Sidebar';
+import { MapView } from './MapView';
 import { useAgentThread } from '../services/agent';
+import { useServices } from '../services/container';
 import { Icon } from '../lib/icons';
 
-type View = 'chat' | 'files' | 'changes';
+type View = 'chat' | 'files' | 'map' | 'changes';
 
 function basename(p: string): string {
 	const i = p.lastIndexOf('/');
@@ -48,6 +50,14 @@ export function AgentPanel() {
 	const project = useShell((s) => s.projects.find((p) => p.id === activeTab?.projectId));
 	const [view, setView] = useState<View>('chat');
 	const brainKey = `proj:${project?.id ?? 'none'}`;
+	const { graph } = useServices();
+
+	// Keep the graph's root project node named after the active workspace.
+	useEffect(() => {
+		if (project?.name) {
+			graph.setProjectName(project.name);
+		}
+	}, [graph, project?.name]);
 
 	return (
 		<section className="brain">
@@ -57,7 +67,7 @@ export function AgentPanel() {
 				<span className="bbranch"><Icon.git />main</span>
 				<span className="sp" />
 				<div className="bviews" role="tablist" aria-label="Agent views">
-					{(['chat', 'files', 'changes'] as View[]).map((v) => (
+					{(['chat', 'files', 'map', 'changes'] as View[]).map((v) => (
 						<button key={v} role="tab" aria-selected={view === v} className={view === v ? 'on' : ''} onClick={() => setView(v)}>
 							{v[0].toUpperCase() + v.slice(1)}
 						</button>
@@ -67,6 +77,7 @@ export function AgentPanel() {
 			<div className="brain-body">
 				{view === 'chat' && <AgentThread brainKey={brainKey} />}
 				{view === 'files' && <div className="brain-files"><Explorer /></div>}
+				{view === 'map' && <MapView />}
 				{view === 'changes' && <ChangesView brainKey={brainKey} />}
 			</div>
 			<AgentComposer brainKey={brainKey} />
