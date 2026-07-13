@@ -14,6 +14,7 @@ import { ShareSheet } from './ShareSheet';
 import { ActivityShelf } from './ActivityShelf';
 import { AgentsMenu } from './AgentsMenu';
 import { CockpitModeMenu } from './CockpitModeMenu';
+import { HeaderMenu } from './HeaderMenu';
 import { closeTabWithCleanup } from '../lib/closeTab';
 
 const PEOPLE = [
@@ -33,8 +34,6 @@ export function AppsPanel() {
 	const setActiveTab = useShell((s) => s.setActiveTab);
 	const addTab = useShell((s) => s.addTab);
 	const maximizedPaneId = useShell((s) => s.maximizedPaneId);
-	const theme = useShell((s) => s.theme);
-	const setTheme = useShell((s) => s.setTheme);
 	const [sheet, setSheet] = useState<null | 'invite' | 'share'>(null);
 	const [addOpen, setAddOpen] = useState(false);
 
@@ -106,14 +105,13 @@ export function AppsPanel() {
 				</div>
 				<span className="sp" />
 				<button className="ib" title="Run / Preview" aria-label="Run"><Icon.play /></button>
-				<div className="presence" title="3 collaborators live">
+				<button className="presence" title="Invite people" aria-label="Invite people" onClick={() => setSheet('invite')}>
 					{PEOPLE.map((p) => (<span key={p.initial} className="av" style={{ background: p.color }}>{p.initial}</span>))}
 					<span className="av more">+4</span>
-				</div>
+				</button>
 				<AgentsMenu />
-				<button className="ib" title={theme === 'dark' ? 'Light theme' : 'Dark theme'} aria-label="Toggle theme" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? <Icon.moon /> : <Icon.sun />}</button>
-				<button className="btn ghost" onClick={() => setSheet('invite')}><Icon.invite />Invite</button>
 				<button className="btn brand" onClick={() => setSheet('share')}><Icon.share />Share</button>
+				<HeaderMenu />
 			</div>
 			<div className="apps-stage">
 				{maximizedLeaf ? <PaneChrome pane={maximizedLeaf.pane} /> : <SplitView key={activeTab.id} node={activeTab.tree} />}
