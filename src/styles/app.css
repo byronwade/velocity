@@ -137,7 +137,24 @@ svg { display: block; }
 .activity .grow { flex: 1; }
 .panel-col { width: 216px; flex: none; border-left: 1px solid var(--line); background: var(--rail); display: flex; flex-direction: column; }
 .panel-col .ph { font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--faint); padding: 12px 14px 6px; font-weight: 600; }
-.tree { overflow: auto; padding: 0 6px 10px; font-size: 12.5px; }
+.tree-wrap { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+.tree-head { flex: none; display: flex; align-items: center; gap: 2px; padding: 4px 8px 4px 10px; }
+.tree-head .th-title { font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); font-weight: 650; }
+.tree-head .sp { flex: 1; }
+.tree-head .th-btn { display: inline-flex; align-items: center; width: 24px; height: 22px; justify-content: center; border-radius: 5px; color: var(--muted); transition: background var(--dur), color var(--dur); }
+.tree-head .th-btn:hover { background: color-mix(in srgb, var(--fg) 8%, transparent); color: var(--fg); }
+.tree-head .th-btn svg { width: 13px; height: 13px; }
+.tree-head .th-btn svg + svg { width: 9px; height: 9px; margin-left: -3px; }
+.tree { overflow: auto; padding: 0 6px 10px; font-size: 12.5px; flex: 1; min-height: 0; }
+
+/* right-click context menu (Explorer) */
+.ctxmenu { position: fixed; z-index: 200; min-width: 172px; padding: 5px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--elev-2); }
+.ctxmenu button { width: 100%; display: flex; align-items: center; gap: 9px; padding: 7px 9px; border-radius: 6px; font-size: 12.5px; color: var(--fg); text-align: left; transition: background var(--dur); }
+.ctxmenu button:hover { background: color-mix(in srgb, var(--fg) 7%, transparent); }
+.ctxmenu button svg { width: 14px; height: 14px; color: var(--muted); flex: none; }
+.ctxmenu button.danger { color: var(--danger); }
+.ctxmenu button.danger svg { color: var(--danger); }
+.ctxmenu .ctx-sep { height: 1px; margin: 4px 6px; background: var(--line); }
 .tree .row { width: 100%; display: flex; align-items: center; gap: 6px; padding: 3px 6px; border: 0; border-radius: 6px; cursor: pointer; white-space: nowrap; color: var(--fg); background: transparent; text-align: left; }
 .tree .row:hover { background: color-mix(in srgb, var(--fg) 5%, transparent); }
 .tree .row.sel { background: color-mix(in srgb, var(--fg) 9%, transparent); }
