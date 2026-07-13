@@ -13,10 +13,24 @@ export function SplitView({ node }: { node: Node }) {
 function Split({ node }: { node: Extract<Node, { kind: 'split' }> }) {
 	const setRatio = useShell((s) => s.setRatio);
 	const ref = useRef<HTMLDivElement>(null);
+	const aRef = useRef<HTMLDivElement>(null);
+	const bRef = useRef<HTMLDivElement>(null);
 	const draggingRef = useRef(false);
+	// Live ratio during a drag, plus a coalescing rAF handle. We update the
+	// panes' flex-basis imperatively on each frame and only commit to the
+	// store on release — so a drag never triggers a React re-render per move.
+	const liveRatio = useRef(node.ratio);
+	const rafRef = useRef(0);
 
 	const aPct = `${node.ratio * 100}%`;
 	const bPct = `${(1 - node.ratio) * 100}%`;
+
+	function paint() {
+		rafRef.current = 0;
+		const r = liveRatio.current;
+		if (aRef.current) aRef.current.style.flex = `0 0 ${r * 100}%`;
+		if (bRef.current) bRef.current.style.flex = `0 0 ${(1 - r) * 100}%`;
+	}
 
 	function onPointerDown(e: React.PointerEvent) {
 		e.preventDefault();
@@ -29,14 +43,20 @@ function Split({ node }: { node: Extract<Node, { kind: 'split' }> }) {
 			return;
 		}
 		const rect = ref.current.getBoundingClientRect();
-		const ratio = node.axis === 'row'
+		const raw = node.axis === 'row'
 			? (e.clientX - rect.left) / rect.width
 			: (e.clientY - rect.top) / rect.height;
-		setRatio(node.id, ratio);
+		liveRatio.current = Math.max(0.1, Math.min(0.9, raw));
+		if (!rafRef.current) {
+			rafRef.current = requestAnimationFrame(paint);
+		}
 	}
-	function onPointerUp(e: React.PointerEvent) {
+	function endDrag(e: React.PointerEvent) {
+		if (!draggingRef.current) return;
 		draggingRef.current = false;
+		if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = 0; }
 		(e.currentTarget as HTMLElement).classList.remove('dragging');
+		setRatio(node.id, liveRatio.current);
 	}
 	function onKeyDown(e: React.KeyboardEvent) {
 		const step = e.shiftKey ? 0.1 : 0.02;
@@ -50,7 +70,7 @@ function Split({ node }: { node: Extract<Node, { kind: 'split' }> }) {
 
 	return (
 		<div className={`splitview ${node.axis}`} ref={ref}>
-			<div className="split-child" style={{ flex: `0 0 ${aPct}` }}>
+			<div className="split-child" ref={aRef} style={{ flex: `0 0 ${aPct}` }}>
 				<SplitView node={node.a} />
 			</div>
 			<div
@@ -65,9 +85,10 @@ function Split({ node }: { node: Extract<Node, { kind: 'split' }> }) {
 				onKeyDown={onKeyDown}
 				onPointerDown={onPointerDown}
 				onPointerMove={onPointerMove}
-				onPointerUp={onPointerUp}
+				onPointerUp={endDrag}
+				onPointerCancel={endDrag}
 			/>
-			<div className="split-child" style={{ flex: `0 0 ${bPct}` }}>
+			<div className="split-child" ref={bRef} style={{ flex: `0 0 ${bPct}` }}>
 				<SplitView node={node.b} />
 			</div>
 		</div>

@@ -11,21 +11,38 @@ import { closeTabWithCleanup } from './lib/closeTab';
 
 const RAIL_WIDTH = 56;
 
-/** Draggable divider between the agent brain and the apps panel. */
+/** Draggable divider between the agent brain and the apps panel.
+ *  During the drag we write `--brain-w` straight to the `.app` element on a
+ *  requestAnimationFrame, and only commit the final width to the store on
+ *  release — so dragging never triggers a React re-render per mouse move. */
 function BrainResizer() {
 	const setBrainWidth = useShell((s) => s.setBrainWidth);
 	const [drag, setDrag] = useState(false);
 	function onDown(e: React.PointerEvent) {
 		e.preventDefault();
+		const app = (e.currentTarget as HTMLElement).closest('.app') as HTMLElement | null;
 		setDrag(true);
-		const move = (ev: PointerEvent) => setBrainWidth(ev.clientX - RAIL_WIDTH);
+		let latest = 0;
+		let raf = 0;
+		const paint = () => {
+			raf = 0;
+			app?.style.setProperty('--brain-w', `${latest}px`);
+		};
+		const move = (ev: PointerEvent) => {
+			latest = Math.max(240, Math.min(760, ev.clientX - RAIL_WIDTH));
+			if (!raf) raf = requestAnimationFrame(paint);
+		};
 		const up = () => {
 			setDrag(false);
+			if (raf) cancelAnimationFrame(raf);
 			window.removeEventListener('pointermove', move);
 			window.removeEventListener('pointerup', up);
 			document.body.style.cursor = '';
+			document.body.style.userSelect = '';
+			if (latest) setBrainWidth(latest);
 		};
 		document.body.style.cursor = 'col-resize';
+		document.body.style.userSelect = 'none';
 		window.addEventListener('pointermove', move);
 		window.addEventListener('pointerup', up);
 	}
