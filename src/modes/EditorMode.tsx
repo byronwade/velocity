@@ -67,7 +67,7 @@ export function EditorMode({ paneId }: { paneId: string }) {
 				{dir && <span className="path">{dir}</span>}
 				<span className="sp" />
 			</div>
-			<Suspense fallback={<div className="cm-host" />}>
+			<Suspense fallback={<div className="cm-host cm-skeleton" aria-hidden />}>
 				<CodeMirrorHost doc={doc} paneId={paneId} onSave={() => void editor.save(doc.path)} />
 			</Suspense>
 		</div>
