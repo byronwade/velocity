@@ -4,6 +4,7 @@
 
 import { useEffect, useState } from 'react';
 import { useShell } from '../lib/store';
+import { useServices } from '../services/container';
 import { findLeafByPane, leaves } from '../lib/tree';
 import { APP_MODES, type Tab } from '../lib/types';
 import { MODE_DEFS } from '../modes/registry';
@@ -32,6 +33,7 @@ export function AppsPanel() {
 	const setActiveTab = useShell((s) => s.setActiveTab);
 	const addTab = useShell((s) => s.addTab);
 	const maximizedPaneId = useShell((s) => s.maximizedPaneId);
+	const services = useServices();
 	const [sheet, setSheet] = useState<null | 'invite' | 'share'>(null);
 	const [addOpen, setAddOpen] = useState(false);
 
@@ -47,11 +49,15 @@ export function AppsPanel() {
 		const s = useShell.getState();
 		const existing = s.tabs.find((t) => t.projectId === projectId && tabMode(t) === 'browser');
 		if (existing) {
+			// Existing browser pane is already mounted — navigate it via the event.
 			s.setActiveTab(existing.id);
+			setTimeout(() => window.dispatchEvent(new CustomEvent('velocity:navigate', { detail: { url: 'localhost:3000' } })), 60);
 		} else {
+			// Brand-new pane: seed its initial URL so it lands on the app on mount
+			// (no race against the pane attaching its navigate listener).
+			services.browser.requestPreview('localhost:3000');
 			s.addTab('browser', projectId);
 		}
-		setTimeout(() => window.dispatchEvent(new CustomEvent('velocity:navigate', { detail: { url: 'localhost:3000' } })), 90);
 	}
 
 	useEffect(() => {

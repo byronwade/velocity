@@ -29,11 +29,25 @@ export class BrowserService {
 	private bookmarks: Bookmark[] = load();
 	private listeners = new Set<() => void>();
 	private rev = 0;
+	private pendingUrl: string | null = null;
+
+	/** Ask that the next newly-opened browser pane start at `url` (used by the
+	 *  Run/Preview button so a brand-new pane reliably lands on the app without
+	 *  racing a navigate event against the pane mounting). */
+	requestPreview(url: string): void {
+		this.pendingUrl = url;
+	}
 
 	for(paneId: string): BrowserState {
 		let s = this.states.get(paneId);
 		if (!s) {
-			s = { history: [BROWSER_HOME], index: 0 };
+			if (this.pendingUrl) {
+				const url = normalizeUrl(this.pendingUrl);
+				this.pendingUrl = null;
+				s = { history: [BROWSER_HOME, url], index: 1 };
+			} else {
+				s = { history: [BROWSER_HOME], index: 0 };
+			}
 			this.states.set(paneId, s);
 		}
 		return s;
