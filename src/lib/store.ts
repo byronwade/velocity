@@ -49,6 +49,7 @@ interface ShellState extends PersistShape {
 	closePane: (paneId: string) => void;
 	setRatio: (splitId: string, ratio: number) => void;
 	toggleMaximizePane: (paneId: string) => void;
+	setMaximizedPane: (paneId: string | null) => void;
 
 	// chrome
 	toggleSidebar: () => void;
@@ -201,6 +202,7 @@ export const useShell = create<ShellState>((set) => ({
 	setRatio: (splitId, ratio) => set((s) => withActiveTab(s, (t) => ({ ...t, tree: setRatioOp(t.tree, splitId, ratio) }))),
 
 	toggleMaximizePane: (paneId) => set((s) => ({ maximizedPaneId: s.maximizedPaneId === paneId ? null : paneId })),
+	setMaximizedPane: (paneId) => set({ maximizedPaneId: paneId }),
 
 	toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
 	setBrainWidth: (w) => set({ brainWidth: Math.max(320, Math.min(680, Math.round(w))) }),

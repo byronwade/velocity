@@ -36,7 +36,9 @@ const MODE_APP: Partial<Record<CockpitMode, Mode>> = {
 	library: 'library',
 };
 
-/** Enter a cockpit mode: set the lens and, where one exists, switch the stage app. */
+/** Enter a cockpit mode: set the lens and, where one exists, switch the stage app.
+ *  Full-surface studios (everything but the editor) fill the stage; Build keeps
+ *  its editor+terminal split. */
 export function applyCockpitMode(m: CockpitMode): void {
 	const s = useShell.getState();
 	s.setCockpitMode(m);
@@ -44,6 +46,7 @@ export function applyCockpitMode(m: CockpitMode): void {
 	if (app) {
 		const tab = s.tabs.find((t) => t.id === s.activeTabId) ?? s.tabs[0];
 		s.setPaneMode(tab.activePaneId, app);
+		s.setMaximizedPane(app === 'editor' ? null : tab.activePaneId);
 	}
 }
 
