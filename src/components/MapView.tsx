@@ -93,11 +93,12 @@ export function MapView() {
 							{g.nodes.map((n) => (
 								<button
 									key={n.id}
-									className={`mnode k-${n.kind}${selectedId === n.id ? ' on' : ''}`}
+									className={`mnode${selectedId === n.id ? ' on' : ''}`}
 									onClick={() => activate(n)}
 									title={n.path ?? n.label}
 								>
-									{n.label}
+									<KindIcon kind={n.kind} />
+									<span className="mn-label">{n.label}</span>
 								</button>
 							))}
 						</div>
