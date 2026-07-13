@@ -11,6 +11,7 @@ import { TerminalMode } from './TerminalMode';
 import { BrowserMode } from './BrowserMode';
 import { BuilderMode } from './BuilderMode';
 import { DatabaseStudio } from './DatabaseStudio';
+import { ObservabilityStudio } from './ObservabilityStudio';
 import type { ComponentType } from 'react';
 
 export interface ModeDef {
@@ -30,6 +31,7 @@ export const MODE_DEFS: Record<Mode, ModeDef> = {
 	browser: { id: 'browser', name: 'Browser', blurb: 'A real browser, devtools attached', icon: 'browser', Content: BrowserMode, actions: ['Reload', 'Devtools', 'Responsive'] },
 	builder: { id: 'builder', name: 'Builder', blurb: 'Describe an app → build → deploy anywhere', icon: 'builder', Content: BuilderMode, actions: ['Regenerate', 'Versions', 'Diff'] },
 	database: { id: 'database', name: 'Database', blurb: 'Schema explorer + real SQL over your data', icon: 'database', Content: DatabaseStudio, actions: ['Run', 'New query', 'Export'] },
+	observe: { id: 'observe', name: 'Observe', blurb: 'Live errors, rejections & logs', icon: 'activity', Content: ObservabilityStudio, actions: ['Clear', 'Filter', 'Export'] },
 };
 
 export { Icon };

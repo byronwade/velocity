@@ -16,6 +16,7 @@ import { AgentService, LocalAgent } from './agent';
 import { GraphService } from './graph';
 import { ReviewService } from './review';
 import { DbService } from './db';
+import { ObservabilityService } from './observability';
 import { noCollab, type CollabExtensionFactory } from './collab';
 
 export interface Services {
@@ -30,6 +31,8 @@ export interface Services {
 	review: ReviewService;
 	/** The relational store (schema from .sql files) — the database studio. */
 	db: DbService;
+	/** Real runtime telemetry (errors, rejections, console) — the observe studio. */
+	observability: ObservabilityService;
 	/** The collaboration seam. Swap for a CRDT factory to enable network sync. */
 	collab: CollabExtensionFactory;
 }
@@ -43,7 +46,9 @@ export function createServices(): Services {
 	const graph = new GraphService(fs);
 	const review = new ReviewService(fs);
 	const db = new DbService(fs);
-	return { fs, editor, shell, browser: new BrowserService(), agent, graph, review, db, collab: noCollab };
+	const observability = new ObservabilityService();
+	observability.install();
+	return { fs, editor, shell, browser: new BrowserService(), agent, graph, review, db, observability, collab: noCollab };
 }
 
 let singleton: Services | null = null;
