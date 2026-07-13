@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useShell } from './lib/store';
 import { leaves } from './lib/tree';
 import { ProjectRail } from './components/ProjectRail';
@@ -7,6 +7,29 @@ import { AppsPanel } from './components/AppsPanel';
 import { APP_MODES } from './lib/types';
 import { getServices } from './services/container';
 import { closeTabWithCleanup } from './lib/closeTab';
+
+const RAIL_WIDTH = 56;
+
+/** Draggable divider between the agent brain and the apps panel. */
+function BrainResizer() {
+	const setBrainWidth = useShell((s) => s.setBrainWidth);
+	const [drag, setDrag] = useState(false);
+	function onDown(e: React.PointerEvent) {
+		e.preventDefault();
+		setDrag(true);
+		const move = (ev: PointerEvent) => setBrainWidth(ev.clientX - RAIL_WIDTH);
+		const up = () => {
+			setDrag(false);
+			window.removeEventListener('pointermove', move);
+			window.removeEventListener('pointerup', up);
+			document.body.style.cursor = '';
+		};
+		document.body.style.cursor = 'col-resize';
+		window.addEventListener('pointermove', move);
+		window.addEventListener('pointerup', up);
+	}
+	return <div className={`brain-resizer${drag ? ' dragging' : ''}`} role="separator" aria-orientation="vertical" aria-label="Resize agent panel" onPointerDown={onDown} />;
+}
 
 export function App() {
 	const theme = useShell((s) => s.theme);
@@ -56,6 +79,9 @@ export function App() {
 		return () => window.removeEventListener('keydown', onKey);
 	}, []);
 
+	const brainWidth = useShell((s) => s.brainWidth);
+	const projects = useShell((s) => s.projects);
+
 	// Guard: if the persisted active pane no longer exists, fall back to the first leaf.
 	const tab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
 	const activeExists = leaves(tab.tree).some((l) => l.pane.id === tab.activePaneId);
@@ -65,10 +91,14 @@ export function App() {
 		}
 	}, [activeExists, tab.tree]);
 
+	// The active project's color threads through the whole window as `--pc`.
+	const projectColor = projects.find((p) => p.id === tab?.projectId)?.color ?? 'var(--brand)';
+
 	return (
-		<div className="app v0">
+		<div className="app v0" style={{ ['--pc' as string]: projectColor, ['--brain-w' as string]: `${brainWidth}px` }}>
 			<ProjectRail />
 			<AgentPanel />
+			<BrainResizer />
 			<AppsPanel />
 		</div>
 	);

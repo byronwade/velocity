@@ -245,7 +245,7 @@ svg { display: block; }
 .achip svg { width: 12px; height: 12px; }
 .achip b { font-family: var(--mono); font-weight: 600; }
 .ac-bar { display: flex; align-items: center; gap: 6px; border-radius: 13px; background: color-mix(in srgb, var(--fg) 5%, transparent); padding: 6px 8px; box-shadow: var(--elev-1); transition: background var(--dur); }
-.ac-bar:focus-within { background: var(--panel); box-shadow: var(--elev-1), 0 0 0 2px color-mix(in srgb, var(--brand) 30%, transparent); }
+.ac-bar:focus-within { background: var(--panel); box-shadow: var(--elev-1), 0 0 0 2px color-mix(in srgb, var(--pc, var(--brand)) 30%, transparent); }
 .ac-plus { width: 28px; height: 28px; border-radius: 8px; color: var(--muted); display: grid; place-items: center; flex: none; }
 .ac-plus:hover { background: color-mix(in srgb, var(--fg) 8%, transparent); color: var(--fg); }
 .ac-plus svg { width: 16px; height: 16px; }
@@ -465,10 +465,19 @@ svg { display: block; }
 .prail-foot .who { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #7c5cff, #d94fb0); color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 600; margin-top: 5px; cursor: pointer; }
 
 /* agent brain (left) */
-.brain { position: relative; width: 424px; flex: none; display: flex; flex-direction: column; min-height: 0; }
-/* Ambient workspace glow — the active project's color, soft and immersive. */
-.brain::before { content: ""; position: absolute; top: -80px; left: -60px; width: 360px; height: 260px; background: radial-gradient(closest-side, color-mix(in srgb, var(--glow, var(--brand)) 15%, transparent), transparent); filter: blur(36px); pointer-events: none; z-index: 0; }
+.brain { position: relative; width: var(--brain-w, 424px); flex: none; display: flex; flex-direction: column; min-height: 0; }
+/* Ambient workspace glow — the active project's color, softly breathing. */
+.brain::before { content: ""; position: absolute; top: -80px; left: -60px; width: 360px; height: 260px; background: radial-gradient(closest-side, color-mix(in srgb, var(--pc, var(--brand)) 16%, transparent), transparent); filter: blur(36px); pointer-events: none; z-index: 0; animation: glow-breathe 7s ease-in-out infinite; }
 .brain > * { position: relative; z-index: 1; }
+@keyframes glow-breathe { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; } }
+
+/* draggable divider between brain and apps */
+.brain-resizer { width: 8px; flex: none; position: relative; cursor: col-resize; z-index: 20; }
+.brain-resizer::after { content: ""; position: absolute; top: 8px; bottom: 8px; left: 3px; width: 2px; border-radius: 2px; background: transparent; transition: background var(--dur); }
+.brain-resizer:hover::after, .brain-resizer.dragging::after { background: color-mix(in srgb, var(--pc, var(--accent)) 70%, transparent); }
+
+.stream-caret { display: inline-block; width: 7px; height: 14px; margin-left: 2px; border-radius: 1px; background: var(--pc, var(--brand)); vertical-align: text-bottom; animation: caret-blink 1s steps(2, jump-none) infinite; }
+@keyframes caret-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 .brain-head { height: 46px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 8px 0 6px; }
 .brain-head .pdot { width: 9px; height: 9px; border-radius: 3px; flex: none; }
 .brain-head .bname { font-weight: 650; font-size: 13px; letter-spacing: -0.01em; }
@@ -492,11 +501,12 @@ svg { display: block; }
 .apps { flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 0; }
 .apps-head { height: 46px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 12px 0 4px; }
 .apps-tabs { display: flex; align-items: center; gap: 3px; min-width: 0; overflow-x: auto; }
-.atab { display: flex; align-items: center; gap: 7px; height: 30px; padding: 0 6px 0 10px; border-radius: 9px; font-size: 12.5px; color: var(--muted); cursor: pointer; max-width: 190px; min-width: 0; flex: 0 1 auto; user-select: none; }
+.atab { position: relative; display: flex; align-items: center; gap: 7px; height: 30px; padding: 0 6px 0 10px; border-radius: 9px; font-size: 12.5px; color: var(--muted); cursor: pointer; max-width: 190px; min-width: 0; flex: 0 1 auto; user-select: none; }
 .atab:hover { background: color-mix(in srgb, var(--fg) 5%, transparent); color: var(--fg); }
 .atab.active { background: var(--panel); color: var(--fg); box-shadow: var(--elev-1); }
+.atab.active::after { content: ""; position: absolute; left: 11px; right: 11px; bottom: 2px; height: 2px; border-radius: 2px; background: var(--pc, var(--brand)); opacity: 0.9; }
 .atab .glyph { width: 14px; height: 14px; color: var(--faint); flex: none; }
-.atab.active .glyph { color: var(--brand); }
+.atab.active .glyph { color: var(--pc, var(--brand)); }
 .atab .glyph svg { width: 14px; height: 14px; }
 .atab .tt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .atab .x { width: 17px; height: 17px; border-radius: 5px; display: grid; place-items: center; color: var(--faint); flex: none; opacity: 0; transition: opacity var(--dur); }
@@ -531,10 +541,12 @@ svg { display: block; }
 @keyframes fade-up { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes menu-in { from { opacity: 0; transform: scale(0.97) translateY(-4px); } to { opacity: 1; transform: none; } }
+@keyframes view-in { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: none; } }
 .msg { animation: fade-up 0.26s var(--ease) both; }
 .toolcard { animation: fade-up 0.22s var(--ease) both; }
 .changes-card { animation: fade-up 0.24s var(--ease) both; }
-.apps-stage > *, .brain-body > * { animation: fade-in 0.2s var(--ease) both; }
+.apps-stage > * { animation: fade-in 0.2s var(--ease) both; }
+.brain-body > * { animation: view-in 0.24s var(--ease) both; }
 .addmenu, .modemenu { animation: menu-in 0.14s var(--ease) both; transform-origin: top left; }
 
 /* tactile press on interactive controls */

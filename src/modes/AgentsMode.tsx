@@ -135,7 +135,7 @@ function MessageView({ m }: { m: AgentMessage }) {
 			{m.tools.map((tc) => (
 				<ToolCardView key={tc.id} tc={tc} />
 			))}
-			{m.text && <div className="prose"><Prose text={m.text} /></div>}
+			{m.text && <div className="prose"><Prose text={m.text} />{m.pending && <span className="stream-caret" aria-hidden />}</div>}
 			{m.changes && m.changes.length > 0 && <ChangesCard files={m.changes} />}
 			{m.pending && !m.text && m.tools.length === 0 && <div className="typing"><i /><i /><i /></div>}
 			{!m.pending && m.text && (
