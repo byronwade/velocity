@@ -9,6 +9,8 @@
 
 import { createContext, useContext, type ReactNode } from 'react';
 import { InMemoryFileSystem, type IFileSystem } from './filesystem';
+import { localStorageStore } from './persistence';
+import { SEED_FILES } from './seed';
 import { EditorService } from './editorService';
 import { ShellService } from './shell';
 import { BrowserService } from './browser';
@@ -50,7 +52,9 @@ export interface Services {
 }
 
 export function createServices(): Services {
-	const fs = new InMemoryFileSystem();
+	// Durable workspace: edits and created files survive a reload. Falls back to
+	// pure in-memory when localStorage is unavailable (tests, private mode).
+	const fs = new InMemoryFileSystem(SEED_FILES, localStorageStore());
 	const editor = new EditorService(fs);
 	const shell = new ShellService(fs, editor);
 	// Swap `new LocalAgent()` for a Claude API backend to make the agent a model.

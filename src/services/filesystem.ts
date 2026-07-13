@@ -7,6 +7,7 @@
 // ---------------------------------------------------------------------------
 
 import { SEED_FILES } from './seed';
+import { SEED_VERSION, memoryOnlyStore, type FsStore, type FsSnapshot } from './persistence';
 
 export interface IFileSystem {
 	/** Read a file's contents. Rejects if the path does not exist. */
@@ -25,6 +26,8 @@ export interface IFileSystem {
 	directories(): Promise<string[]>;
 	/** Subscribe to structural changes (create/delete/rename). Returns an unsubscribe. */
 	onChange(listener: () => void): () => void;
+	/** Discard all saved state and reset the tree to the seed project. */
+	reset(): Promise<void>;
 }
 
 /** Normalize to a canonical, slash-separated, no-leading-slash path. */
@@ -46,11 +49,51 @@ export class InMemoryFileSystem implements IFileSystem {
 	private files = new Map<string, string>();
 	private emptyDirs = new Set<string>();
 	private listeners = new Set<() => void>();
+	private readonly store: FsStore;
+	private readonly seed: Record<string, string>;
+	private flushHandle: ReturnType<typeof setTimeout> | null = null;
 
-	constructor(seed: Record<string, string> = SEED_FILES) {
-		for (const [path, content] of Object.entries(seed)) {
+	constructor(seed: Record<string, string> = SEED_FILES, store: FsStore = memoryOnlyStore) {
+		this.seed = seed;
+		this.store = store;
+		const saved = store.load();
+		if (saved) {
+			// Restore the persisted workspace verbatim — the user's world wins.
+			for (const [path, content] of Object.entries(saved.files)) {
+				this.files.set(normalizePath(path), content);
+			}
+			for (const dir of saved.emptyDirs) {
+				this.emptyDirs.add(normalizePath(dir));
+			}
+		} else {
+			this.seedFresh();
+		}
+	}
+
+	/** Populate the tree from the seed (a fresh or reset workspace). */
+	private seedFresh(): void {
+		for (const [path, content] of Object.entries(this.seed)) {
 			this.files.set(normalizePath(path), content);
 		}
+	}
+
+	/** Serialize current state for the store. */
+	private snapshot(): FsSnapshot {
+		return {
+			v: SEED_VERSION,
+			files: Object.fromEntries(this.files),
+			emptyDirs: [...this.emptyDirs],
+		};
+	}
+
+	/** Debounced write-through to the store — coalesces bursts of edits. */
+	private schedulePersist(): void {
+		if (this.store === memoryOnlyStore) return;
+		if (this.flushHandle !== null) return;
+		this.flushHandle = setTimeout(() => {
+			this.flushHandle = null;
+			this.store.save(this.snapshot());
+		}, 150);
 	}
 
 	async readFile(path: string): Promise<string> {
@@ -152,7 +195,18 @@ export class InMemoryFileSystem implements IFileSystem {
 		return () => this.listeners.delete(listener);
 	}
 
+	async reset(): Promise<void> {
+		this.files.clear();
+		this.emptyDirs.clear();
+		this.seedFresh();
+		this.store.clear();
+		this.emit();
+	}
+
 	private emit() {
+		// Every emit is a real mutation (create / overwrite / mkdir / delete), so
+		// this is exactly where durable state should be brought up to date.
+		this.schedulePersist();
 		for (const l of this.listeners) {
 			l();
 		}

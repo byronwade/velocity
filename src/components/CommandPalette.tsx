@@ -124,6 +124,21 @@ export function CommandPalette() {
 			});
 		}
 
+		// 5) System commands. Reset discards persisted edits and re-seeds — the
+		// escape hatch now that the workspace survives reloads.
+		out.push({
+			id: 'reset-workspace',
+			title: 'Reset workspace to seed',
+			subtitle: 'Discards saved edits',
+			keywords: 'reset clear wipe restore defaults persistence',
+			icon: 'reload',
+			group: 'System',
+			run: () => {
+				const ok = typeof window === 'undefined' || window.confirm('Reset the workspace? All saved edits and created files will be discarded and the seed project restored.');
+				if (ok) void services.fs.reset();
+			},
+		});
+
 		return out;
 	}, [graph, query, services]);
 
