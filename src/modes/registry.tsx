@@ -15,6 +15,7 @@ import { ObservabilityStudio } from './ObservabilityStudio';
 import { DesignStudio } from './DesignStudio';
 import { TestStudio } from './TestStudio';
 import { DeploymentStudio } from './DeploymentStudio';
+import { HomeDashboard } from './HomeDashboard';
 import type { ComponentType } from 'react';
 
 export interface ModeDef {
@@ -38,6 +39,7 @@ export const MODE_DEFS: Record<Mode, ModeDef> = {
 	design: { id: 'design', name: 'Design', blurb: 'Tokens, components & routes', icon: 'layers', Content: DesignStudio, actions: ['Tokens', 'Components', 'Sync'] },
 	test: { id: 'test', name: 'Test', blurb: 'Real checks over the live workspace', icon: 'beaker', Content: TestStudio, actions: ['Run all', 'Filter'] },
 	ship: { id: 'ship', name: 'Ship', blurb: 'Deploy builds to environments', icon: 'rocket', Content: DeploymentStudio, actions: ['Deploy', 'Rollback', 'Envs'] },
+	home: { id: 'home', name: 'Home', blurb: 'Project overview at a glance', icon: 'home', Content: HomeDashboard, actions: [] },
 };
 
 export { Icon };

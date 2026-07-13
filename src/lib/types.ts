@@ -5,9 +5,9 @@
 // single pane, and every pane runs one of the five modes. Mode is per-pane, so a
 // tab can show (e.g.) a Live Editor split beside a Browser with a Terminal below.
 
-export type Mode = 'agents' | 'editor' | 'terminal' | 'browser' | 'builder' | 'database' | 'observe' | 'design' | 'test' | 'ship';
+export type Mode = 'agents' | 'editor' | 'terminal' | 'browser' | 'builder' | 'database' | 'observe' | 'design' | 'test' | 'ship' | 'home';
 
-export const MODES: Mode[] = ['agents', 'editor', 'terminal', 'browser', 'builder', 'database', 'observe', 'design', 'test', 'ship'];
+export const MODES: Mode[] = ['agents', 'editor', 'terminal', 'browser', 'builder', 'database', 'observe', 'design', 'test', 'ship', 'home'];
 
 /** The modes an "app" tab can be — the agent is the persistent brain, not an app. */
 export const APP_MODES: Mode[] = ['editor', 'terminal', 'browser', 'builder', 'database', 'observe', 'design', 'test', 'ship'];

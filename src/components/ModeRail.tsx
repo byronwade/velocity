@@ -24,6 +24,7 @@ const MODE_META: Record<CockpitMode, { name: string; icon: IconName }> = {
 
 /** Modes that correspond to a real app pane get the stage switched to match. */
 const MODE_APP: Partial<Record<CockpitMode, Mode>> = {
+	home: 'home',
 	build: 'editor',
 	browse: 'browser',
 	design: 'design',
