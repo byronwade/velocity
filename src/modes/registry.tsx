@@ -1,7 +1,8 @@
-// Mode registry: metadata + the (stubbed, for Milestone 1) content component for
-// each of the five modes. Modes are real surfaces in later milestones; here they
-// render distinct, on-brand placeholders so the shell reads true while the
-// split/tab/mode mechanics are proven.
+// Mode registry: metadata + the content component for each operating mode.
+// Every mode here is a real, working surface — the live editor, terminal,
+// browser, builder, the Data/API/Observe/Design/Test/Ship studios, Home,
+// Mission Control, and the Library catalog — each a lens over the one project
+// graph and its backing services, not a placeholder.
 
 import type { Mode } from '../lib/types';
 import { Icon, type IconName } from '../lib/icons';
