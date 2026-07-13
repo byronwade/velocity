@@ -42,18 +42,14 @@ export function CommandPalette() {
 	const graph = useGraph();
 	const services = useServices();
 
-	// Global shortcut: ⌘K / Ctrl-K toggles the palette.
+	// Opened by the `workbench.action.showCommands` command (⌘⇧P by default),
+	// which the central keybinding service dispatches as this event.
 	useEffect(() => {
-		function onKey(e: KeyboardEvent) {
-			if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-				e.preventDefault();
-				setOpen((o) => !o);
-			} else if (e.key === 'Escape') {
-				setOpen(false);
-			}
-		}
+		const open = () => setOpen(true);
+		const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+		window.addEventListener('velocity:command-palette', open);
 		window.addEventListener('keydown', onKey);
-		return () => window.removeEventListener('keydown', onKey);
+		return () => { window.removeEventListener('velocity:command-palette', open); window.removeEventListener('keydown', onKey); };
 	}, []);
 
 	useEffect(() => {

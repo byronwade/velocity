@@ -37,13 +37,12 @@ export function CommandBar() {
 		return () => document.removeEventListener('keydown', esc);
 	}, [open]);
 
-	// ⌘J / Ctrl-J focuses the command bar from anywhere.
+	// Focus the command bar from anywhere. The keybinding (⌘J by default) is owned
+	// by the central keybinding service, which dispatches this event.
 	useEffect(() => {
-		const onKey = (e: KeyboardEvent) => {
-			if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'j') { e.preventDefault(); taRef.current?.focus(); if (hasHistory) setOpen(true); }
-		};
-		window.addEventListener('keydown', onKey);
-		return () => window.removeEventListener('keydown', onKey);
+		const focus = () => { taRef.current?.focus(); if (hasHistory) setOpen(true); };
+		window.addEventListener('velocity:focus-commandbar', focus);
+		return () => window.removeEventListener('velocity:focus-commandbar', focus);
 	}, [hasHistory]);
 
 	function send() {

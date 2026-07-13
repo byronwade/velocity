@@ -6,11 +6,11 @@ import { AppsPanel } from './components/AppsPanel';
 import { CommandPalette } from './components/CommandPalette';
 import { CommandBar } from './components/CommandBar';
 import { QuickOpen } from './components/QuickOpen';
-import { ShortcutHelp } from './components/ShortcutHelp';
 import { TodoIndex } from './components/TodoIndex';
-import { APP_MODES } from './lib/types';
-import { getServices } from './services/container';
-import { closeTabWithCleanup } from './lib/closeTab';
+import { KeyboardShortcuts } from './components/KeyboardShortcuts';
+import { ChordStatus } from './components/ChordStatus';
+import { installKeybindings } from './keybindings/service';
+import { registerAppCommands } from './keybindings/registerAppCommands';
 import { Icon } from './lib/icons';
 
 const RAIL_WIDTH = 0;
@@ -84,36 +84,19 @@ export function App() {
 		document.documentElement.style.colorScheme = theme;
 	}, [theme]);
 
-	// Global keyboard shortcuts.
+	// Boot the VS Code-style keybinding system once: register every command with
+	// its handler, then install the global chord-aware key dispatcher.
 	useEffect(() => {
-		function onKey(e: KeyboardEvent) {
-			const mod = e.metaKey || e.ctrlKey;
-			if (!mod) {
-				return;
-			}
-			const s = useShell.getState();
-			const tab = s.tabs.find((t) => t.id === s.activeTabId) ?? s.tabs[0];
-			if (e.key === 't') { e.preventDefault(); s.addTab(); }
-			else if (e.key === 'b') { e.preventDefault(); s.toggleBrain(); }
-			else if (e.key === 'w') { e.preventDefault(); closeTabWithCleanup(s.activeTabId); }
-			else if (e.key === 'Enter') { e.preventDefault(); s.toggleMaximizePane(tab.activePaneId); }
-			else if (e.code === 'Backslash') {
-				e.preventDefault();
-				const from = tab.activePaneId;
-				s.splitPane(from, e.shiftKey ? 'col' : 'row');
-				const after = useShell.getState();
-				const at = after.tabs.find((x) => x.id === after.activeTabId) ?? after.tabs[0];
-				getServices().editor.inheritBinding(from, at.activePaneId);
-			}
-			else if (e.key >= '1' && e.key <= '9') {
-				e.preventDefault();
-				// ⌘1–4 switch the active pane between app modes.
-				const i = Number(e.key) - 1;
-				if (i < APP_MODES.length) { s.setPaneMode(tab.activePaneId, APP_MODES[i]); }
-			}
-		}
-		window.addEventListener('keydown', onKey);
-		return () => window.removeEventListener('keydown', onKey);
+		registerAppCommands();
+		installKeybindings();
+	}, []);
+
+	// The Keyboard Shortcuts editor, opened via ⌘K ⌘S or the account menu.
+	const [keybindingsOpen, setKeybindingsOpen] = useState(false);
+	useEffect(() => {
+		const open = () => setKeybindingsOpen(true);
+		window.addEventListener('velocity:open-keybindings', open);
+		return () => window.removeEventListener('velocity:open-keybindings', open);
 	}, []);
 
 	const brainWidth = useShell((s) => s.brainWidth);
@@ -142,8 +125,9 @@ export function App() {
 			<CommandBar />
 			<CommandPalette />
 			<QuickOpen />
-			<ShortcutHelp />
 			<TodoIndex />
+			<ChordStatus />
+			{keybindingsOpen && <KeyboardShortcuts onClose={() => setKeybindingsOpen(false)} />}
 		</div>
 	);
 }

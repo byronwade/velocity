@@ -1528,6 +1528,50 @@ svg { display: block; }
    stays visible — matching the app's brand-button convention. */
 .eset-toggle.on span { background: var(--panel); transform: translateX(16px); }
 
+/* Chord "waiting for next key" status toast */
+.chord-status { position: fixed; bottom: 74px; left: 50%; transform: translateX(-50%); z-index: 260; display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--panel); border: 1px solid var(--line-2); border-radius: 10px; box-shadow: var(--elev-2); font-size: 12.5px; color: var(--muted); animation: fade-in 0.1s var(--ease) both; }
+.chord-status kbd { font-family: var(--mono); font-size: 11px; color: var(--fg); background: color-mix(in srgb, var(--fg) 8%, transparent); border: 1px solid var(--line); border-radius: 5px; padding: 2px 6px; }
+
+/* Keyboard Shortcuts editor (⌘K ⌘S) */
+.kbd-editor { width: min(920px, 95vw); height: min(680px, 88vh); display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--elev-3); overflow: hidden; }
+.kbd-head-actions { display: inline-flex; align-items: center; gap: 4px; }
+.kbd-mini { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 7px; color: var(--muted); }
+.kbd-mini:hover { background: color-mix(in srgb, var(--fg) 8%, transparent); color: var(--fg); }
+.kbd-mini.danger:hover { background: color-mix(in srgb, var(--danger) 14%, transparent); color: var(--danger); }
+.kbd-mini svg { width: 15px; height: 15px; }
+.kbd-toolbar { display: flex; align-items: center; gap: 12px; padding: 4px 16px 12px; }
+.kbd-toolbar .kbd-search { flex: 1; margin: 0; }
+.kbd-filter { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); white-space: nowrap; cursor: pointer; }
+.kbd-filter input { accent-color: var(--brand); }
+.kbd-table { flex: 1; min-height: 0; overflow: auto; border-top: 1px solid var(--line); }
+.kbd-tr { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.4fr) minmax(0, 0.9fr) 64px; align-items: center; gap: 12px; padding: 7px 16px; border-bottom: 1px solid color-mix(in srgb, var(--line) 60%, transparent); }
+.kbd-tr:not(.kbd-thead):hover { background: color-mix(in srgb, var(--fg) 4%, transparent); }
+.kbd-thead { position: sticky; top: 0; z-index: 1; background: var(--panel); font-size: 10.5px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--faint); font-weight: 650; }
+.kbd-c-cmd { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.kbd-cmd-title { font-size: 13px; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kbd-cmd-id { font-size: 10.5px; color: var(--faint); font-family: var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kbd-c-key { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 0; }
+.kbd-c-when { font-size: 11px; color: var(--muted); font-family: var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kbd-c-act { display: inline-flex; gap: 2px; justify-content: flex-end; }
+.kbd-chip { display: inline-flex; align-items: center; background: color-mix(in srgb, var(--fg) 6%, transparent); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.kbd-chip.user { border-color: color-mix(in srgb, var(--brand) 55%, var(--line)); }
+.kbd-chip-key { font-family: var(--mono); font-size: 11.5px; color: var(--fg); padding: 3px 7px; }
+.kbd-chip-key:hover { background: color-mix(in srgb, var(--fg) 8%, transparent); }
+.kbd-chip-x { display: grid; place-items: center; width: 18px; height: 22px; color: var(--faint); border-left: 1px solid var(--line); }
+.kbd-chip-x:hover { background: color-mix(in srgb, var(--danger) 16%, transparent); color: var(--danger); }
+.kbd-chip-x svg { width: 11px; height: 11px; }
+.kbd-add-inline { font-size: 12px; color: var(--faint); padding: 3px 6px; border-radius: 6px; }
+.kbd-add-inline:hover { color: var(--fg); background: color-mix(in srgb, var(--fg) 6%, transparent); }
+.kbd-foot { padding: 9px 16px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--muted); }
+/* Chord recorder overlay */
+.kbd-rec-scrim { position: fixed; inset: 0; z-index: 240; display: grid; place-items: center; background: color-mix(in srgb, #000 30%, transparent); }
+.kbd-rec-card { width: min(440px, 90vw); background: var(--panel); border: 1px solid var(--line-2); border-radius: 14px; box-shadow: var(--elev-3); padding: 18px; }
+.kbd-rec-title { font-size: 13px; color: var(--muted); margin-bottom: 12px; text-align: center; }
+.kbd-recorder { outline: none; border: 1px dashed color-mix(in srgb, var(--brand) 50%, var(--line)); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; align-items: center; gap: 6px; background: var(--sunk); cursor: text; }
+.kbd-recorder:focus { border-color: var(--brand); }
+.kbd-rec-keys { font-family: var(--mono); font-size: 18px; color: var(--fg); min-height: 24px; }
+.kbd-rec-hint { font-size: 11px; color: var(--faint); }
+
 /* keyboard shortcut cheatsheet (⌘/) */
 .kbd-help { width: min(680px, 94vw); max-height: 82vh; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--elev-3); overflow: hidden; }
 .kbd-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 10px; }

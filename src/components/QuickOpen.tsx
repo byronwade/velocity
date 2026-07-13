@@ -41,20 +41,14 @@ export function QuickOpen() {
 	const [cursor, setCursor] = useState(0);
 	const inputRef = useRef<HTMLInputElement>(null);
 
+	// Opened by the quick-open / recent-files commands (⌘P / ⌘E by default), which
+	// the central keybinding service dispatches as this event.
 	useEffect(() => {
-		const onKey = (e: KeyboardEvent) => {
-			const mod = e.metaKey || e.ctrlKey;
-			// ⌘P (all files) and ⌘E (recent files) both open the switcher; with no
-			// query typed, results lead with your most-recently-used files either way.
-			if (mod && (e.key.toLowerCase() === 'p' || e.key.toLowerCase() === 'e') && !e.shiftKey) {
-				e.preventDefault();
-				setOpen((o) => !o);
-			} else if (e.key === 'Escape') {
-				setOpen(false);
-			}
-		};
+		const open = () => setOpen(true);
+		const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+		window.addEventListener('velocity:quickopen', open as EventListener);
 		window.addEventListener('keydown', onKey);
-		return () => window.removeEventListener('keydown', onKey);
+		return () => { window.removeEventListener('velocity:quickopen', open as EventListener); window.removeEventListener('keydown', onKey); };
 	}, []);
 
 	useEffect(() => {

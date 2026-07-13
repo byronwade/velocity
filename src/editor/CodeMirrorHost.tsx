@@ -25,14 +25,14 @@ import {
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { bracketMatching, foldGutter, foldKeymap, indentOnInput } from '@codemirror/language';
 import { autocompletion, closeBrackets, closeBracketsKeymap, completionKeymap } from '@codemirror/autocomplete';
-import { highlightSelectionMatches, searchKeymap, gotoLine, selectNextOccurrence, selectSelectionMatches } from '@codemirror/search';
+import { highlightSelectionMatches, searchKeymap } from '@codemirror/search';
 import { fromDocument, type TextDocument } from '../services/document';
 import { useServices } from '../services/container';
 import { editorTheme } from './theme';
 import { languageForPath } from './languages';
-import { formatSource } from '../services/format';
 import { getEditorPrefs, subscribeEditorPrefs, type EditorPrefs } from '../services/editorPrefs';
 import { richEditing } from './richEditing';
+import { setActiveEditor, clearActiveEditor } from './activeView';
 
 // Reconfigurable slice for user editor preferences (font size, tab width, word
 // wrap). One Compartment marker is reused across views; each view reconfigures
@@ -47,20 +47,6 @@ function prefsExtensions(prefs: EditorPrefs) {
 		EditorView.theme({ '.cm-scroller': { fontSize: `${prefs.fontSize}px` } }),
 		prefs.wordWrap ? EditorView.lineWrapping : [],
 	];
-}
-
-/** Format the view's buffer with Prettier and replace it, keeping the cursor at
- *  roughly the same document offset. No-ops for unsupported files or if the
- *  formatter leaves the text unchanged. */
-async function formatView(view: EditorView, path: string): Promise<void> {
-	const before = view.state.doc.toString();
-	const after = await formatSource(path, before);
-	if (after === before) return;
-	const head = Math.min(view.state.selection.main.head, after.length);
-	view.dispatch({
-		changes: { from: 0, to: view.state.doc.length, insert: after },
-		selection: { anchor: head },
-	});
 }
 
 // A basicSetup-equivalent, assembled explicitly so the bundle carries only what
@@ -117,30 +103,6 @@ export function CodeMirrorHost({ doc, paneId, onSave, onCursor }: { doc: TextDoc
 			return;
 		}
 
-		const saveKeymap = keymap.of([
-			{
-				key: 'Mod-s',
-				preventDefault: true,
-				run: (v) => {
-					// Format-on-save (when enabled): reformat, then persist. Formatting
-					// is async, so save after it resolves; on any failure we still save.
-					if (getEditorPrefs().formatOnSave) {
-						void formatView(v, doc.path).finally(() => saveRef.current());
-					} else {
-						saveRef.current();
-					}
-					return true;
-				},
-			},
-			{ key: 'Mod-g', preventDefault: true, run: gotoLine },
-			// Format Document (VS Code's ⇧⌥F).
-			{ key: 'Shift-Alt-f', preventDefault: true, run: (v) => { void formatView(v, doc.path); return true; } },
-			// Multi-cursor: ⌘D adds the next occurrence of the current word/selection
-			// to the selection; ⌘⇧L selects every occurrence at once.
-			{ key: 'Mod-d', preventDefault: true, run: selectNextOccurrence },
-			{ key: 'Mod-Shift-l', preventDefault: true, run: selectSelectionMatches },
-		]);
-
 		// Report cursor line/column + selection to the status bar.
 		const cursorReporter = EditorView.updateListener.of((update) => {
 			if (!update.selectionSet && !update.docChanged) {
@@ -177,11 +139,18 @@ export function CodeMirrorHost({ doc, paneId, onSave, onCursor }: { doc: TextDoc
 		const view = new EditorView({
 			state: EditorState.create({
 				doc: doc.text,
-				extensions: [baseExtensions, saveKeymap, cursorReporter, languageForPath(doc.path), editorTheme, prefsCompartment.of(prefsExtensions(getEditorPrefs())), collab(doc, paneId), forward],
+				extensions: [baseExtensions, cursorReporter, languageForPath(doc.path), editorTheme, prefsCompartment.of(prefsExtensions(getEditorPrefs())), collab(doc, paneId), forward],
 			}),
 			parent,
 		});
 		doc.attach(view);
+
+		// Register this view as the active editor whenever it holds focus, so the
+		// keybinding service's editor commands (save, format, multi-cursor, …) act
+		// on it. The reference persists after blur (commands from menus still work).
+		const markActive = () => setActiveEditor({ view, path: doc.path, save: () => saveRef.current() });
+		view.dom.addEventListener('focusin', markActive);
+		if (view.hasFocus) markActive();
 
 		// Live-apply preference changes (font size / tab size / word wrap) to this
 		// view without recreating it.
@@ -203,6 +172,8 @@ export function CodeMirrorHost({ doc, paneId, onSave, onCursor }: { doc: TextDoc
 		return () => {
 			unsub();
 			window.removeEventListener('velocity:goto-line', onGoto as EventListener);
+			view.dom.removeEventListener('focusin', markActive);
+			clearActiveEditor(view);
 			doc.detach(view);
 			view.destroy();
 		};

@@ -40,15 +40,10 @@ export function TodoIndex() {
 	const [cursor, setCursor] = useState(0);
 	const inputRef = useRef<HTMLInputElement>(null);
 
+	// Opened by the `workbench.actions.view.problems` command (⌘⇧M by default),
+	// dispatched as this event by the keybinding service.
 	useEffect(() => {
-		const onKey = (e: KeyboardEvent) => {
-			if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'm') {
-				e.preventDefault();
-				setOpen((o) => !o);
-			} else if (e.key === 'Escape') {
-				setOpen(false);
-			}
-		};
+		const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
 		const onEvt = () => setOpen(true);
 		window.addEventListener('keydown', onKey);
 		window.addEventListener('velocity:todos', onEvt as EventListener);

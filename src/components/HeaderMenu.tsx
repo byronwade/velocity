@@ -25,9 +25,16 @@ export function HeaderMenu() {
 		return () => { document.removeEventListener('mousedown', close); document.removeEventListener('keydown', esc); };
 	}, [open]);
 
+	// Open the editor settings from the account menu or the openSettings command.
+	useEffect(() => {
+		const open = () => setSettingsOpen(true);
+		window.addEventListener('velocity:open-settings', open);
+		return () => window.removeEventListener('velocity:open-settings', open);
+	}, []);
+
 	function openPalette() {
 		setOpen(false);
-		window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }));
+		window.dispatchEvent(new Event('velocity:command-palette'));
 	}
 
 	return (
@@ -45,10 +52,10 @@ export function HeaderMenu() {
 						<span>{theme === 'dark' ? 'Light theme' : 'Dark theme'}</span>
 					</button>
 					<button className="hmenu-row" onClick={openPalette}>
-						<Icon.command /><span>Command palette</span><kbd>⌘K</kbd>
+						<Icon.command /><span>Command palette</span><kbd>⇧⌘P</kbd>
 					</button>
-					<button className="hmenu-row" onClick={() => { setOpen(false); window.dispatchEvent(new Event('velocity:shortcuts')); }}>
-						<Icon.command /><span>Keyboard shortcuts</span><kbd>⌘/</kbd>
+					<button className="hmenu-row" onClick={() => { setOpen(false); window.dispatchEvent(new Event('velocity:open-keybindings')); }}>
+						<Icon.command /><span>Keyboard shortcuts</span><kbd>⌘K ⌘S</kbd>
 					</button>
 					<button className="hmenu-row" onClick={() => { setOpen(false); setMemoryOpen(true); }}><Icon.sparkle /><span>Agent memory</span></button>
 					<button className="hmenu-row" onClick={() => { setOpen(false); setSettingsOpen(true); }}><Icon.settings /><span>Editor settings</span></button>
