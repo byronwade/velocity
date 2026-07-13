@@ -120,7 +120,7 @@ function findRenders(content: string): string[] {
 }
 
 /** Relative import specifiers: `import … from './x'` / `import('../y')`. */
-function findRelativeImports(content: string): string[] {
+export function findRelativeImports(content: string): string[] {
 	const specs = new Set<string>();
 	const re = /(?:import|export)[^'"]*?from\s*['"](\.[^'"]+)['"]/g;
 	const re2 = /import\(\s*['"](\.[^'"]+)['"]\s*\)/g;
@@ -149,7 +149,7 @@ function findHttpMethods(content: string): string[] {
 }
 
 /** Resolve a relative import specifier from a source path to a concrete file path in the set. */
-function resolveImport(fromPath: string, spec: string, files: Set<string>): string | undefined {
+export function resolveImport(fromPath: string, spec: string, files: Set<string>): string | undefined {
 	const dir = fromPath.slice(0, fromPath.lastIndexOf('/'));
 	const parts = (dir ? dir + '/' + spec : spec).split('/');
 	const stack: string[] = [];

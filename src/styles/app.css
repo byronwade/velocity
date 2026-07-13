@@ -842,3 +842,30 @@ svg { display: block; }
 .ds-route { display: inline-flex; align-items: center; gap: 7px; padding: 6px 11px; border-radius: 8px; font-size: 12px; color: var(--muted); background: color-mix(in srgb, var(--fg) 4%, transparent); font-family: var(--mono); }
 .ds-route:hover { color: var(--fg); background: color-mix(in srgb, var(--fg) 8%, transparent); }
 .ds-route svg { width: 12px; height: 12px; color: var(--faint); }
+
+/* ---------------------------------------------------------------------------
+   Test studio — real checks over the live workspace
+   --------------------------------------------------------------------------- */
+.test { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.test-head { flex: none; display: flex; align-items: center; gap: 10px; padding: 12px 12px 12px 16px; border-bottom: 1px solid var(--line); }
+.test-summary { display: flex; align-items: baseline; gap: 12px; font-size: 12.5px; color: var(--muted); }
+.test-summary b { font-variant-numeric: tabular-nums; font-weight: 650; }
+.ts-pass b { color: #3fae6a; }
+.ts-fail b { color: #d0567f; }
+.ts-total { color: var(--faint); font-size: 11.5px; }
+.test-head .sp { flex: 1; }
+.test-run { display: inline-flex; align-items: center; gap: 7px; background: var(--fg); color: var(--panel); font-size: 12px; font-weight: 600; padding: 7px 14px; border-radius: 8px; }
+.test-run:disabled { opacity: 0.6; }
+.test-run svg { width: 12px; height: 12px; }
+.test-run .spin { border-top-color: var(--panel); }
+.test-list { flex: 1; min-height: 0; overflow: auto; padding: 6px 8px 10px; }
+.test-row { display: flex; align-items: center; gap: 11px; padding: 9px 10px; border-radius: 9px; font-size: 12.5px; }
+.test-row:hover { background: color-mix(in srgb, var(--fg) 3%, transparent); }
+.tr-ic { width: 18px; flex: none; display: grid; place-items: center; }
+.tr-ic svg { width: 15px; height: 15px; }
+.test-row.s-pass .tr-ic { color: #3fae6a; }
+.test-row.s-fail .tr-ic { color: #d0567f; }
+.tr-name { flex: none; color: var(--fg); font-weight: 500; }
+.tr-cat { flex: none; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--faint); background: color-mix(in srgb, var(--fg) 6%, transparent); border-radius: 5px; padding: 2px 7px; }
+.tr-detail { margin-left: auto; min-width: 0; text-align: right; color: var(--faint); font-family: var(--mono); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.test-row.s-fail .tr-detail { color: color-mix(in srgb, #d0567f 60%, var(--fg)); }

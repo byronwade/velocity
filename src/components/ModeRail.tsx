@@ -29,6 +29,7 @@ const MODE_APP: Partial<Record<CockpitMode, Mode>> = {
 	design: 'design',
 	data: 'database',
 	observe: 'observe',
+	test: 'test',
 };
 
 export function ModeRail() {
