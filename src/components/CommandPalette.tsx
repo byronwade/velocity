@@ -12,14 +12,16 @@ import { useServices } from '../services/container';
 import { useGraph } from '../services/graph';
 import { groupByKind, KIND_LABEL, type GraphKind, type GraphNode } from '../lib/graph';
 import { openFileInActivePane } from '../lib/openFile';
-import { APP_MODES, type Mode } from '../lib/types';
-import { MODE_DEFS } from '../modes/registry';
+import { COCKPIT_MODES } from '../lib/types';
+import { MODE_META, applyCockpitMode } from './ModeRail';
 import { Icon, type IconName } from '../lib/icons';
 
 interface Action {
 	id: string;
 	title: string;
 	subtitle?: string;
+	/** Extra terms to match/rank against (e.g. a mode's short name). */
+	keywords?: string;
 	icon: IconName;
 	group: string;
 	run: () => void;
@@ -81,20 +83,17 @@ export function CommandPalette() {
 			});
 		}
 
-		// 2) Switch the active pane between app modes.
-		for (const m of APP_MODES as Mode[]) {
-			const d = MODE_DEFS[m];
+		// 2) Jump to any cockpit mode / studio.
+		for (const m of COCKPIT_MODES) {
+			const meta = MODE_META[m];
 			out.push({
 				id: `mode-${m}`,
-				title: `Switch to ${d.name}`,
-				subtitle: d.blurb,
-				icon: d.icon,
+				title: `Go to ${meta.name}`,
+				subtitle: 'Mode',
+				keywords: meta.name,
+				icon: meta.icon,
 				group: 'Go to',
-				run: () => {
-					const st = useShell.getState();
-					const t = st.tabs.find((x) => x.id === st.activeTabId) ?? st.tabs[0];
-					st.setPaneMode(t.activePaneId, m);
-				},
+				run: () => applyCockpitMode(m),
 			});
 		}
 
@@ -130,11 +129,8 @@ export function CommandPalette() {
 
 	const results = useMemo(() => {
 		const q = query.trim().toLowerCase();
-		const list = q
-			? actions
-					.filter((a) => a.id === 'ask-agent' || a.title.toLowerCase().includes(q) || a.subtitle?.toLowerCase().includes(q))
-					.sort((a, b) => rank(a, q) - rank(b, q))
-			: actions;
+		const matches = (a: Action) => a.id === 'ask-agent' || a.title.toLowerCase().includes(q) || a.keywords?.toLowerCase().includes(q) || a.subtitle?.toLowerCase().includes(q);
+		const list = q ? actions.filter(matches).sort((a, b) => rank(a, q) - rank(b, q)) : actions;
 		return list.slice(0, 50);
 	}, [actions, query]);
 
@@ -208,12 +204,17 @@ function openNode(editor: ReturnType<typeof useServices>['editor'], n: GraphNode
 	}
 }
 
-/** Lower is better: prefix match beats substring; shorter title breaks ties. */
+/** Lower is better. Exact/prefix matches win; "ask the agent" sits below them
+ *  (rank 2) so typing a mode or file name navigates on Enter, but still appears
+ *  as a fallback when nothing else matches strongly. */
 function rank(a: Action, q: string): number {
-	if (a.id === 'ask-agent') return -1;
-	const t = a.title.toLowerCase();
-	if (t === q) return 0;
-	if (t.startsWith(q)) return 1;
-	if (t.includes(q)) return 2;
-	return 3;
+	if (a.id === 'ask-agent') return 2;
+	const fields = [a.title, a.keywords, a.subtitle].filter(Boolean).map((f) => f!.toLowerCase());
+	let best = 9;
+	for (const f of fields) {
+		if (f === q) best = Math.min(best, 0);
+		else if (f.startsWith(q)) best = Math.min(best, 1);
+		else if (f.includes(q)) best = Math.min(best, 3);
+	}
+	return best;
 }

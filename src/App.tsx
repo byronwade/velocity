@@ -4,7 +4,6 @@ import { leaves } from './lib/tree';
 import { ModeRail } from './components/ModeRail';
 import { AgentPanel } from './components/AgentPanel';
 import { AppsPanel } from './components/AppsPanel';
-import { AgentDock } from './components/AgentDock';
 import { CommandPalette } from './components/CommandPalette';
 import { APP_MODES } from './lib/types';
 import { getServices } from './services/container';
@@ -98,7 +97,6 @@ export function App() {
 			<AgentPanel />
 			<BrainResizer />
 			<AppsPanel />
-			<AgentDock />
 			<CommandPalette />
 		</div>
 	);

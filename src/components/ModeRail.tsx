@@ -9,7 +9,7 @@ import { useShell } from '../lib/store';
 import { COCKPIT_MODES, type CockpitMode, type Mode } from '../lib/types';
 import { Icon, type IconName } from '../lib/icons';
 
-const MODE_META: Record<CockpitMode, { name: string; icon: IconName }> = {
+export const MODE_META: Record<CockpitMode, { name: string; icon: IconName }> = {
 	home: { name: 'Home', icon: 'home' },
 	build: { name: 'Build', icon: 'editor' },
 	design: { name: 'Design', icon: 'layers' },
@@ -35,21 +35,21 @@ const MODE_APP: Partial<Record<CockpitMode, Mode>> = {
 	agents: 'mission',
 };
 
+/** Enter a cockpit mode: set the lens and, where one exists, switch the stage app. */
+export function applyCockpitMode(m: CockpitMode): void {
+	const s = useShell.getState();
+	s.setCockpitMode(m);
+	const app = MODE_APP[m];
+	if (app) {
+		const tab = s.tabs.find((t) => t.id === s.activeTabId) ?? s.tabs[0];
+		s.setPaneMode(tab.activePaneId, app);
+	}
+}
+
 export function ModeRail() {
 	const cockpitMode = useShell((s) => s.cockpitMode);
-	const setCockpitMode = useShell((s) => s.setCockpitMode);
 	const theme = useShell((s) => s.theme);
 	const setTheme = useShell((s) => s.setTheme);
-
-	function pick(m: CockpitMode) {
-		setCockpitMode(m);
-		const app = MODE_APP[m];
-		if (app) {
-			const s = useShell.getState();
-			const tab = s.tabs.find((t) => t.id === s.activeTabId) ?? s.tabs[0];
-			s.setPaneMode(tab.activePaneId, app);
-		}
-	}
 
 	return (
 		<aside className="mrail">
@@ -60,7 +60,7 @@ export function ModeRail() {
 					const Glyph = Icon[meta.icon];
 					const on = cockpitMode === m;
 					return (
-						<button key={m} className={`mrbtn${on ? ' on' : ''}`} onClick={() => pick(m)} aria-label={meta.name} aria-current={on}>
+						<button key={m} className={`mrbtn${on ? ' on' : ''}`} onClick={() => applyCockpitMode(m)} aria-label={meta.name} aria-current={on}>
 							<Glyph />
 							<span className="mrlabel">{meta.name}</span>
 						</button>

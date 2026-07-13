@@ -47,7 +47,7 @@ export function PaneChrome({ pane }: { pane: Pane }) {
 				</div>
 			</div>
 			<div className="pane-body">
-				<Content paneId={pane.id} />
+				<Content key={pane.mode} paneId={pane.id} />
 			</div>
 		</div>
 	);

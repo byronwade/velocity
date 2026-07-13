@@ -12,6 +12,7 @@ import { SplitView } from './SplitView';
 import { PaneChrome } from './PaneChrome';
 import { ShareSheet } from './ShareSheet';
 import { ActivityShelf } from './ActivityShelf';
+import { AgentsMenu } from './AgentsMenu';
 import { closeTabWithCleanup } from '../lib/closeTab';
 
 const PEOPLE = [
@@ -101,6 +102,7 @@ export function AppsPanel() {
 					{PEOPLE.map((p) => (<span key={p.initial} className="av" style={{ background: p.color }}>{p.initial}</span>))}
 					<span className="av more">+4</span>
 				</div>
+				<AgentsMenu />
 				<button className="btn ghost" onClick={() => setSheet('invite')}><Icon.invite />Invite</button>
 				<button className="btn brand" onClick={() => setSheet('share')}><Icon.share />Share</button>
 			</div>

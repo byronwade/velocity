@@ -147,12 +147,15 @@ svg { display: block; }
 .pane { width: 100%; height: 100%; background: var(--panel); overflow: hidden; display: flex; flex-direction: column; min-width: 0; min-height: 0; position: relative; }
 /* Active-pane indication is left to focus + content — no coloured ring. */
 .pane-head { height: 36px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 8px 0 12px; font-size: 12px; color: var(--muted); }
-.pane-head .glyph { color: var(--brand); display: grid; place-items: center; }
+.pane-head .glyph { color: var(--muted); display: grid; place-items: center; }
 .pane-head .glyph svg { width: 14px; height: 14px; }
 .pane-head .t { color: var(--fg); font-weight: 550; letter-spacing: -0.01em; }
 .pane-head .sp { flex: 1; }
 .pane-head .acts { display: flex; gap: 1px; }
 .pane-body { flex: 1; min-height: 0; overflow: hidden; display: flex; }
+.pane-body > * { flex: 1; min-width: 0; animation: view-fade 0.2s var(--ease) both; }
+@keyframes view-fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .pane-body > * { animation: none; } }
 
 /* ---------- Row 4 · status bar ---------- */
 .status { height: var(--h-status); flex: none; display: flex; align-items: center; gap: 14px; padding: 0 12px; background: var(--panel); border-top: 1px solid var(--line); font-size: 11px; color: var(--muted); }
@@ -645,20 +648,21 @@ svg { display: block; }
 .wsmenu .wsadd { margin-top: 3px; border-top: 1px solid var(--line); border-radius: 0 0 8px 8px; padding-top: 9px; color: var(--muted); }
 .wsmenu .wsadd svg { color: var(--faint); }
 
-/* Agent dock — observable workers, right side. */
-.adock { width: 288px; flex: none; display: flex; flex-direction: column; min-height: 0; background: var(--shell); }
-.adock.collapsed { width: 48px; align-items: center; padding-top: 10px; }
-.adock-expand { position: relative; width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; color: var(--muted); background: color-mix(in srgb, var(--fg) 5%, transparent); }
-.adock-expand:hover { color: var(--fg); background: color-mix(in srgb, var(--fg) 9%, transparent); }
-.adock-expand svg { width: 17px; height: 17px; }
-.adock-expand .adot { position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; border-radius: 50%; background: #3fae6a; }
-.adock-expand .adot.warn { background: #b08b2e; }
-.adock-head { height: 46px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 8px 0 14px; color: var(--fg); }
-.adock-head svg { width: 15px; height: 15px; color: var(--muted); }
-.adock-head b { font-size: 13px; font-weight: 650; letter-spacing: -0.01em; }
-.adock-head .adock-sub { font-size: 11.5px; color: var(--faint); }
-.adock-head .sp { flex: 1; }
-.adock-body { flex: 1; min-height: 0; overflow: auto; padding: 4px 10px 10px; display: flex; flex-direction: column; gap: 8px; }
+/* Agents — top-right dropdown (trigger + popover). */
+.amenu { position: relative; display: flex; }
+.amenu-trigger { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 8px 0 10px; border-radius: 8px; color: var(--muted); font-size: 12.5px; font-weight: 550; transition: background var(--dur), color var(--dur); }
+.amenu-trigger:hover, .amenu-trigger.on { color: var(--fg); background: color-mix(in srgb, var(--fg) 6%, transparent); }
+.amenu-trigger > svg:first-child { width: 15px; height: 15px; }
+.amenu-trigger > svg:last-child { width: 13px; height: 13px; color: var(--faint); }
+.amenu-live { width: 7px; height: 7px; border-radius: 50%; background: var(--fg); animation: pulse-dot 1.2s ease-in-out infinite; }
+.amenu-badge { min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: #b08b2e; color: #fff; font-size: 10.5px; font-weight: 700; display: grid; place-items: center; }
+.amenu-pop { position: absolute; top: calc(100% + 8px); right: 0; width: 320px; max-height: 72vh; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line-2); border-radius: 14px; box-shadow: var(--elev-2); overflow: hidden; z-index: 90; animation: menu-in 0.14s var(--ease) both; transform-origin: top right; }
+.amenu-head { flex: none; display: flex; align-items: center; gap: 8px; padding: 12px 14px 8px; color: var(--fg); }
+.amenu-head svg { width: 15px; height: 15px; color: var(--muted); }
+.amenu-head b { font-size: 13px; font-weight: 650; letter-spacing: -0.01em; }
+.amenu-head .amenu-sub { font-size: 11.5px; color: var(--faint); margin-left: auto; }
+.amenu-body { flex: 1; min-height: 0; overflow: auto; padding: 2px 10px 10px; display: flex; flex-direction: column; gap: 8px; }
+@media (prefers-reduced-motion: reduce) { .amenu-pop { animation: none; } }
 .adock-label { font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); font-weight: 650; padding: 6px 4px 1px; }
 
 /* active mission summary */
