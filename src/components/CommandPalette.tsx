@@ -13,6 +13,7 @@ import { useGraph } from '../services/graph';
 import { groupByKind, KIND_LABEL, type GraphKind, type GraphNode } from '../lib/graph';
 import { openFileInActivePane } from '../lib/openFile';
 import { COCKPIT_MODES } from '../lib/types';
+import { getEditorPrefs, setEditorPrefs } from '../services/editorPrefs';
 import { MODE_META, applyCockpitMode } from './ModeRail';
 import { Icon, type IconName } from '../lib/icons';
 
@@ -124,7 +125,18 @@ export function CommandPalette() {
 			});
 		}
 
-		// 5) System commands. Reset discards persisted edits and re-seeds — the
+		// 5) Editor preferences.
+		out.push({
+			id: 'toggle-format-on-save',
+			title: getEditorPrefs().formatOnSave ? 'Disable format on save' : 'Enable format on save',
+			subtitle: 'Prettier · ⇧⌥F to format now',
+			keywords: 'prettier format save autoformat beautify',
+			icon: 'sparkle',
+			group: 'Editor',
+			run: () => setEditorPrefs({ formatOnSave: !getEditorPrefs().formatOnSave }),
+		});
+
+		// 6) System commands. Reset discards persisted edits and re-seeds — the
 		// escape hatch now that the workspace survives reloads.
 		out.push({
 			id: 'reset-workspace',

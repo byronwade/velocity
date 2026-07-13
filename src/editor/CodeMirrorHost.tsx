@@ -30,6 +30,22 @@ import { fromDocument, type TextDocument } from '../services/document';
 import { useServices } from '../services/container';
 import { editorTheme } from './theme';
 import { languageForPath } from './languages';
+import { formatSource } from '../services/format';
+import { getEditorPrefs } from '../services/editorPrefs';
+
+/** Format the view's buffer with Prettier and replace it, keeping the cursor at
+ *  roughly the same document offset. No-ops for unsupported files or if the
+ *  formatter leaves the text unchanged. */
+async function formatView(view: EditorView, path: string): Promise<void> {
+	const before = view.state.doc.toString();
+	const after = await formatSource(path, before);
+	if (after === before) return;
+	const head = Math.min(view.state.selection.main.head, after.length);
+	view.dispatch({
+		changes: { from: 0, to: view.state.doc.length, insert: after },
+		selection: { anchor: head },
+	});
+}
 
 // A basicSetup-equivalent, assembled explicitly so the bundle carries only what
 // we use. Shared across views (CodeMirror dedupes extension descriptors).
@@ -88,12 +104,20 @@ export function CodeMirrorHost({ doc, paneId, onSave, onCursor }: { doc: TextDoc
 			{
 				key: 'Mod-s',
 				preventDefault: true,
-				run: () => {
-					saveRef.current();
+				run: (v) => {
+					// Format-on-save (when enabled): reformat, then persist. Formatting
+					// is async, so save after it resolves; on any failure we still save.
+					if (getEditorPrefs().formatOnSave) {
+						void formatView(v, doc.path).finally(() => saveRef.current());
+					} else {
+						saveRef.current();
+					}
 					return true;
 				},
 			},
 			{ key: 'Mod-g', preventDefault: true, run: gotoLine },
+			// Format Document (VS Code's ⇧⌥F).
+			{ key: 'Shift-Alt-f', preventDefault: true, run: (v) => { void formatView(v, doc.path); return true; } },
 			// Multi-cursor: ⌘D adds the next occurrence of the current word/selection
 			// to the selection; ⌘⇧L selects every occurrence at once.
 			{ key: 'Mod-d', preventDefault: true, run: selectNextOccurrence },

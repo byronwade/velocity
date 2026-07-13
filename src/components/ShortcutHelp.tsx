@@ -40,7 +40,8 @@ const GROUPS: Group[] = [
 	{
 		name: 'Editor',
 		items: [
-			{ keys: [MOD, 'S'], label: 'Save file' },
+			{ keys: [MOD, 'S'], label: 'Save file (formats if enabled)' },
+			{ keys: ['⇧', 'Alt', 'F'], label: 'Format document' },
 			{ keys: [MOD, 'F'], label: 'Find in file' },
 			{ keys: [MOD, 'G'], label: 'Go to line' },
 			{ keys: [MOD, 'D'], label: 'Select next occurrence' },
