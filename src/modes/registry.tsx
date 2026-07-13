@@ -12,6 +12,7 @@ import { BrowserMode } from './BrowserMode';
 import { BuilderMode } from './BuilderMode';
 import { DatabaseStudio } from './DatabaseStudio';
 import { ObservabilityStudio } from './ObservabilityStudio';
+import { DesignStudio } from './DesignStudio';
 import type { ComponentType } from 'react';
 
 export interface ModeDef {
@@ -32,6 +33,7 @@ export const MODE_DEFS: Record<Mode, ModeDef> = {
 	builder: { id: 'builder', name: 'Builder', blurb: 'Describe an app → build → deploy anywhere', icon: 'builder', Content: BuilderMode, actions: ['Regenerate', 'Versions', 'Diff'] },
 	database: { id: 'database', name: 'Database', blurb: 'Schema explorer + real SQL over your data', icon: 'database', Content: DatabaseStudio, actions: ['Run', 'New query', 'Export'] },
 	observe: { id: 'observe', name: 'Observe', blurb: 'Live errors, rejections & logs', icon: 'activity', Content: ObservabilityStudio, actions: ['Clear', 'Filter', 'Export'] },
+	design: { id: 'design', name: 'Design', blurb: 'Tokens, components & routes', icon: 'layers', Content: DesignStudio, actions: ['Tokens', 'Components', 'Sync'] },
 };
 
 export { Icon };

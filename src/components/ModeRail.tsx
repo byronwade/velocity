@@ -26,7 +26,7 @@ const MODE_META: Record<CockpitMode, { name: string; icon: IconName }> = {
 const MODE_APP: Partial<Record<CockpitMode, Mode>> = {
 	build: 'editor',
 	browse: 'browser',
-	design: 'builder',
+	design: 'design',
 	data: 'database',
 	observe: 'observe',
 };

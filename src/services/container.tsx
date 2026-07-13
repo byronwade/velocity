@@ -17,6 +17,7 @@ import { GraphService } from './graph';
 import { ReviewService } from './review';
 import { DbService } from './db';
 import { ObservabilityService } from './observability';
+import { DesignService } from './design';
 import { noCollab, type CollabExtensionFactory } from './collab';
 
 export interface Services {
@@ -33,6 +34,8 @@ export interface Services {
 	db: DbService;
 	/** Real runtime telemetry (errors, rejections, console) — the observe studio. */
 	observability: ObservabilityService;
+	/** Design tokens parsed from the workspace CSS — the design studio. */
+	design: DesignService;
 	/** The collaboration seam. Swap for a CRDT factory to enable network sync. */
 	collab: CollabExtensionFactory;
 }
@@ -48,7 +51,8 @@ export function createServices(): Services {
 	const db = new DbService(fs);
 	const observability = new ObservabilityService();
 	observability.install();
-	return { fs, editor, shell, browser: new BrowserService(), agent, graph, review, db, observability, collab: noCollab };
+	const design = new DesignService(fs);
+	return { fs, editor, shell, browser: new BrowserService(), agent, graph, review, db, observability, design, collab: noCollab };
 }
 
 let singleton: Services | null = null;

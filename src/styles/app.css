@@ -811,3 +811,34 @@ svg { display: block; }
 .obs-src { flex: none; color: var(--faint); background: color-mix(in srgb, var(--fg) 6%, transparent); border-radius: 4px; padding: 1px 6px; font-size: 10.5px; }
 .obs-msg { flex: 1; min-width: 0; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .obs-row.l-error .obs-msg { color: color-mix(in srgb, #d0567f 55%, var(--fg)); }
+
+/* ---------------------------------------------------------------------------
+   Design studio — tokens + component/route inventory
+   --------------------------------------------------------------------------- */
+.design { height: 100%; min-height: 0; overflow: auto; padding: 6px 16px 20px; }
+.ds-empty { margin: auto; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: var(--faint); font-size: 13px; line-height: 1.9; }
+.ds-sec { padding: 14px 0 4px; }
+.ds-sec-head { display: flex; align-items: center; gap: 8px; font-size: 10.5px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--faint); font-weight: 650; padding: 0 2px 10px; }
+.ds-n { margin-left: auto; font-variant-numeric: tabular-nums; text-transform: none; letter-spacing: 0; opacity: 0.8; }
+.ds-swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 10px; }
+.ds-swatch { min-width: 0; }
+.ds-chip { height: 46px; border-radius: 10px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fg) 10%, transparent); }
+.ds-sw-name { margin-top: 7px; font-family: var(--mono); font-size: 11.5px; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-sw-val { font-family: var(--mono); font-size: 10.5px; color: var(--faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-tokens { display: flex; flex-direction: column; gap: 2px; }
+.ds-token { display: flex; align-items: baseline; gap: 12px; padding: 6px 8px; border-radius: 7px; font-family: var(--mono); font-size: 12px; }
+.ds-token:hover { background: color-mix(in srgb, var(--fg) 4%, transparent); }
+.ds-tk-name { color: var(--fg); min-width: 160px; flex: none; }
+.ds-tk-val { color: var(--muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.ds-card { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 12px; border-radius: 11px; background: color-mix(in srgb, var(--fg) 3.5%, transparent); text-align: left; transition: background var(--dur), transform 90ms var(--ease); }
+.ds-card:hover { background: color-mix(in srgb, var(--fg) 7%, transparent); }
+.ds-card:active { transform: scale(0.98); }
+.ds-card-ic { display: grid; place-items: center; color: var(--muted); }
+.ds-card-ic svg { width: 16px; height: 16px; }
+.ds-card-name { font-size: 12.5px; font-weight: 600; color: var(--fg); }
+.ds-card-file { font-size: 10.5px; color: var(--faint); font-family: var(--mono); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-routes { display: flex; flex-wrap: wrap; gap: 6px; }
+.ds-route { display: inline-flex; align-items: center; gap: 7px; padding: 6px 11px; border-radius: 8px; font-size: 12px; color: var(--muted); background: color-mix(in srgb, var(--fg) 4%, transparent); font-family: var(--mono); }
+.ds-route:hover { color: var(--fg); background: color-mix(in srgb, var(--fg) 8%, transparent); }
+.ds-route svg { width: 12px; height: 12px; color: var(--faint); }
