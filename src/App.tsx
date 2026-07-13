@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useShell } from './lib/store';
 import { leaves } from './lib/tree';
-import { ModeRail } from './components/ModeRail';
 import { AgentPanel } from './components/AgentPanel';
 import { AppsPanel } from './components/AppsPanel';
 import { CommandPalette } from './components/CommandPalette';
@@ -10,7 +9,7 @@ import { getServices } from './services/container';
 import { closeTabWithCleanup } from './lib/closeTab';
 import { Icon } from './lib/icons';
 
-const RAIL_WIDTH = 56;
+const RAIL_WIDTH = 0;
 
 /** Draggable divider between the agent brain and the apps panel.
  *  During the drag we write `--brain-w` straight to the `.app` element on a
@@ -128,7 +127,6 @@ export function App() {
 
 	return (
 		<div className={`app v0${brainCollapsed ? ' brain-collapsed' : ''}`} style={{ ['--brain-w' as string]: `${brainWidth}px` }}>
-			<ModeRail />
 			<AgentPanel />
 			{!brainCollapsed && <BrainResizer />}
 			{brainCollapsed && (

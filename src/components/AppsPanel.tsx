@@ -13,6 +13,7 @@ import { PaneChrome } from './PaneChrome';
 import { ShareSheet } from './ShareSheet';
 import { ActivityShelf } from './ActivityShelf';
 import { AgentsMenu } from './AgentsMenu';
+import { CockpitModeMenu } from './CockpitModeMenu';
 import { closeTabWithCleanup } from '../lib/closeTab';
 
 const PEOPLE = [
@@ -32,6 +33,8 @@ export function AppsPanel() {
 	const setActiveTab = useShell((s) => s.setActiveTab);
 	const addTab = useShell((s) => s.addTab);
 	const maximizedPaneId = useShell((s) => s.maximizedPaneId);
+	const theme = useShell((s) => s.theme);
+	const setTheme = useShell((s) => s.setTheme);
 	const [sheet, setSheet] = useState<null | 'invite' | 'share'>(null);
 	const [addOpen, setAddOpen] = useState(false);
 
@@ -56,6 +59,7 @@ export function AppsPanel() {
 	return (
 		<section className="apps">
 			<div className="apps-head">
+				<CockpitModeMenu />
 				<div className="apps-tabs" role="tablist" aria-label="Apps">
 					{appTabs.map((t) => {
 						const Glyph = Icon[MODE_DEFS[tabMode(t)].icon];
@@ -103,6 +107,7 @@ export function AppsPanel() {
 					<span className="av more">+4</span>
 				</div>
 				<AgentsMenu />
+				<button className="ib" title={theme === 'dark' ? 'Light theme' : 'Dark theme'} aria-label="Toggle theme" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? <Icon.moon /> : <Icon.sun />}</button>
 				<button className="btn ghost" onClick={() => setSheet('invite')}><Icon.invite />Invite</button>
 				<button className="btn brand" onClick={() => setSheet('share')}><Icon.share />Share</button>
 			</div>

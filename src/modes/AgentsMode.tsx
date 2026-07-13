@@ -197,12 +197,11 @@ export function AgentComposer({ brainKey }: { brainKey: string }) {
 					<span className="achip"><Icon.diff />Changes <b className="add">+{added}</b> <b className="del">−{removed}</b></span>
 				</div>
 			)}
-			<div className="ac-bar">
-				<button className="ac-plus" title="Add context" aria-label="Add context"><Icon.plus /></button>
+			<div className="ac-box">
 				<textarea
 					rows={1}
 					value={input}
-					placeholder="Ask the agent to build, run, open, or explain…"
+					placeholder="Ask for follow-up changes…"
 					onChange={(e) => setInput(e.target.value)}
 					onKeyDown={(e) => {
 						if (e.key === 'Enter' && !e.shiftKey) {
@@ -211,8 +210,15 @@ export function AgentComposer({ brainKey }: { brainKey: string }) {
 						}
 					}}
 				/>
-				<button className="ac-model" title="Model">Velocity · Local <Icon.chevron /></button>
-				<button className="ac-mic" title="Voice" aria-label="Voice"><Icon.mic /></button>
+				<div className="ac-row">
+					<button className="ac-plus" title="Add context" aria-label="Add context"><Icon.plus /></button>
+					<span className="ac-sp" />
+					<button className="ac-model" title="Model"><Icon.sparkle /><span>Velocity · Local</span><Icon.chevron /></button>
+					<button className="ac-mic" title="Voice" aria-label="Voice"><Icon.mic /></button>
+					<button className="ac-send" onClick={send} disabled={!input.trim() || busy} title="Send" aria-label="Send">
+						{busy ? <span className="spin" /> : <Icon.send />}
+					</button>
+				</div>
 			</div>
 			<div className="ac-foot">
 				<Icon.git />

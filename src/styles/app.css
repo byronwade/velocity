@@ -96,6 +96,18 @@ svg { display: block; }
 .modebtn .chev { width: 14px; height: 14px; color: var(--faint); }
 .modebtn .doc { color: var(--muted); font-weight: 400; max-width: 20vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* top-bar cockpit mode switcher (Framer "Canvas ▾") — replaces the icon rail */
+.cockpitbtn { display: flex; align-items: center; gap: 7px; padding: 6px 8px 6px 10px; border-radius: var(--r-md); background: transparent; color: var(--fg); font-size: 13px; font-weight: 600; letter-spacing: -0.01em; flex: none; transition: background var(--dur); }
+.cockpitbtn:hover { background: color-mix(in srgb, var(--fg) 7%, transparent); }
+.cockpitbtn .mo { width: 16px; height: 16px; color: var(--brand); display: grid; place-items: center; }
+.cockpitbtn .mo svg { width: 16px; height: 16px; }
+.cockpitbtn .cm-name { min-width: 0; }
+.cockpitbtn .chev { width: 13px; height: 13px; color: var(--faint); display: grid; place-items: center; }
+.modemenu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
+.modemenu-grid .mode-item { gap: 9px; padding: 8px 9px; }
+.modemenu-grid .mode-item .ic { width: 26px; height: 26px; border-radius: 8px; }
+.modemenu-grid .mode-item .ic svg { width: 15px; height: 15px; }
+
 .modemenu { position: fixed; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 7px; width: 322px; box-shadow: var(--elev-2); z-index: 100; }
 .modemenu .filter { display: flex; align-items: center; gap: 8px; padding: 8px 11px; margin-bottom: 5px; border-radius: 10px; background: color-mix(in srgb, var(--fg) 5%, transparent); }
 .modemenu .filter:focus-within { background: color-mix(in srgb, var(--fg) 8%, transparent); }
@@ -258,18 +270,29 @@ svg { display: block; }
 .achip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 8px; color: var(--muted); background: var(--panel); }
 .achip svg { width: 12px; height: 12px; }
 .achip b { font-family: var(--mono); font-weight: 600; }
-.ac-bar { display: flex; align-items: center; gap: 6px; border-radius: var(--r-lg); background: color-mix(in srgb, var(--fg) 5%, transparent); padding: 6px 8px; box-shadow: var(--elev-1); transition: background var(--dur); }
-.ac-bar:focus-within { background: var(--panel); box-shadow: var(--elev-1), 0 0 0 2px color-mix(in srgb, var(--fg) 13%, transparent); }
-.ac-plus { width: 28px; height: 28px; border-radius: 8px; color: var(--muted); display: grid; place-items: center; flex: none; }
+/* ChatGPT-style composer: a rounded card, input on top, a toolbar row beneath */
+.ac-box { display: flex; flex-direction: column; gap: 8px; border-radius: var(--r-lg); background: var(--panel); padding: 10px 10px 8px; box-shadow: var(--elev-1), 0 0 0 1px var(--line); transition: box-shadow var(--dur); }
+.ac-box:focus-within { box-shadow: var(--elev-2), 0 0 0 1px color-mix(in srgb, var(--fg) 22%, var(--line)); }
+.ac-box textarea { width: 100%; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: 13.5px; line-height: 1.5; resize: none; outline: none; min-height: 22px; max-height: 160px; padding: 2px 4px; }
+.ac-box textarea::placeholder { color: var(--faint); }
+.ac-row { display: flex; align-items: center; gap: 4px; }
+.ac-sp { flex: 1; }
+.ac-plus { width: 30px; height: 30px; border-radius: 8px; color: var(--muted); display: grid; place-items: center; flex: none; }
 .ac-plus:hover { background: color-mix(in srgb, var(--fg) 8%, transparent); color: var(--fg); }
-.ac-plus svg { width: 16px; height: 16px; }
-.ac-bar textarea { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: 13px; resize: none; outline: none; min-height: 20px; max-height: 120px; padding: 4px 2px; }
-.ac-model { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--muted); padding: 5px 9px; border-radius: 8px; flex: none; white-space: nowrap; }
+.ac-plus svg { width: 17px; height: 17px; }
+.ac-model { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); padding: 6px 10px; border-radius: 8px; flex: none; white-space: nowrap; }
 .ac-model:hover { background: color-mix(in srgb, var(--fg) 7%, transparent); color: var(--fg); }
-.ac-model svg { width: 11px; height: 11px; }
-.ac-mic { width: 28px; height: 28px; border-radius: 8px; color: var(--muted); display: grid; place-items: center; flex: none; }
+.ac-model svg:first-child { width: 13px; height: 13px; color: var(--brand); }
+.ac-model svg:last-child { width: 12px; height: 12px; opacity: 0.7; }
+.ac-mic { width: 30px; height: 30px; border-radius: 8px; color: var(--muted); display: grid; place-items: center; flex: none; }
 .ac-mic:hover { background: color-mix(in srgb, var(--fg) 8%, transparent); color: var(--fg); }
-.ac-mic svg { width: 15px; height: 15px; }
+.ac-mic svg { width: 16px; height: 16px; }
+.ac-send { width: 32px; height: 32px; border-radius: 50%; background: var(--brand); color: var(--panel); display: grid; place-items: center; flex: none; transition: opacity var(--dur), transform 90ms var(--ease), background var(--dur); }
+.ac-send:hover:not(:disabled) { filter: brightness(1.08); }
+.ac-send:active:not(:disabled) { transform: scale(0.92); }
+.ac-send:disabled { opacity: 0.32; cursor: default; }
+.ac-send svg { width: 16px; height: 16px; }
+.ac-send .spin { width: 13px; height: 13px; border: 2px solid color-mix(in srgb, var(--panel) 45%, transparent); border-top-color: var(--panel); border-radius: 50%; animation: spin 0.7s linear infinite; }
 .ac-foot { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 11px; color: var(--faint); }
 .ac-foot svg { width: 12px; height: 12px; }
 .ac-foot .dot { opacity: 0.6; }
@@ -509,7 +532,7 @@ svg { display: block; }
 
 /* collapsed brain — panel folds away; a reopen chip appears at the stage edge */
 .app.brain-collapsed .brain { width: 0; min-width: 0; opacity: 0; overflow: hidden; pointer-events: none; }
-.brain-reopen { position: absolute; left: 66px; top: 9px; z-index: 30; width: 30px; height: 30px; display: grid; place-items: center; border-radius: var(--r-sm); color: var(--muted); background: var(--panel); box-shadow: var(--elev-1); transition: background var(--dur), color var(--dur); }
+.brain-reopen { position: absolute; left: 10px; top: 9px; z-index: 30; width: 30px; height: 30px; display: grid; place-items: center; border-radius: var(--r-sm); color: var(--muted); background: var(--panel); box-shadow: var(--elev-1); transition: background var(--dur), color var(--dur); }
 .brain-reopen:hover { color: var(--fg); background: color-mix(in srgb, var(--fg) 6%, var(--panel)); }
 .brain-reopen svg { width: 16px; height: 16px; }
 
