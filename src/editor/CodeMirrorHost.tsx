@@ -150,7 +150,9 @@ export function CodeMirrorHost({ doc, paneId, onSave, onCursor }: { doc: TextDoc
 		// on it. The reference persists after blur (commands from menus still work).
 		const markActive = () => setActiveEditor({ view, path: doc.path, save: () => saveRef.current() });
 		view.dom.addEventListener('focusin', markActive);
-		if (view.hasFocus) markActive();
+		// The most-recently-mounted editor is the active target until focus moves —
+		// so "attach context" and editor commands work on the file you just opened.
+		markActive();
 
 		// Live-apply preference changes (font size / tab size / word wrap) to this
 		// view without recreating it.

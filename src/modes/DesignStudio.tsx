@@ -8,7 +8,7 @@
 // inspector: the project's real design tokens are LIVE-EDITABLE — change a
 // colour and the app + every artboard restyle instantly.
 
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDesign } from '../services/design';
 import { usePreview } from '../services/preview';
 import { useGraph } from '../services/graph';
@@ -122,10 +122,24 @@ export function DesignStudio(_props: { paneId: string }) {
 
 	const [sel, setSel] = useState<string | null>('device:desktop');
 	const [view, setView] = useState({ x: 60, y: 90, z: 0.42 });
+	const [leftTab, setLeftTab] = useState<'pages' | 'layers' | 'assets'>('pages');
+	const [rightTab, setRightTab] = useState<'style' | 'inspect'>('style');
+	const [tool, setTool] = useState<'move' | 'hand'>('move');
+	const [assets, setAssets] = useState<string[]>([]);
 	const canvasRef = useRef<HTMLDivElement>(null);
 
+	// Asset files (images, fonts, stylesheets) for the Assets tab.
+	useEffect(() => {
+		void fs.list().then((ps) => setAssets(ps.filter((p) => /\.(png|jpe?g|gif|svg|webp|ico|css|woff2?|ttf|otf)$/i.test(p))));
+	}, [fs]);
+
+	const toolRef = useRef(tool);
+	toolRef.current = tool;
+
 	const onPointerDown = useCallback((e: React.PointerEvent) => {
-		if ((e.target as HTMLElement).closest('.dz-frame')) return;
+		// In Move mode a press on a frame selects it (handled on the frame); in Hand
+		// mode every press pans the canvas.
+		if (toolRef.current === 'move' && (e.target as HTMLElement).closest('.dz-frame')) return;
 		setSel(null);
 		const startX = e.clientX, startY = e.clientY;
 		let base = { x: 0, y: 0 };
@@ -178,39 +192,45 @@ export function DesignStudio(_props: { paneId: string }) {
 		<div className="dz">
 			{/* Left: pages + layers */}
 			<aside className="dz-layers">
-				<div className="dz-panel-tabs"><button className="on">Pages</button><button>Layers</button><button>Assets</button></div>
+				<div className="dz-panel-tabs">{(['pages', 'layers', 'assets'] as const).map((t) => (<button key={t} className={leftTab === t ? 'on' : ''} onClick={() => setLeftTab(t)}>{t[0].toUpperCase() + t.slice(1)}</button>))}</div>
 				<div className="dz-layer-scroll">
-					<div className="dz-layer-group">Screens</div>
-					{frames.filter((f) => f.kind === 'device').map((f) => (
-						<button key={f.id} className={`dz-layer${sel === f.id ? ' on' : ''}`} onClick={() => focusFrame(f)}>
-							<Icon.browser /><span>{f.label}</span>
-						</button>
-					))}
-					{routes.length > 0 && <div className="dz-layer-group">Pages</div>}
-					{routes.map((n) => (
-						<button key={n.id} className={`dz-layer${sel === n.id ? ' on' : ''}`} onClick={() => focusFrame(frames.find((f) => f.id === n.id))}>
-							<Icon.browser /><span>{n.label}</span>
-						</button>
-					))}
-					{components.length > 0 && <div className="dz-layer-group">Components</div>}
-					{components.map((n) => (
-						<button key={n.id} className={`dz-layer${sel === n.id ? ' on' : ''}`} onClick={() => focusFrame(frames.find((f) => f.id === n.id))}>
-							<Icon.builder /><span>{n.label}</span>
-						</button>
-					))}
-				</div>
+						{leftTab === 'pages' && (<>
+							<div className="dz-layer-group">Screens</div>
+							{frames.filter((f) => f.kind === 'device').map((f) => (
+								<button key={f.id} className={`dz-layer${sel === f.id ? ' on' : ''}`} onClick={() => focusFrame(f)}>
+									<Icon.browser /><span>{f.label}</span>
+								</button>
+							))}
+							{routes.length > 0 && <div className="dz-layer-group">Pages</div>}
+							{routes.map((n) => (
+								<button key={n.id} className={`dz-layer${sel === n.id ? ' on' : ''}`} onClick={() => focusFrame(frames.find((f) => f.id === n.id))}>
+									<Icon.browser /><span>{n.label}</span>
+								</button>
+							))}
+						</>)}
+						{leftTab === 'layers' && (components.length ? components.map((n) => (
+							<button key={n.id} className={`dz-layer${sel === n.id ? ' on' : ''}`} onClick={() => focusFrame(frames.find((f) => f.id === n.id))}>
+								<Icon.builder /><span>{n.label}</span>
+							</button>
+						)) : <div className="dz-insp-hint left">No components in this project yet.</div>)}
+						{leftTab === 'assets' && (assets.length ? assets.map((p) => (
+							<button key={p} className="dz-layer" title={p} onClick={() => openFileInActivePane(editor, p)}>
+								<Icon.file /><span>{p.slice(p.lastIndexOf('/') + 1)}</span>
+							</button>
+						)) : <div className="dz-insp-hint left">No image, font, or CSS assets found.</div>)}
+					</div>
 			</aside>
 
 			{/* Center: canvas */}
 			<div className="dz-stage">
-				<div ref={canvasRef} className="dz-canvas" onPointerDown={onPointerDown} onWheel={onWheel}>
+				<div ref={canvasRef} className={`dz-canvas${tool === 'hand' ? ' panning' : ''}`} onPointerDown={onPointerDown} onWheel={onWheel}>
 					<div className="dz-world" style={{ transform: `translate(${view.x}px, ${view.y}px) scale(${view.z})` }}>
 						{frames.map((f) => (
 							<div
 								key={f.id}
 								className={`dz-frame${f.kind === 'device' ? ' device' : ''}${sel === f.id ? ' sel' : ''}`}
 								style={{ left: f.x, top: f.y, width: f.w, height: f.h }}
-								onPointerDown={(e) => { e.stopPropagation(); setSel(f.id); }}
+								onPointerDown={(e) => { if (toolRef.current === 'hand') return; e.stopPropagation(); setSel(f.id); }}
 							>
 								<div className="dz-frame-label">{f.label}</div>
 								<div className="dz-frame-body">
@@ -224,8 +244,8 @@ export function DesignStudio(_props: { paneId: string }) {
 
 					{/* Floating canvas toolbar (Framer-style) */}
 					<div className="dz-float">
-						<button className="on" title="Move"><Icon.command /></button>
-						<button title="Hand"><Icon.grid /></button>
+						<button className={tool === 'move' ? 'on' : ''} title="Move / select" aria-pressed={tool === 'move'} onClick={() => setTool('move')}><Icon.command /></button>
+						<button className={tool === 'hand' ? 'on' : ''} title="Hand / pan" aria-pressed={tool === 'hand'} onClick={() => setTool('hand')}><Icon.grid /></button>
 						<span className="dz-float-sep" />
 						<button title="Zoom out" onClick={() => zoomBy(0.8)}><Icon.minus /></button>
 						<button className="dz-float-z" title="Reset view" onClick={resetView}>{Math.round(view.z * 100)}%</button>
@@ -258,11 +278,14 @@ export function DesignStudio(_props: { paneId: string }) {
 					</div>
 				) : (
 					<div className="dz-insp-scroll">
-						<div className="dz-panel-tabs"><button className="on">Style</button><button>Inspect</button></div>
-						{selFrame?.kind === 'device' && (
+						<div className="dz-panel-tabs">
+							<button className={rightTab === 'style' ? 'on' : ''} onClick={() => setRightTab('style')}>Style</button>
+							<button className={rightTab === 'inspect' ? 'on' : ''} onClick={() => setRightTab('inspect')}>Inspect</button>
+						</div>
+						{rightTab === 'inspect' && selFrame?.kind === 'device' && (
 							<div className="dz-insp-sec"><div className="dz-insp-row"><span>Artboard</span><b>{selFrame.label}px</b></div><div className="dz-insp-hint left">Live preview of the workspace app at this breakpoint.</div></div>
 						)}
-						{colors.length > 0 && (
+						{rightTab === 'style' && colors.length > 0 && (
 							<div className="dz-insp-sec">
 								<div className="dz-insp-title">Colors <span>{colors.length}</span></div>
 								<div className="dz-tokens">
@@ -280,7 +303,7 @@ export function DesignStudio(_props: { paneId: string }) {
 								</div>
 							</div>
 						)}
-						{values.length > 0 && (
+						{rightTab === 'inspect' && values.length > 0 && (
 							<div className="dz-insp-sec">
 								<div className="dz-insp-title">Values <span>{values.length}</span></div>
 								{values.map((t) => (

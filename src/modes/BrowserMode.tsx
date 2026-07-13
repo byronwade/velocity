@@ -26,6 +26,7 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 	const [, bump] = useReducer((x: number) => x + 1, 0);
 	const [loadKey, setLoadKey] = useState(0);
 	const [loading, setLoading] = useState(false);
+	const [menuOpen, setMenuOpen] = useState(false);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const current = state.history[state.index];
 	const [urlInput, setUrlInput] = useState(current === BROWSER_HOME ? '' : current);
@@ -35,6 +36,14 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 	useEffect(() => {
 		setUrlInput(current === BROWSER_HOME ? '' : current);
 	}, [current]);
+
+	// Dismiss the browser menu on outside click.
+	useEffect(() => {
+		if (!menuOpen) return;
+		const close = (e: MouseEvent) => { if (!(e.target as HTMLElement).closest('.cr-menu-wrap')) setMenuOpen(false); };
+		document.addEventListener('mousedown', close);
+		return () => document.removeEventListener('mousedown', close);
+	}, [menuOpen]);
 
 	// Show a loading bar until the frame reports load (or a short timeout).
 	useEffect(() => {
@@ -127,11 +136,22 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 					<button type="button" className={`cr-star${bookmarked ? ' on' : ''}`} title={bookmarked ? 'Remove bookmark' : 'Bookmark this tab'} aria-label="Bookmark this tab" aria-pressed={bookmarked} onClick={() => browser.toggleBookmark(current)}><Icon.star /></button>
 				</form>
 				<div className="cr-actions">
-					<button className="cr-icb" title="Extensions" aria-label="Extensions"><Icon.puzzle /></button>
 					<button className="cr-icb" title="Home" aria-label="Home" onClick={() => navigate(BROWSER_HOME)}><Icon.home /></button>
 					{isExternal && <a className="cr-icb" title="Open in a new tab" aria-label="Open externally" href={current} target="_blank" rel="noreferrer noopener"><Icon.share /></a>}
 					<span className="cr-avatar" title="Profile" aria-hidden>B</span>
-					<button className="cr-icb" title="Menu" aria-label="Menu"><Icon.dots /></button>
+					<div className="cr-menu-wrap">
+						<button className="cr-icb" title="Menu" aria-label="Menu" aria-expanded={menuOpen} onClick={() => setMenuOpen((o) => !o)}><Icon.dots /></button>
+						{menuOpen && (
+							<div className="cr-menu" role="menu">
+								<button onClick={() => { setLoadKey((k) => k + 1); setMenuOpen(false); }}><Icon.reload />Reload</button>
+								<button disabled={isStart} onClick={() => { void navigator.clipboard?.writeText(current); setMenuOpen(false); }}><Icon.share />Copy URL</button>
+								<button disabled={isStart} onClick={() => { browser.toggleBookmark(current); setMenuOpen(false); }}><Icon.star />{bookmarked ? 'Remove bookmark' : 'Bookmark'}</button>
+								{isExternal && <button onClick={() => { window.open(current, '_blank', 'noopener'); setMenuOpen(false); }}><Icon.share />Open in new tab</button>}
+								<div className="cr-menu-sep" />
+								<button onClick={() => { navigate(BROWSER_HOME); setMenuOpen(false); }}><Icon.home />New tab page</button>
+							</div>
+						)}
+					</div>
 				</div>
 			</div>
 

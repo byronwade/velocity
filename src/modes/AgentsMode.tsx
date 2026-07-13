@@ -9,6 +9,7 @@ import { memo, useEffect, useRef, useState } from 'react';
 import { useServices } from '../services/container';
 import { useAgentThread, type AgentMessage, type FileChange, type ToolCall } from '../services/agent';
 import { ModelPicker } from '../components/ModelPicker';
+import { getActiveEditor } from '../editor/activeView';
 import { Icon, type IconName } from '../lib/icons';
 
 const TOOL_ICON: Record<string, IconName> = {
@@ -122,6 +123,21 @@ function ChangesCard({ files }: { files: FileChange[] }) {
 
 // Memoized: with the agent service updating messages immutably, only the
 // message whose object identity changed (the streaming one) re-renders — the
+// Response actions — a local rating (thumbs) plus copy. The rating is a real,
+// per-message toggle; wiring it to durable telemetry is a future step.
+function MsgActions({ text }: { text: string }) {
+	const [rating, setRating] = useState<'up' | 'down' | null>(null);
+	const [copied, setCopied] = useState(false);
+	function copyText() { void navigator.clipboard?.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1200); }
+	return (
+		<div className="msg-actions">
+			<button className={rating === 'up' ? 'on' : ''} title="Good response" aria-pressed={rating === 'up'} onClick={() => setRating((r) => (r === 'up' ? null : 'up'))}><Icon.thumbUp /></button>
+			<button className={rating === 'down' ? 'on' : ''} title="Bad response" aria-pressed={rating === 'down'} onClick={() => setRating((r) => (r === 'down' ? null : 'down'))}><Icon.thumbDown /></button>
+			<button title={copied ? 'Copied' : 'Copy'} onClick={copyText}>{copied ? <Icon.check /> : <Icon.copy />}</button>
+		</div>
+	);
+}
+
 // rest of the conversation is skipped.
 const MessageView = memo(function MessageView({ m }: { m: AgentMessage }) {
 	if (m.role === 'user') {
@@ -142,13 +158,7 @@ const MessageView = memo(function MessageView({ m }: { m: AgentMessage }) {
 			{m.text && <div className="prose"><Prose text={m.text} />{m.pending && <span className="stream-caret" aria-hidden />}</div>}
 			{m.changes && m.changes.length > 0 && <ChangesCard files={m.changes} />}
 			{m.pending && !m.text && m.tools.length === 0 && <div className="typing"><i /><i /><i /></div>}
-			{!m.pending && m.text && (
-				<div className="msg-actions">
-					<button title="Good response"><Icon.thumbUp /></button>
-					<button title="Bad response"><Icon.thumbDown /></button>
-					<button title="Copy" onClick={() => navigator.clipboard?.writeText(m.text)}><Icon.copy /></button>
-				</div>
-			)}
+			{!m.pending && m.text && <MsgActions text={m.text} />}
 		</div>
 	);
 });
@@ -187,6 +197,13 @@ export function AgentComposer({ brainKey }: { brainKey: string }) {
 		void agent.send(brainKey, t);
 	}
 
+	// Attach the current editor file to the prompt as @-context.
+	function addContext() {
+		const path = getActiveEditor()?.path;
+		const ref = path ? `@${path} ` : '@';
+		setInput((v) => (!v || v.endsWith(' ') ? v : v + ' ') + ref);
+	}
+
 	const lastChanges = [...thread].reverse().find((m) => m.changes && m.changes.length)?.changes;
 	const added = lastChanges?.reduce((s, f) => s + f.added, 0) ?? 0;
 	const removed = lastChanges?.reduce((s, f) => s + f.removed, 0) ?? 0;
@@ -212,10 +229,9 @@ export function AgentComposer({ brainKey }: { brainKey: string }) {
 					}}
 				/>
 				<div className="ac-row">
-					<button className="ac-plus" title="Add context" aria-label="Add context"><Icon.plus /></button>
+					<button className="ac-plus" title="Attach the current file as context" aria-label="Add context" onClick={addContext}><Icon.plus /></button>
 					<span className="ac-sp" />
 					<ModelPicker />
-					<button className="ac-mic" title="Voice" aria-label="Voice"><Icon.mic /></button>
 					<button className="ac-send" onClick={send} disabled={!input.trim() || busy} title="Send" aria-label="Send">
 						{busy ? <span className="spin" /> : <Icon.send />}
 					</button>

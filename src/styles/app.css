@@ -284,6 +284,7 @@ svg { display: block; }
 .msg-actions { display: flex; gap: 1px; margin-top: 8px; }
 .msg-actions button { width: 26px; height: 26px; border-radius: 6px; color: var(--faint); display: grid; place-items: center; }
 .msg-actions button:hover { background: color-mix(in srgb, var(--fg) 7%, transparent); color: var(--fg); }
+.msg-actions button.on { color: var(--brand); background: color-mix(in srgb, var(--brand) 12%, transparent); }
 .msg-actions svg { width: 14px; height: 14px; }
 
 /* agents — Files Changed review card */
@@ -491,6 +492,13 @@ svg { display: block; }
 .cr-progress { position: absolute; top: 0; left: 0; height: 2.5px; width: 100%; z-index: 2; background: linear-gradient(90deg, transparent, var(--cr-ring), transparent); background-size: 40% 100%; background-repeat: no-repeat; animation: cr-load 1s ease-in-out infinite; }
 @keyframes cr-load { 0% { background-position: -40% 0; } 100% { background-position: 140% 0; } }
 .cr-avatar { width: 26px; height: 26px; margin: 0 3px; display: grid; place-items: center; border-radius: 50%; background: var(--brand); color: var(--panel); font-size: 12px; font-weight: 650; flex: none; }
+.cr-menu-wrap { position: relative; }
+.cr-menu { position: absolute; top: calc(100% + 6px); right: 0; z-index: 40; min-width: 190px; background: var(--panel); border: 1px solid var(--line-2); border-radius: 10px; box-shadow: var(--elev-2); padding: 5px; animation: menu-in 0.12s var(--ease) both; }
+.cr-menu button { display: flex; align-items: center; gap: 9px; width: 100%; padding: 7px 9px; border-radius: 7px; color: var(--fg); font-size: 12.5px; text-align: left; }
+.cr-menu button:hover:not(:disabled) { background: color-mix(in srgb, var(--fg) 7%, transparent); }
+.cr-menu button:disabled { opacity: 0.4; }
+.cr-menu button svg { width: 14px; height: 14px; color: var(--muted); flex: none; }
+.cr-menu-sep { height: 1px; background: var(--line); margin: 5px 4px; }
 
 .browser-view { flex: 1; min-height: 0; background: #fff; position: relative; }
 .browser-view .frame { width: 100%; height: 100%; border: 0; display: block; }
@@ -1113,6 +1121,8 @@ svg { display: block; }
 	background-image: radial-gradient(circle, color-mix(in srgb, var(--fg) 12%, transparent) 1px, transparent 1px);
 	background-size: 22px 22px; }
 .dz-canvas:active { cursor: grabbing; }
+.dz-canvas.panning { cursor: grab; }
+.dz-canvas.panning .dz-frame { cursor: grab; }
 .dz-world { position: absolute; top: 0; left: 0; transform-origin: 0 0; will-change: transform; }
 .dz-frame { position: absolute; background: var(--panel); border-radius: 4px; box-shadow: 0 0 0 1px var(--line), var(--elev-2); overflow: hidden; cursor: default; }
 .dz-frame.sel { box-shadow: 0 0 0 2px var(--accent), var(--elev-3); }
