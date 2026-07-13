@@ -14,6 +14,7 @@ import { DatabaseStudio } from './DatabaseStudio';
 import { ObservabilityStudio } from './ObservabilityStudio';
 import { DesignStudio } from './DesignStudio';
 import { TestStudio } from './TestStudio';
+import { DeploymentStudio } from './DeploymentStudio';
 import type { ComponentType } from 'react';
 
 export interface ModeDef {
@@ -36,6 +37,7 @@ export const MODE_DEFS: Record<Mode, ModeDef> = {
 	observe: { id: 'observe', name: 'Observe', blurb: 'Live errors, rejections & logs', icon: 'activity', Content: ObservabilityStudio, actions: ['Clear', 'Filter', 'Export'] },
 	design: { id: 'design', name: 'Design', blurb: 'Tokens, components & routes', icon: 'layers', Content: DesignStudio, actions: ['Tokens', 'Components', 'Sync'] },
 	test: { id: 'test', name: 'Test', blurb: 'Real checks over the live workspace', icon: 'beaker', Content: TestStudio, actions: ['Run all', 'Filter'] },
+	ship: { id: 'ship', name: 'Ship', blurb: 'Deploy builds to environments', icon: 'rocket', Content: DeploymentStudio, actions: ['Deploy', 'Rollback', 'Envs'] },
 };
 
 export { Icon };

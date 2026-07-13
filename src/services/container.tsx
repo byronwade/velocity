@@ -18,6 +18,7 @@ import { ReviewService } from './review';
 import { DbService } from './db';
 import { ObservabilityService } from './observability';
 import { DesignService } from './design';
+import { DeployService } from './deploy';
 import { noCollab, type CollabExtensionFactory } from './collab';
 
 export interface Services {
@@ -36,6 +37,8 @@ export interface Services {
 	observability: ObservabilityService;
 	/** Design tokens parsed from the workspace CSS — the design studio. */
 	design: DesignService;
+	/** Build artifacts + per-environment deploy state — the ship studio. */
+	deploy: DeployService;
 	/** The collaboration seam. Swap for a CRDT factory to enable network sync. */
 	collab: CollabExtensionFactory;
 }
@@ -52,7 +55,8 @@ export function createServices(): Services {
 	const observability = new ObservabilityService();
 	observability.install();
 	const design = new DesignService(fs);
-	return { fs, editor, shell, browser: new BrowserService(), agent, graph, review, db, observability, design, collab: noCollab };
+	const deploy = new DeployService(fs);
+	return { fs, editor, shell, browser: new BrowserService(), agent, graph, review, db, observability, design, deploy, collab: noCollab };
 }
 
 let singleton: Services | null = null;
