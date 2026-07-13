@@ -8,6 +8,7 @@ import { useShell } from '../lib/store';
 import { Explorer } from './Sidebar';
 import { MapView } from './MapView';
 import { ReviewView } from './ReviewView';
+import { BrowserSidebar } from './BrowserSidebar';
 import { useServices } from '../services/container';
 import { Icon } from '../lib/icons';
 import type { CockpitMode } from '../lib/types';
@@ -86,18 +87,24 @@ export function AgentPanel() {
 				<span className="sp" />
 				<button className="ib bcollapse" onClick={toggleBrain} title="Hide panel (⌘B)" aria-label="Hide panel"><Icon.panelLeft /></button>
 			</div>
-			<div className="bviews" role="tablist" aria-label="Workspace views">
-				{(['files', 'map', 'changes'] as View[]).map((v) => (
-					<button key={v} role="tab" aria-selected={view === v} className={view === v ? 'on' : ''} onClick={() => setView(v)}>
-						{v === 'changes' ? 'Review' : v[0].toUpperCase() + v.slice(1)}
-					</button>
-				))}
-			</div>
-			<div className="brain-body">
-				{view === 'files' && <div className="brain-files"><Explorer /></div>}
-				{view === 'map' && <MapView focus={mapFocus} />}
-				{view === 'changes' && <ReviewView />}
-			</div>
+			{cockpitMode === 'browse' ? (
+				<div className="brain-body"><BrowserSidebar /></div>
+			) : (
+				<>
+					<div className="bviews" role="tablist" aria-label="Workspace views">
+						{(['files', 'map', 'changes'] as View[]).map((v) => (
+							<button key={v} role="tab" aria-selected={view === v} className={view === v ? 'on' : ''} onClick={() => setView(v)}>
+								{v === 'changes' ? 'Review' : v[0].toUpperCase() + v.slice(1)}
+							</button>
+						))}
+					</div>
+					<div className="brain-body">
+						{view === 'files' && <div className="brain-files"><Explorer /></div>}
+						{view === 'map' && <MapView focus={mapFocus} />}
+						{view === 'changes' && <ReviewView />}
+					</div>
+				</>
+			)}
 		</section>
 	);
 }
