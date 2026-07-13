@@ -19,10 +19,17 @@ import { generate } from './generator';
 import { openFileInActivePane } from '../lib/openFile';
 import { uid } from '../lib/tree';
 
+export interface ChatMsg {
+	role: 'user' | 'assistant';
+	content: string;
+}
+
 export interface AgentContext {
 	fs: IFileSystem;
 	editor: EditorService;
 	shell: Shell;
+	/** Prior conversation turns (text only), oldest first — for model backends. */
+	history: ChatMsg[];
 }
 
 export interface FileChange {
@@ -33,6 +40,7 @@ export interface FileChange {
 
 export type AgentEvent =
 	| { type: 'text'; text: string }
+	| { type: 'text-delta'; text: string }
 	| { type: 'tool'; id: string; tool: string; label: string }
 	| { type: 'tool-done'; id: string; status?: 'done' | 'error'; output?: string }
 	| { type: 'changes'; files: FileChange[] };
@@ -245,6 +253,8 @@ export class AgentService {
 		private editor: EditorService,
 		private shells: ShellService,
 		public backend: AgentBackend,
+		/** Resolves the active backend at send time (e.g. Local vs Ollama). */
+		private resolve?: () => AgentBackend,
 	) {}
 
 	thread(paneId: string): AgentMessage[] {
@@ -265,14 +275,19 @@ export class AgentService {
 		if (!text || this.busy.has(paneId)) {
 			return;
 		}
+		// Snapshot prior turns (text only) as history for a model backend.
+		const history: ChatMsg[] = this.thread(paneId)
+			.filter((m) => m.id !== 'greeting' && m.text.trim())
+			.map((m) => ({ role: m.role, content: m.text }));
 		const asst: AgentMessage = { id: uid('m'), role: 'assistant', text: '', tools: [], pending: true };
 		this.threads.set(paneId, [...this.thread(paneId), { id: uid('m'), role: 'user', text, tools: [] }, asst]);
 		this.busy.add(paneId);
 		this.bump();
 
-		const ctx: AgentContext = { fs: this.fs, editor: this.editor, shell: this.shells.for(`agent:${paneId}`) };
+		const ctx: AgentContext = { fs: this.fs, editor: this.editor, shell: this.shells.for(`agent:${paneId}`), history };
+		const backend = this.resolve?.() ?? this.backend;
 		try {
-			for await (const ev of this.backend.run(text, ctx)) {
+			for await (const ev of backend.run(text, ctx)) {
 				this.apply(paneId, asst.id, ev);
 				this.bump();
 			}
@@ -312,6 +327,9 @@ export class AgentService {
 		this.patch(paneId, msgId, (msg) => {
 			if (ev.type === 'text') {
 				return { ...msg, text: msg.text ? `${msg.text}\n\n${ev.text}` : ev.text };
+			}
+			if (ev.type === 'text-delta') {
+				return { ...msg, text: msg.text + ev.text };
 			}
 			if (ev.type === 'tool') {
 				return { ...msg, tools: [...msg.tools, { id: ev.id, tool: ev.tool, label: ev.label, status: 'running' as const }] };

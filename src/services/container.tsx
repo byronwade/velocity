@@ -15,6 +15,7 @@ import { EditorService } from './editorService';
 import { ShellService } from './shell';
 import { BrowserService } from './browser';
 import { AgentService, LocalAgent } from './agent';
+import { resolveBackend } from './agentSettings';
 import { GraphService } from './graph';
 import { ReviewService } from './review';
 import { DbService } from './db';
@@ -60,8 +61,10 @@ export function createServices(): Services {
 	const fs = new InMemoryFileSystem(SEED_FILES, localStorageStore());
 	const editor = new EditorService(fs);
 	const shell = new ShellService(fs, editor);
-	// Swap `new LocalAgent()` for a Claude API backend to make the agent a model.
-	const agent = new AgentService(fs, editor, shell, new LocalAgent());
+	// Local rule-based backend by default; resolveBackend swaps in an Ollama
+	// (or other) model backend at send time based on the user's agent settings.
+	const localAgent = new LocalAgent();
+	const agent = new AgentService(fs, editor, shell, localAgent, () => resolveBackend(localAgent));
 	const graph = new GraphService(fs);
 	const review = new ReviewService(fs);
 	const db = new DbService(fs);

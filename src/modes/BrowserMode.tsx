@@ -87,8 +87,14 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 				navigate(d.url);
 			}
 		}
+		// The agent's navigate_browser tool drives the browser via this event.
+		function onNav(e: Event) {
+			const url = (e as CustomEvent<{ url?: string }>).detail?.url;
+			if (typeof url === 'string' && url) navigate(url);
+		}
 		window.addEventListener('message', onMsg);
-		return () => window.removeEventListener('message', onMsg);
+		window.addEventListener('velocity:navigate', onNav);
+		return () => { window.removeEventListener('message', onMsg); window.removeEventListener('velocity:navigate', onNav); };
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [state]);
 

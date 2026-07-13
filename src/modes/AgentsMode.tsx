@@ -8,6 +8,7 @@
 import { memo, useEffect, useRef, useState } from 'react';
 import { useServices } from '../services/container';
 import { useAgentThread, type AgentMessage, type FileChange, type ToolCall } from '../services/agent';
+import { ModelPicker } from '../components/ModelPicker';
 import { Icon, type IconName } from '../lib/icons';
 
 const TOOL_ICON: Record<string, IconName> = {
@@ -213,7 +214,7 @@ export function AgentComposer({ brainKey }: { brainKey: string }) {
 				<div className="ac-row">
 					<button className="ac-plus" title="Add context" aria-label="Add context"><Icon.plus /></button>
 					<span className="ac-sp" />
-					<button className="ac-model" title="Model"><Icon.sparkle /><span>Velocity · Local</span><Icon.chevron /></button>
+					<ModelPicker />
 					<button className="ac-mic" title="Voice" aria-label="Voice"><Icon.mic /></button>
 					<button className="ac-send" onClick={send} disabled={!input.trim() || busy} title="Send" aria-label="Send">
 						{busy ? <span className="spin" /> : <Icon.send />}
