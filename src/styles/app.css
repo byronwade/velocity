@@ -652,30 +652,61 @@ svg { display: block; }
 .adock-expand:hover { color: var(--fg); background: color-mix(in srgb, var(--fg) 9%, transparent); }
 .adock-expand svg { width: 17px; height: 17px; }
 .adock-expand .adot { position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; border-radius: 50%; background: #3fae6a; }
+.adock-expand .adot.warn { background: #b08b2e; }
 .adock-head { height: 46px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 8px 0 14px; color: var(--fg); }
 .adock-head svg { width: 15px; height: 15px; color: var(--muted); }
 .adock-head b { font-size: 13px; font-weight: 650; letter-spacing: -0.01em; }
 .adock-head .adock-sub { font-size: 11.5px; color: var(--faint); }
 .adock-head .sp { flex: 1; }
 .adock-body { flex: 1; min-height: 0; overflow: auto; padding: 4px 10px 10px; display: flex; flex-direction: column; gap: 8px; }
-.wcard { display: flex; flex-direction: column; gap: 7px; width: 100%; text-align: left; padding: 11px 12px; border-radius: 12px; background: var(--panel); box-shadow: 0 0 0 1px var(--line); transition: box-shadow var(--dur), transform 90ms var(--ease); }
+.adock-label { font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); font-weight: 650; padding: 6px 4px 1px; }
+
+/* active mission summary */
+.mission-card { display: flex; flex-direction: column; gap: 8px; width: 100%; text-align: left; padding: 12px; border-radius: 13px; background: color-mix(in srgb, var(--fg) 4%, transparent); box-shadow: 0 0 0 1px var(--line); transition: box-shadow var(--dur), transform 90ms var(--ease); }
+.mission-card:hover { box-shadow: 0 0 0 1px var(--line-2); }
+.mission-card:active { transform: scale(0.99); }
+.mission-card.st-approval { box-shadow: 0 0 0 1px color-mix(in srgb, #b08b2e 45%, var(--line)); }
+.mcx-top { display: flex; align-items: center; gap: 8px; }
+.mcx-badge { width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center; background: color-mix(in srgb, var(--fg) 8%, transparent); color: var(--fg); flex: none; }
+.mcx-badge svg { width: 13px; height: 13px; }
+.mcx-title { font-size: 12px; font-weight: 650; color: var(--fg); flex: 1; }
+.mcx-state { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.03em; font-weight: 650; color: var(--faint); }
+.mcx-state.s-running { color: var(--fg); }
+.mcx-state.s-approval { color: #b08b2e; }
+.mcx-state.s-complete { color: #3fae6a; }
+.mcx-obj { font-size: 12.5px; color: var(--fg); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.mcx-bar { height: 5px; border-radius: 3px; background: color-mix(in srgb, var(--fg) 9%, transparent); overflow: hidden; }
+.mcx-fill { display: block; height: 100%; border-radius: 3px; background: var(--fg); transition: width 0.4s var(--ease); }
+.mcx-foot { display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--faint); }
+.mcx-now { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; color: var(--muted); text-transform: capitalize; }
+.mcx-now svg { width: 11px; height: 11px; }
+.mcx-now.approve { color: #b08b2e; text-transform: none; }
+
+/* worker cards */
+.wcard { display: flex; gap: 10px; width: 100%; text-align: left; padding: 11px 12px; border-radius: 12px; background: var(--panel); box-shadow: 0 0 0 1px var(--line); transition: box-shadow var(--dur), transform 90ms var(--ease); }
 .wcard:hover { box-shadow: 0 0 0 1px var(--line-2); }
-.wcard.on { background: color-mix(in srgb, var(--fg) 4%, transparent); box-shadow: 0 0 0 1px var(--line-2); }
+.wcard.on { box-shadow: 0 0 0 1px color-mix(in srgb, var(--fg) 22%, transparent); }
 .wcard:active { transform: scale(0.99); }
+.wc-av { width: 30px; height: 30px; border-radius: 9px; flex: none; display: grid; place-items: center; color: #fff; font-size: 13px; font-weight: 650; }
+.wc-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
 .wc-top { display: flex; align-items: center; gap: 8px; }
-.wc-dot { width: 8px; height: 8px; border-radius: 3px; flex: none; }
 .wc-name { font-size: 12.5px; font-weight: 600; color: var(--fg); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.wc-status { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--faint); }
+.wc-status { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--faint); flex: none; }
+.wc-dotp { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
 .wc-status.s-working { color: var(--fg); }
+.wc-status.s-working .wc-dotp { animation: pulse-dot 1.2s ease-in-out infinite; }
 .wc-status.s-ready { color: #3fae6a; }
 .wc-obj { font-size: 12px; color: var(--muted); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.wc-meta { display: flex; flex-wrap: wrap; gap: 5px; }
+.wc-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 1px; }
 .wc-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); background: color-mix(in srgb, var(--fg) 5%, transparent); border-radius: 6px; padding: 3px 7px; }
 .wc-chip svg { width: 11px; height: 11px; color: var(--faint); }
 .wc-chip .add { color: #3fae6a; font-weight: 600; }
 .wc-chip .del { color: #d0567f; font-weight: 600; }
-.adock-foot { flex: none; display: flex; align-items: center; gap: 7px; padding: 10px 14px; color: var(--faint); font-size: 11.5px; }
+@keyframes pulse-dot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.7); } }
+@media (prefers-reduced-motion: reduce) { .wc-status.s-working .wc-dotp, .mcx-fill { animation: none; transition: none; } }
+.adock-foot { flex: none; display: flex; align-items: center; gap: 7px; padding: 11px 14px; color: var(--faint); font-size: 11.5px; }
 .adock-foot svg { width: 13px; height: 13px; }
+.adock-foot.pending .chevron, .adock-foot.pending > svg:last-child { margin-left: auto; }
 
 /* ---------------------------------------------------------------------------
    Activity shelf — the cockpit's bottom surface (stacked event cards)
