@@ -1,7 +1,22 @@
-/* Geist — the same family v0 ships. Loaded from Google Fonts; the system
-   stack in --sans/--mono covers first paint and any offline case. The
-   @import must lead the file. */
-@import url("https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap");
+/* Geist — the same family v0 ships. Loaded via @font-face with
+   `font-display: swap`, which is NON-render-blocking: the app paints
+   immediately in the system fallback (--sans/--mono) and swaps to Geist
+   only once it loads. A slow, blocked, or offline CDN therefore never
+   blanks the page — unlike a top-level CSS @import, which is. */
+@font-face {
+	font-family: "Geist";
+	font-style: normal;
+	font-weight: 100 900;
+	font-display: swap;
+	src: url("https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-sans/Geist-Variable.woff2") format("woff2");
+}
+@font-face {
+	font-family: "Geist Mono";
+	font-style: normal;
+	font-weight: 100 900;
+	font-display: swap;
+	src: url("https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-mono/GeistMono-Variable.woff2") format("woff2");
+}
 
 /* Velocity design tokens — matched 1:1 to v0.dev's compiled Geist/Vercel
    design system. Neutrals are the exact `--v0-gray-*` ramp, radius base is
