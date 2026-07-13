@@ -82,7 +82,6 @@ export function App() {
 	}, []);
 
 	const brainWidth = useShell((s) => s.brainWidth);
-	const projects = useShell((s) => s.projects);
 
 	// Guard: if the persisted active pane no longer exists, fall back to the first leaf.
 	const tab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
@@ -93,11 +92,8 @@ export function App() {
 		}
 	}, [activeExists, tab.tree]);
 
-	// The active project's color threads through the whole window as `--pc`.
-	const projectColor = projects.find((p) => p.id === tab?.projectId)?.color ?? 'var(--brand)';
-
 	return (
-		<div className="app v0" style={{ ['--pc' as string]: projectColor, ['--brain-w' as string]: `${brainWidth}px` }}>
+		<div className="app v0" style={{ ['--brain-w' as string]: `${brainWidth}px` }}>
 			<ModeRail />
 			<AgentPanel />
 			<BrainResizer />
