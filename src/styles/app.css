@@ -24,20 +24,20 @@ svg { display: block; }
 .app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
 
 /* generic icon button */
-.ib { width: 30px; height: 30px; border: 0; background: transparent; color: var(--muted); cursor: pointer; display: grid; place-items: center; border-radius: 8px; transition: background var(--dur), color var(--dur); }
+.ib { width: 30px; height: 30px; border: 0; background: transparent; color: var(--muted); cursor: pointer; display: grid; place-items: center; border-radius: var(--r-sm); transition: background var(--dur), color var(--dur); }
 .ib:hover { background: color-mix(in srgb, var(--fg) 8%, transparent); color: var(--fg); }
 .ib:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .ib.sm { width: 24px; height: 24px; }
 .ib svg { width: 16px; height: 16px; }
 .ib.sm svg { width: 14px; height: 14px; }
 
-.btn { border: 1px solid var(--line-2); background: var(--panel); color: var(--fg); font-size: 12.5px; font-weight: 550; padding: 6px 12px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; transition: background var(--dur); }
+.btn { border: 1px solid var(--line-2); background: var(--panel); color: var(--fg); font-size: 13px; font-weight: 500; padding: 6px 12px; border-radius: var(--r-sm); cursor: pointer; display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; box-shadow: var(--elev-1); transition: background var(--dur), box-shadow var(--dur); }
 .btn:hover { background: color-mix(in srgb, var(--fg) 5%, transparent); }
 .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .btn svg { width: 14px; height: 14px; }
-.btn.primary { background: var(--fg); color: var(--panel); border-color: var(--fg); }
-.btn.brand { background: var(--brand); color: var(--panel); border-color: var(--brand); }
-.btn.ghost { border-color: transparent; background: transparent; }
+.btn.primary { background: var(--fg); color: var(--panel); border-color: var(--fg); box-shadow: none; }
+.btn.brand { background: var(--brand); color: var(--panel); border-color: var(--brand); box-shadow: none; }
+.btn.ghost { border-color: transparent; background: transparent; box-shadow: none; }
 .btn.ghost:hover { background: color-mix(in srgb, var(--fg) 7%, transparent); }
 
 /* ---------- Row 1 · Tab strip ---------- */
@@ -125,6 +125,7 @@ svg { display: block; }
 .tree .row { width: 100%; display: flex; align-items: center; gap: 6px; padding: 3px 6px; border: 0; border-radius: 6px; cursor: pointer; white-space: nowrap; color: var(--fg); background: transparent; text-align: left; }
 .tree .row:hover { background: color-mix(in srgb, var(--fg) 5%, transparent); }
 .tree .row.sel { background: color-mix(in srgb, var(--fg) 9%, transparent); }
+.tree .row.sel svg { color: var(--fg); }
 .tree .row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .tree .row svg { width: 14px; height: 14px; color: var(--muted); flex: none; }
 .tree .row .nm { overflow: hidden; text-overflow: ellipsis; }
@@ -253,7 +254,7 @@ svg { display: block; }
 .achip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 8px; color: var(--muted); background: var(--panel); }
 .achip svg { width: 12px; height: 12px; }
 .achip b { font-family: var(--mono); font-weight: 600; }
-.ac-bar { display: flex; align-items: center; gap: 6px; border-radius: 13px; background: color-mix(in srgb, var(--fg) 5%, transparent); padding: 6px 8px; box-shadow: var(--elev-1); transition: background var(--dur); }
+.ac-bar { display: flex; align-items: center; gap: 6px; border-radius: var(--r-lg); background: color-mix(in srgb, var(--fg) 5%, transparent); padding: 6px 8px; box-shadow: var(--elev-1); transition: background var(--dur); }
 .ac-bar:focus-within { background: var(--panel); box-shadow: var(--elev-1), 0 0 0 2px color-mix(in srgb, var(--fg) 13%, transparent); }
 .ac-plus { width: 28px; height: 28px; border-radius: 8px; color: var(--muted); display: grid; place-items: center; flex: none; }
 .ac-plus:hover { background: color-mix(in srgb, var(--fg) 8%, transparent); color: var(--fg); }
