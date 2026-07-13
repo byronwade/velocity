@@ -7,45 +7,13 @@ import { useShell } from '../lib/store';
 import { AgentThread, AgentComposer } from '../modes/AgentsMode';
 import { Explorer } from './Sidebar';
 import { MapView } from './MapView';
-import { useAgentThread } from '../services/agent';
+import { ReviewView } from './ReviewView';
 import { useServices } from '../services/container';
 import { Icon } from '../lib/icons';
 import type { CockpitMode } from '../lib/types';
 import type { GraphKind } from '../lib/graph';
 
 type View = 'chat' | 'files' | 'map' | 'changes';
-
-function basename(p: string): string {
-	const i = p.lastIndexOf('/');
-	return i === -1 ? p : p.slice(i + 1);
-}
-
-function ChangesView({ brainKey }: { brainKey: string }) {
-	const { thread } = useAgentThread(brainKey);
-	const map = new Map<string, { added: number; removed: number }>();
-	for (const m of thread) {
-		for (const c of m.changes ?? []) {
-			const prev = map.get(c.path) ?? { added: 0, removed: 0 };
-			map.set(c.path, { added: prev.added + c.added, removed: prev.removed + c.removed });
-		}
-	}
-	const files = [...map.entries()];
-	if (files.length === 0) {
-		return <div className="brain-empty">No changes yet.<br />Ask the agent to build or edit something.</div>;
-	}
-	return (
-		<div className="brain-changes">
-			<div className="cc-head"><span>{files.length} File{files.length === 1 ? '' : 's'} Changed</span></div>
-			{files.map(([path, s]) => (
-				<div className="cc-row" key={path} title={path}>
-					<Icon.file />
-					<span className="cc-name">{basename(path)}</span>
-					<span className="cc-stat"><span className="add">+{s.added}</span> <span className="del">−{s.removed}</span></span>
-				</div>
-			))}
-		</div>
-	);
-}
 
 // The cockpit mode sets the brain's default lens; the view tabs still override.
 const MODE_VIEW: Record<CockpitMode, View> = {
@@ -119,7 +87,7 @@ export function AgentPanel() {
 				<div className="bviews" role="tablist" aria-label="Agent views">
 					{(['chat', 'files', 'map', 'changes'] as View[]).map((v) => (
 						<button key={v} role="tab" aria-selected={view === v} className={view === v ? 'on' : ''} onClick={() => setView(v)}>
-							{v[0].toUpperCase() + v.slice(1)}
+							{v === 'changes' ? 'Review' : v[0].toUpperCase() + v.slice(1)}
 						</button>
 					))}
 				</div>
@@ -128,7 +96,7 @@ export function AgentPanel() {
 				{view === 'chat' && <AgentThread brainKey={brainKey} />}
 				{view === 'files' && <div className="brain-files"><Explorer /></div>}
 				{view === 'map' && <MapView focus={mapFocus} />}
-				{view === 'changes' && <ChangesView brainKey={brainKey} />}
+				{view === 'changes' && <ReviewView />}
 			</div>
 			<AgentComposer brainKey={brainKey} />
 		</section>

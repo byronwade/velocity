@@ -707,3 +707,39 @@ svg { display: block; }
 .ev.s-done .ev-stat svg { width: 13px; height: 13px; color: #3fae6a; }
 .ev.s-error .ev-stat { color: #d0567f; font-weight: 700; }
 @media (prefers-reduced-motion: reduce) { .ev { animation: none; } }
+
+/* ---------------------------------------------------------------------------
+   Review studio — working-tree diff (in the brain's Review lens)
+   --------------------------------------------------------------------------- */
+.review { flex: 1; min-height: 0; overflow: auto; padding: 4px 8px 12px; }
+.review-head { display: flex; align-items: center; justify-content: space-between; padding: 8px 6px 10px; font-size: 12px; color: var(--muted); }
+.review-head .rh-stat { font-variant-numeric: tabular-nums; }
+.review-head .add, .rf-stat .add { color: #3fae6a; font-weight: 600; }
+.review-head .del, .rf-stat .del { color: #d0567f; font-weight: 600; }
+.review-list { display: flex; flex-direction: column; gap: 8px; }
+.rfile { border-radius: 10px; background: color-mix(in srgb, var(--fg) 3%, transparent); overflow: hidden; }
+.rf-head { display: flex; align-items: center; gap: 6px; padding: 4px 6px 4px 4px; }
+.rf-toggle { display: flex; align-items: center; gap: 7px; flex: 1; min-width: 0; padding: 4px 4px; border-radius: 7px; text-align: left; color: var(--fg); }
+.rf-toggle:hover { background: color-mix(in srgb, var(--fg) 5%, transparent); }
+.rf-chev { display: grid; place-items: center; color: var(--faint); transform: rotate(-90deg); transition: transform var(--dur) var(--ease); }
+.rfile.open .rf-chev { transform: rotate(0deg); }
+.rf-chev svg { width: 13px; height: 13px; }
+.rf-badge { width: 17px; height: 17px; border-radius: 5px; display: grid; place-items: center; font-size: 10px; font-weight: 700; flex: none; color: #fff; }
+.rf-badge.b-added { background: #3fae6a; }
+.rf-badge.b-modified { background: #b08b2e; }
+.rf-badge.b-deleted { background: #c0506f; }
+.rf-name { font-size: 12.5px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rf-stat { font-size: 11.5px; font-variant-numeric: tabular-nums; flex: none; }
+.rf-open { width: 24px; height: 24px; border-radius: 6px; display: grid; place-items: center; color: var(--faint); flex: none; }
+.rf-open:hover { background: color-mix(in srgb, var(--fg) 7%, transparent); color: var(--fg); }
+.rf-open svg { width: 13px; height: 13px; }
+.diff { font-family: var(--mono); font-size: 11.5px; line-height: 1.55; background: var(--code-bg); border-top: 1px solid var(--line); overflow-x: auto; }
+.dl { display: flex; white-space: pre; }
+.dl .dsym { width: 18px; flex: none; text-align: center; color: var(--faint); user-select: none; }
+.dl .dtx { flex: 1; padding-right: 10px; }
+.dl.add { background: color-mix(in srgb, #3fae6a 13%, transparent); }
+.dl.add .dsym { color: #3fae6a; }
+.dl.del { background: color-mix(in srgb, #d0567f 13%, transparent); }
+.dl.del .dsym { color: #d0567f; }
+.dl.gap { color: var(--faint); background: color-mix(in srgb, var(--fg) 3%, transparent); font-style: italic; }
+.dl.gap .dtx { font-size: 11px; }
