@@ -168,7 +168,13 @@ export class Shell {
 			const st = stages[i];
 			if (!st.length) return fail('syntax error near `|`');
 			const cmd = st[0];
-			const args = st.slice(1).map((a) => this.expand(a));
+			const args: string[] = [];
+			for (const raw of st.slice(1)) {
+				const val = this.expand(raw);
+				const globbed = await this.glob(val);
+				if (globbed) args.push(...globbed);
+				else args.push(val);
+			}
 			// A stage whose output is consumed (piped onward or redirected to a file)
 			// formats for machines — e.g. `ls` emits one entry per line, like a real
 			// shell writing to a non-tty.
@@ -191,6 +197,22 @@ export class Shell {
 	/** Expand $VAR / ${VAR} references from the environment. */
 	private expand(arg: string): string {
 		return arg.replace(/\$\{([A-Za-z_][A-Za-z0-9_]*)\}|\$([A-Za-z_][A-Za-z0-9_]*)/g, (_m, a, b) => this.env[a ?? b] ?? '');
+	}
+
+	/** Expand a `*`/`?` glob against the cwd. Returns matching paths, or null when
+	 *  the token has no wildcards or matches nothing (bash keeps the literal). */
+	private async glob(pattern: string): Promise<string[] | null> {
+		if (!/[*?]/.test(pattern)) return null;
+		const files = await this.fs.list();
+		const dirs = await this.fs.directories();
+		const prefix = this.cwd ? `${this.cwd}/` : '';
+		const rel = [...files, ...dirs.map((d) => `${d}/`)]
+			.filter((p) => p.startsWith(prefix))
+			.map((p) => p.slice(prefix.length))
+			.filter(Boolean);
+		const re = new RegExp(`^${pattern.split('').map((c) => (c === '*' ? '[^/]*' : c === '?' ? '[^/]' : /[.+^${}()|[\]\\]/.test(c) ? `\\${c}` : c)).join('')}$`);
+		const matches = [...new Set(rel.map((r) => r.replace(/\/$/, '')))].filter((r) => re.test(r)).sort();
+		return matches.length ? matches : null;
 	}
 
 	// --- command dispatch --------------------------------------------------
