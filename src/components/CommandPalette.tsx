@@ -16,6 +16,9 @@ import { COCKPIT_MODES } from '../lib/types';
 import { getEditorPrefs, setEditorPrefs } from '../services/editorPrefs';
 import { MODE_META, applyCockpitMode } from './ModeRail';
 import { Icon, type IconName } from '../lib/icons';
+import { allCommands } from '../keybindings/commands';
+import { bindingsForCommand } from '../keybindings/service';
+import { formatKeybinding } from '../keybindings/keys';
 
 interface Action {
 	id: string;
@@ -23,10 +26,18 @@ interface Action {
 	subtitle?: string;
 	/** Extra terms to match/rank against (e.g. a mode's short name). */
 	keywords?: string;
+	/** Effective keybinding, shown right-aligned like VS Code's palette. */
+	keybinding?: string;
 	icon: IconName;
 	group: string;
 	run: () => void;
 }
+
+// Icon per command category, so the Commands group reads at a glance.
+const CATEGORY_ICON: Record<string, IconName> = {
+	Editor: 'file', 'Editor Folding': 'file', File: 'file', View: 'panelLeft',
+	Workbench: 'command', Preferences: 'settings', Terminal: 'command', Go: 'search',
+};
 
 const KIND_ICON: Record<GraphKind, IconName> = {
 	project: 'home', file: 'file', component: 'builder', route: 'browser',
@@ -132,15 +143,20 @@ export function CommandPalette() {
 			run: () => setEditorPrefs({ formatOnSave: !getEditorPrefs().formatOnSave }),
 		});
 
-		out.push({
-			id: 'open-todo-index',
-			title: 'Show TODO / FIXME index',
-			subtitle: 'Project-wide markers · ⌘⇧M',
-			keywords: 'todo fixme hack xxx note markers tasks',
-			icon: 'check',
-			group: 'Go to',
-			run: () => window.dispatchEvent(new Event('velocity:todos')),
-		});
+		// 5b) Every registered command — the true VS Code-style palette. Each shows
+		// its effective keybinding right-aligned and runs the real handler.
+		for (const cmd of allCommands()) {
+			const kb = bindingsForCommand(cmd.id)[0];
+			out.push({
+				id: `cmd:${cmd.id}`,
+				title: cmd.title,
+				keywords: `${cmd.id} ${cmd.category ?? ''}`,
+				keybinding: kb ? formatKeybinding(kb.chords) : undefined,
+				icon: CATEGORY_ICON[cmd.category ?? ''] ?? 'command',
+				group: cmd.category ?? 'Commands',
+				run: () => cmd.run(),
+			});
+		}
 
 		// 6) System commands. Reset discards persisted edits and re-seeds — the
 		// escape hatch now that the workspace survives reloads.
@@ -219,6 +235,7 @@ export function CommandPalette() {
 									<span className="cmdk-ic"><Glyph /></span>
 									<span className="cmdk-title">{a.title}</span>
 									{a.subtitle && <span className="cmdk-sub">{a.subtitle}</span>}
+									{a.keybinding && <span className="cmdk-kbd">{a.keybinding}</span>}
 								</button>
 							</div>
 						);

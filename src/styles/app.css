@@ -800,6 +800,8 @@ svg { display: block; }
 .cmdk-row.on .cmdk-ic { color: var(--fg); }
 .cmdk-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cmdk-sub { margin-left: auto; padding-left: 12px; color: var(--faint); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 45%; flex: none; }
+.cmdk-row .cmdk-sub + .cmdk-kbd { margin-left: 10px; }
+.cmdk-kbd { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--muted); background: color-mix(in srgb, var(--fg) 7%, transparent); border: 1px solid var(--line); border-radius: 5px; padding: 2px 6px; flex: none; white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { .cmdk-scrim, .cmdk { animation: none; } }
 
 /* Quick Open (⌘P) — fuzzy file switcher, styled after the command palette. */
