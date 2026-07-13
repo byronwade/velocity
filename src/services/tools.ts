@@ -9,6 +9,7 @@
 import type { AgentContext } from './agent';
 import { normalizePath } from './filesystem';
 import { openFileInActivePane } from '../lib/openFile';
+import { addMemory } from './memory';
 
 export interface ToolDef {
 	name: string;
@@ -100,7 +101,39 @@ export const TOOLS: ToolDef[] = [
 			return `Navigated the browser to ${url}.`;
 		},
 	},
+	{
+		name: 'remember',
+		description: 'Save a durable note about the user or project that you should recall in future conversations (preferences, decisions, conventions).',
+		parameters: { type: 'object', properties: { note: { type: 'string' } }, required: ['note'] },
+		async run(args) {
+			const note = str(args.note).trim();
+			if (!note) return 'Error: empty note';
+			addMemory(note);
+			return `Remembered: "${note}"`;
+		},
+	},
+	{
+		name: 'index_project',
+		description: 'Get a symbol index of the project: each source file with its exported functions/components/types. Use this to locate code before editing.',
+		parameters: { type: 'object', properties: {} },
+		async run(_args, ctx) {
+			return await projectIndex(ctx);
+		},
+	},
 ];
+
+/** A compact symbol index: source files with their exported symbols. */
+export async function projectIndex(ctx: AgentContext): Promise<string> {
+	const files = (await ctx.fs.list()).filter((f) => /\.(tsx?|jsx?)$/.test(f));
+	const out: string[] = [];
+	for (const f of files) {
+		let src: string;
+		try { src = await ctx.fs.readFile(f); } catch { continue; }
+		const symbols = [...src.matchAll(/export\s+(?:default\s+)?(?:async\s+)?(?:function|const|class|interface|type)\s+([A-Za-z0-9_]+)/g)].map((m) => m[1]);
+		out.push(symbols.length ? `${f}: ${symbols.join(', ')}` : f);
+	}
+	return out.join('\n') || '(no source files)';
+}
 
 const BY_NAME = new Map(TOOLS.map((t) => [t.name, t]));
 
@@ -130,6 +163,8 @@ export function toolLabel(name: string, args: Record<string, unknown>): string {
 		case 'run_command': return `$ ${str(args.command)}`;
 		case 'navigate_browser': return `Browse ${str(args.url)}`;
 		case 'list_files': return 'List files';
+		case 'index_project': return 'Index project';
+		case 'remember': return `Remember "${str(args.note).slice(0, 40)}"`;
 		default: return name;
 	}
 }

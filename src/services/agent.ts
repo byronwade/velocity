@@ -16,6 +16,7 @@ import { normalizePath } from './filesystem';
 import type { EditorService } from './editorService';
 import { ShellService, type Shell } from './shell';
 import { generate } from './generator';
+import { addMemory, getMemories } from './memory';
 import { openFileInActivePane } from '../lib/openFile';
 import { uid } from '../lib/tree';
 
@@ -61,6 +62,21 @@ export class LocalAgent implements AgentBackend {
 		const text = input.trim();
 		const lower = text.toLowerCase();
 		let m: RegExpMatchArray | null;
+
+		// Save a durable memory.
+		if ((m = text.match(/^remember(?:\s+that)?\s+(.+)/i))) {
+			const note = m[1].trim();
+			addMemory(note);
+			yield { type: 'tool', id: uid('tool'), tool: 'plan', label: `Remember "${note.slice(0, 40)}"` };
+			yield { type: 'text', text: `Got it — I'll remember that: "${note}".` };
+			return;
+		}
+		// Recall memories.
+		if (/^(what do you remember|list memor|show memor|what.s in memor)/i.test(lower)) {
+			const notes = getMemories();
+			yield { type: 'text', text: notes.length ? `I remember:\n${notes.map((n) => `• ${n.text}`).join('\n')}` : "I don't have any saved memories yet. Tell me to “remember …” and I'll keep it." };
+			return;
+		}
 
 		// Run a shell command (explicit `run …` / `$ …`, or a known command first).
 		const firstWord = lower.split(/\s+/)[0];

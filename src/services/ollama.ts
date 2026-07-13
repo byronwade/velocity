@@ -12,7 +12,8 @@
 // ---------------------------------------------------------------------------
 
 import type { AgentBackend, AgentContext, AgentEvent } from './agent';
-import { toolSchemas, runTool, toolLabel } from './tools';
+import { toolSchemas, runTool, toolLabel, projectIndex } from './tools';
+import { memoryPrompt } from './memory';
 import { uid } from '../lib/tree';
 
 export const DEFAULT_OLLAMA_URL = 'http://localhost:11434';
@@ -43,14 +44,15 @@ export async function listOllamaModels(url: string): Promise<string[]> {
 	}
 }
 
-function systemPrompt(fileList: string): string {
+function systemPrompt(index: string, memory: string): string {
 	return [
 		'You are Velocity Agent, an AI pair programmer operating a real, in-browser workspace.',
-		'You have tools to read/write files, run shell commands, search the code, open files in the editor, and drive the in-app browser. Prefer using tools to inspect the project before answering, and to make real changes rather than describing them.',
+		'You have tools to read/write files, run shell commands, search the code, open files in the editor, drive the in-app browser, index the project, and remember durable facts. Prefer using tools to inspect the project before answering, and to make real changes rather than describing them.',
 		'Keep replies concise. Use short markdown. When you edit or create files, say what you did.',
+		memory ? `\n${memory}` : '',
 		'',
-		'Current workspace files:',
-		fileList,
+		'Project index (files → exported symbols):',
+		index,
 	].join('\n');
 }
 
@@ -62,11 +64,11 @@ export class OllamaAgent implements AgentBackend {
 
 	async *run(input: string, ctx: AgentContext): AsyncGenerator<AgentEvent> {
 		const base = this.url.replace(/\/$/, '');
-		let files = '';
-		try { files = (await ctx.fs.list()).join('\n'); } catch { /* ignore */ }
+		let index = '';
+		try { index = await projectIndex(ctx); } catch { /* ignore */ }
 
 		const messages: OllamaMessage[] = [
-			{ role: 'system', content: systemPrompt(files) },
+			{ role: 'system', content: systemPrompt(index, memoryPrompt()) },
 			...ctx.history.map((h) => ({ role: h.role, content: h.content } as OllamaMessage)),
 			{ role: 'user', content: input },
 		];
