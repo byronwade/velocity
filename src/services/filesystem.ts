@@ -64,14 +64,18 @@ export class InMemoryFileSystem implements IFileSystem {
 
 	async writeFile(path: string, content: string): Promise<void> {
 		const p = normalizePath(path);
-		const isNew = !this.files.has(p);
+		const prev = this.files.get(p);
 		this.files.set(p, content);
 		// A newly-created file can retire an empty-dir marker it now populates.
 		for (const dir of ancestors(p)) {
 			this.emptyDirs.delete(dir);
 		}
-		// Only a create changes the tree; a content overwrite does not.
-		if (isNew) {
+		// Notify on any real change. A create changes the tree; an overwrite
+		// changes what every content-derived view shows — the review diff, the
+		// project graph, the DB schema, the design tokens. Skipping overwrites
+		// here (a past "tree only" optimization) silently froze all of those on
+		// save. Only a genuine no-op write is skipped.
+		if (prev !== content) {
 			this.emit();
 		}
 	}
