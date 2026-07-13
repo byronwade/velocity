@@ -8,7 +8,7 @@
 
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { useServices } from '../services/container';
-import { useDocDirty, usePaneDoc, useDocViewCount } from '../services/editorService';
+import { useDocDirty, usePaneDoc, useDocViewCount, usePaneOpenFiles } from '../services/editorService';
 import { languageName } from '../editor/languages';
 import { Icon } from '../lib/icons';
 import type { CursorInfo } from '../editor/CodeMirrorHost';
@@ -29,6 +29,7 @@ export function EditorMode({ paneId }: { paneId: string }) {
 	const doc = usePaneDoc(paneId);
 	const dirty = useDocDirty(doc);
 	const views = useDocViewCount(doc);
+	const openFiles = usePaneOpenFiles(paneId);
 	const [cursor, setCursor] = useState<CursorInfo | null>(null);
 
 	// A fresh editor pane opens a sensible default so it never shows blank code.
@@ -51,17 +52,32 @@ export function EditorMode({ paneId }: { paneId: string }) {
 		);
 	}
 
-	const { name, dir } = splitPath(doc.path);
+	const { dir } = splitPath(doc.path);
 	const crumbs = doc.path.split('/');
 
 	return (
 		<div className="editor">
 			<div className="editor-tabbar">
-				<div className="editor-tab active" title={doc.path}>
-					<Icon.file />
-					<span className="nm">{name}</span>
-					{dirty && <span className="dot" aria-label="Unsaved changes" />}
-				</div>
+				{(openFiles.length ? openFiles : [doc.path]).map((path) => {
+					const active = path === doc.path;
+					const tabName = splitPath(path).name;
+					const tabDirty = active ? dirty : (editor.getDoc(path)?.isDirty ?? false);
+					return (
+						<div
+							key={path}
+							className={`editor-tab${active ? ' active' : ''}`}
+							title={path}
+							onClick={() => { if (!active) void editor.bindPane(paneId, path); }}
+							onAuxClick={(e) => { if (e.button === 1) { e.preventDefault(); editor.closeFile(paneId, path); } }}
+						>
+							<Icon.file />
+							<span className="nm">{tabName}</span>
+							{tabDirty
+								? <span className="dot" aria-label="Unsaved changes" />
+								: <button className="tx" aria-label={`Close ${tabName}`} onClick={(e) => { e.stopPropagation(); editor.closeFile(paneId, path); }}><Icon.close /></button>}
+						</div>
+					);
+				})}
 				{views > 1 && (
 					<span className="shared" title={`Editing live in ${views} panes`}>
 						<Icon.splitRight />
