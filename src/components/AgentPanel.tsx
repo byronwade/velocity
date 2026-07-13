@@ -33,6 +33,7 @@ export function AgentPanel() {
 	const setActiveProject = useShell((s) => s.setActiveProject);
 	const addProject = useShell((s) => s.addProject);
 	const cockpitMode = useShell((s) => s.cockpitMode);
+	const toggleBrain = useShell((s) => s.toggleBrain);
 	const [view, setView] = useState<View>('chat');
 	const [wsOpen, setWsOpen] = useState(false);
 	const brainKey = `proj:${project?.id ?? 'none'}`;
@@ -84,13 +85,14 @@ export function AgentPanel() {
 				</div>
 				<span className="bbranch"><Icon.git />main</span>
 				<span className="sp" />
-				<div className="bviews" role="tablist" aria-label="Agent views">
-					{(['chat', 'files', 'map', 'changes'] as View[]).map((v) => (
-						<button key={v} role="tab" aria-selected={view === v} className={view === v ? 'on' : ''} onClick={() => setView(v)}>
-							{v === 'changes' ? 'Review' : v[0].toUpperCase() + v.slice(1)}
-						</button>
-					))}
-				</div>
+				<button className="ib bcollapse" onClick={toggleBrain} title="Hide panel (⌘B)" aria-label="Hide panel"><Icon.panelLeft /></button>
+			</div>
+			<div className="bviews" role="tablist" aria-label="Agent views">
+				{(['chat', 'files', 'map', 'changes'] as View[]).map((v) => (
+					<button key={v} role="tab" aria-selected={view === v} className={view === v ? 'on' : ''} onClick={() => setView(v)}>
+						{v === 'changes' ? 'Review' : v[0].toUpperCase() + v.slice(1)}
+					</button>
+				))}
 			</div>
 			<div className="brain-body">
 				{view === 'chat' && <AgentThread brainKey={brainKey} />}

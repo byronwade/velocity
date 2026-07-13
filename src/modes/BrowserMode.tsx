@@ -1,9 +1,9 @@
 // ---------------------------------------------------------------------------
-// Browser — a real embedded browser (an <iframe>), minimal by design. The
-// workspace tab above this pane IS the browser tab, so there is no internal
-// tab strip: just a slim toolbar (back/forward/reload/home + address bar), a
-// bookmarks row, and the page filling everything else. Navigating renames the
-// workspace tab to the current site, so the top tab acts as the browser's tab.
+// Browser — a real embedded browser (an <iframe>) styled to look, act, and
+// feel like a Google Chrome tab: a rounded tab strip, the Chrome nav cluster,
+// a pill "omnibox" address bar with a lock/search glyph and a star, and the
+// right-hand action cluster (extensions · profile · menu). Navigating renames
+// the workspace tab and the on-screen Chrome tab to the current site's title.
 // ---------------------------------------------------------------------------
 
 import { useEffect, useMemo, useReducer, useState } from 'react';
@@ -13,6 +13,35 @@ import { leaves } from '../lib/tree';
 import { BROWSER_HOME, normalizeUrl, titleFor } from '../services/browser';
 import { startPage } from './browserStart';
 import { Icon } from '../lib/icons';
+
+/** Hostname for a URL, for the tab favicon + omnibox. */
+function hostOf(url: string): string {
+	try {
+		return new URL(url).hostname.replace(/^www\./, '');
+	} catch {
+		return '';
+	}
+}
+
+/** A real favicon for the site (Chrome-style), falling back to a globe glyph. */
+function FavIcon({ url, start }: { url: string; start: boolean }) {
+	const host = hostOf(url);
+	const [failed, setFailed] = useState(false);
+	useEffect(() => setFailed(false), [host]);
+	if (start || !host || failed) {
+		return <span className="cr-fav cr-fav-globe"><Icon.browser /></span>;
+	}
+	return (
+		<img
+			className="cr-fav"
+			src={`https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=32`}
+			alt=""
+			width={16}
+			height={16}
+			onError={() => setFailed(true)}
+		/>
+	);
+}
 
 export function BrowserMode({ paneId }: { paneId: string }) {
 	const { browser } = useServices();
@@ -77,27 +106,38 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 	}, [state]);
 
 	const isStart = current === BROWSER_HOME;
+	const tabTitle = isStart ? 'New tab' : titleFor(current);
 
 	return (
-		<div className="mode browser">
-			<div className="browser-cmd">
-				<div className="bc-left">
-					<button className="ib sm" title="Back" aria-label="Back" disabled={state.index === 0} onClick={back}><Icon.back /></button>
-					<button className="ib sm" title="Forward" aria-label="Forward" disabled={state.index >= state.history.length - 1} onClick={forward}><Icon.forward /></button>
-					<button className="ib sm" title="Reload" aria-label="Reload" onClick={() => setLoadKey((k) => k + 1)}><Icon.reload /></button>
+		<div className="mode browser chrome">
+			{/* Chrome tab strip */}
+			<div className="cr-tabs">
+				<div className="cr-tab active" title={tabTitle}>
+					<FavIcon url={current} start={isStart} />
+					<span className="cr-tab-title">{tabTitle}</span>
+					<button className="cr-tab-x" aria-label="New tab" title="New tab" onClick={() => navigate(BROWSER_HOME)}><Icon.close /></button>
 				</div>
-				<form
-					className="url"
-					onSubmit={(e) => {
-						e.preventDefault();
-						navigate(urlInput);
-					}}
-				>
-					{isStart ? <Icon.search /> : <Icon.lock />}
-					<input value={urlInput} spellCheck={false} placeholder="Search or enter address" aria-label="Address" onChange={(e) => setUrlInput(e.target.value)} />
+				<button className="cr-newtab" aria-label="New tab" title="New tab" onClick={() => navigate(BROWSER_HOME)}><Icon.plus /></button>
+				<span className="cr-tabs-sp" />
+			</div>
+
+			{/* Chrome toolbar: nav cluster · omnibox · actions */}
+			<div className="cr-toolbar">
+				<div className="cr-nav">
+					<button className="cr-icb" title="Back" aria-label="Back" disabled={state.index === 0} onClick={back}><Icon.back /></button>
+					<button className="cr-icb" title="Forward" aria-label="Forward" disabled={state.index >= state.history.length - 1} onClick={forward}><Icon.forward /></button>
+					<button className="cr-icb" title="Reload" aria-label="Reload" onClick={() => setLoadKey((k) => k + 1)}><Icon.reload /></button>
+				</div>
+				<form className="cr-omni" onSubmit={(e) => { e.preventDefault(); navigate(urlInput); }}>
+					<span className="cr-omni-lead">{isStart ? <Icon.search /> : <Icon.lock />}</span>
+					<input value={urlInput} spellCheck={false} placeholder="Search Google or type a URL" aria-label="Address and search bar" onChange={(e) => setUrlInput(e.target.value)} />
+					<button type="button" className="cr-star" title="Bookmark this tab" aria-label="Bookmark this tab"><Icon.star /></button>
 				</form>
-				<div className="bc-right">
-					<button className="ib sm" title="Home" aria-label="Home" onClick={() => navigate(BROWSER_HOME)}><Icon.home /></button>
+				<div className="cr-actions">
+					<button className="cr-icb" title="Extensions" aria-label="Extensions"><Icon.puzzle /></button>
+					<button className="cr-icb" title="Home" aria-label="Home" onClick={() => navigate(BROWSER_HOME)}><Icon.home /></button>
+					<span className="cr-avatar" title="Profile" aria-hidden>B</span>
+					<button className="cr-icb" title="Menu" aria-label="Menu"><Icon.dots /></button>
 				</div>
 			</div>
 

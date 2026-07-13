@@ -61,6 +61,11 @@ export const Icon = {
 	grid: (p: P) => (<svg {...base(p)}><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>),
 	layers: (p: P) => (<svg {...base(p)}><path d="M12 2 2 7l10 5 10-5-10-5z" /><path d="M2 12l10 5 10-5M2 17l10 5 10-5" /></svg>),
 	dock: (p: P) => (<svg {...base(p)}><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M15 4v16" /></svg>),
+	panelLeft: (p: P) => (<svg {...base(p)}><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 4v16" /></svg>),
+	star: (p: P) => (<svg {...base(p)}><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L4.5 9.7l5.9-.9L12 3.5z" /></svg>),
+	dots: (p: P) => (<svg {...base(p)}><circle cx="12" cy="5" r="1.4" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none" /><circle cx="12" cy="19" r="1.4" fill="currentColor" stroke="none" /></svg>),
+	minus: (p: P) => (<svg {...base(p)}><path d="M5 12h14" /></svg>),
+	puzzle: (p: P) => (<svg {...base(p)}><path d="M14 4a2 2 0 1 0-4 0H7a1 1 0 0 0-1 1v3a2 2 0 1 1 0 4v3a1 1 0 0 0 1 1h3a2 2 0 1 1 4 0h3a1 1 0 0 0 1-1v-3a2 2 0 1 0 0-4V5a1 1 0 0 0-1-1z" /></svg>),
 };
 
 export type IconName = keyof typeof Icon;

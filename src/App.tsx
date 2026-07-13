@@ -8,6 +8,7 @@ import { CommandPalette } from './components/CommandPalette';
 import { APP_MODES } from './lib/types';
 import { getServices } from './services/container';
 import { closeTabWithCleanup } from './lib/closeTab';
+import { Icon } from './lib/icons';
 
 const RAIL_WIDTH = 56;
 
@@ -90,6 +91,7 @@ export function App() {
 			const s = useShell.getState();
 			const tab = s.tabs.find((t) => t.id === s.activeTabId) ?? s.tabs[0];
 			if (e.key === 't') { e.preventDefault(); s.addTab(); }
+			else if (e.key === 'b') { e.preventDefault(); s.toggleBrain(); }
 			else if (e.key === 'w') { e.preventDefault(); closeTabWithCleanup(s.activeTabId); }
 			else if (e.key === 'Enter') { e.preventDefault(); s.toggleMaximizePane(tab.activePaneId); }
 			else if (e.code === 'Backslash') {
@@ -112,6 +114,8 @@ export function App() {
 	}, []);
 
 	const brainWidth = useShell((s) => s.brainWidth);
+	const brainCollapsed = useShell((s) => s.brainCollapsed);
+	const toggleBrain = useShell((s) => s.toggleBrain);
 
 	// Guard: if the persisted active pane no longer exists, fall back to the first leaf.
 	const tab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
@@ -123,10 +127,15 @@ export function App() {
 	}, [activeExists, tab.tree]);
 
 	return (
-		<div className="app v0" style={{ ['--brain-w' as string]: `${brainWidth}px` }}>
+		<div className={`app v0${brainCollapsed ? ' brain-collapsed' : ''}`} style={{ ['--brain-w' as string]: `${brainWidth}px` }}>
 			<ModeRail />
 			<AgentPanel />
-			<BrainResizer />
+			{!brainCollapsed && <BrainResizer />}
+			{brainCollapsed && (
+				<button className="brain-reopen" onClick={toggleBrain} title="Show panel (⌘B)" aria-label="Show panel">
+					<Icon.panelLeft />
+				</button>
+			)}
 			<AppsPanel />
 			<CommandPalette />
 		</div>
