@@ -36,7 +36,7 @@ svg { display: block; }
 .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .btn svg { width: 14px; height: 14px; }
 .btn.primary { background: var(--fg); color: var(--panel); border-color: var(--fg); }
-.btn.brand { background: var(--brand); color: #fff; border-color: var(--brand); }
+.btn.brand { background: var(--brand); color: var(--panel); border-color: var(--brand); }
 .btn.ghost { border-color: transparent; background: transparent; }
 .btn.ghost:hover { background: color-mix(in srgb, var(--fg) 7%, transparent); }
 
@@ -65,7 +65,7 @@ svg { display: block; }
 .header { height: var(--h-header); flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 10px; background: var(--panel); border-bottom: 1px solid var(--line); position: relative; z-index: 30; }
 .hgroup { display: flex; align-items: center; gap: 3px; min-width: 0; }
 .hgroup.right { gap: 7px; }
-.brandmark { width: 22px; height: 22px; border-radius: 7px; background: linear-gradient(135deg, #7c5cff, #d94fb0); flex: none; margin: 0 4px 0 2px; }
+.brandmark { width: 22px; height: 22px; border-radius: 7px; background: var(--fg); flex: none; margin: 0 4px 0 2px; }
 
 /* center · document title + branch */
 .center { position: absolute; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 7px; max-width: 42vw; font-size: 13px; pointer-events: none; }
@@ -103,7 +103,7 @@ svg { display: block; }
 .mode-item:hover, .mode-item.cursor { background: color-mix(in srgb, var(--fg) 6%, transparent); }
 .mode-item.on { background: color-mix(in srgb, var(--brand) 11%, transparent); }
 .mode-item .ic { width: 30px; height: 30px; border-radius: 9px; background: color-mix(in srgb, var(--brand) 12%, transparent); display: grid; place-items: center; color: var(--brand); flex: none; }
-.mode-item.on .ic { background: var(--brand); color: #fff; }
+.mode-item.on .ic { background: var(--brand); color: var(--panel); }
 .mode-item .ic svg { width: 16px; height: 16px; }
 .mode-item .t { font-weight: 600; font-size: 12.5px; letter-spacing: -0.01em; }
 .mode-item .d { font-size: 11.5px; color: var(--muted); }
@@ -183,7 +183,7 @@ svg { display: block; }
 .msg.req { display: flex; justify-content: flex-end; }
 .msg.req .b { background: var(--user-bubble); border-radius: 13px 13px 4px 13px; padding: 9px 13px; max-width: 82%; }
 .msg.res .role { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; margin-bottom: 8px; }
-.msg.res .role .av { width: 20px; height: 20px; border-radius: 6px; background: var(--brand); color: #fff; display: grid; place-items: center; }
+.msg.res .role .av { width: 20px; height: 20px; border-radius: 6px; background: var(--brand); color: var(--panel); display: grid; place-items: center; }
 .msg.res .role .av svg { width: 12px; height: 12px; }
 .msg.res p { margin: 0 0 10px; }
 .msg code { font-family: var(--mono); font-size: 11.5px; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
@@ -370,7 +370,7 @@ svg { display: block; }
 .build-prompt .r { display: flex; align-items: center; gap: 7px; margin-top: 8px; flex-wrap: wrap; }
 .build-prompt .chip { font-size: 11.5px; color: var(--muted); border: 1px solid var(--line); border-radius: 7px; padding: 4px 9px; cursor: pointer; }
 .build-prompt .chip:hover { border-color: var(--line-2); color: var(--fg); }
-.build-prompt .go { margin-left: auto; background: var(--brand); color: #fff; border-radius: 9px; padding: 7px 14px; font-size: 12.5px; font-weight: 600; display: inline-flex; gap: 7px; align-items: center; }
+.build-prompt .go { margin-left: auto; background: var(--brand); color: var(--panel); border-radius: 9px; padding: 7px 14px; font-size: 12.5px; font-weight: 600; display: inline-flex; gap: 7px; align-items: center; }
 .build-prompt .go:disabled { opacity: 0.5; cursor: default; }
 .build-prompt .go svg { width: 14px; height: 14px; }
 
@@ -405,7 +405,7 @@ svg { display: block; }
 .arc-brand { display: flex; align-items: center; gap: 8px; height: var(--h-header); flex: none; padding: 0 14px; }
 .arc-brand .traffic { display: flex; gap: 8px; }
 .arc-brand .traffic i { width: 11px; height: 11px; border-radius: 50%; }
-.arc-brand .brandmark { width: 20px; height: 20px; border-radius: 6px; background: linear-gradient(135deg, #7c5cff, #d94fb0); margin-left: 2px; flex: none; }
+.arc-brand .brandmark { width: 20px; height: 20px; border-radius: 6px; background: var(--fg); margin-left: 2px; flex: none; }
 .arc-brand .wordmark { font-weight: 650; font-size: 13px; letter-spacing: -0.01em; }
 .arc-tabs { flex: none; display: flex; flex-direction: column; gap: 2px; padding: 6px 8px 8px; overflow-y: auto; max-height: 46%; }
 .arc-tab { display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 6px 0 10px; border-radius: 8px; font-size: 12.5px; color: var(--muted); cursor: pointer; }
@@ -427,7 +427,7 @@ svg { display: block; }
 .arc-sec-head { font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--faint); padding: 10px 14px 6px; font-weight: 600; }
 .arc-foot { flex: none; height: 46px; display: flex; align-items: center; gap: 2px; padding: 0 12px; }
 .arc-foot .grow { flex: 1; }
-.arc-foot .who { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, #7c5cff, #d94fb0); color: #fff; display: grid; place-items: center; font-size: 11px; font-weight: 600; cursor: pointer; }
+.arc-foot .who { width: 26px; height: 26px; border-radius: 50%; background: var(--fg); color: var(--panel); display: grid; place-items: center; font-size: 11px; font-weight: 600; cursor: pointer; }
 .arc-main { flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 0; background: var(--shell); }
 .arc-main .header { background: transparent; border-bottom: 0; }
 .arc-main .status { background: transparent; border-top: 0; }
@@ -636,7 +636,7 @@ svg { display: block; }
 .mrbtn:hover .mrlabel { opacity: 1; }
 .mrail .grow { flex: 1; }
 .mrail-foot { display: flex; flex-direction: column; align-items: center; gap: 3px; }
-.mrail-foot .who { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #7c5cff, #d94fb0); color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 600; margin-top: 5px; cursor: pointer; }
+.mrail-foot .who { width: 30px; height: 30px; border-radius: 50%; background: var(--fg); color: var(--panel); display: grid; place-items: center; font-size: 12px; font-weight: 600; margin-top: 5px; cursor: pointer; }
 
 /* Workspace switcher — lives in the brain header now the rail carries modes. */
 .wsswitch { position: relative; display: flex; }

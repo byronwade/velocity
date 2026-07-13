@@ -26,9 +26,10 @@
 
 :root {
 	color-scheme: light;
-	/* Interactive accent = v0 blue-700 (links, focus). Brand kept for the
-	   product wordmark only; primary actions render monochrome like v0. */
-	--brand: #5b5bd6;
+	/* v0/Cursor are monochrome: primary actions and brand accents are the
+	   foreground color, never a hue. --brand tracks --fg so it inverts per
+	   theme. --accent (v0 blue-700) is reserved for links/focus only. */
+	--brand: var(--fg);
 	--accent: #0072f5;
 	--good: #45a557;
 	--warn: #ff990a;
