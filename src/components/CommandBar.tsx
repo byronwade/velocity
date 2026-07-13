@@ -18,7 +18,7 @@ export function CommandBar() {
 	const { agent } = useServices();
 	const activeProjectId = useShell((s) => (s.tabs.find((t) => t.id === s.activeTabId) ?? s.tabs[0])?.projectId);
 	const brainKey = `proj:${activeProjectId ?? 'global'}`;
-	const { thread, busy, queued } = useAgentThread(brainKey);
+	const { thread, busy, queued, context } = useAgentThread(brainKey);
 
 	const [open, setOpen] = useState(false);
 	const [input, setInput] = useState('');
@@ -61,6 +61,11 @@ export function CommandBar() {
 					<div className="cbar-thread">
 						<div className="cbar-thread-head">
 							<span><Icon.sparkle />Agent</span>
+							<span className="cbar-sp" />
+							<span className={`cbar-ctx${context.pct >= 80 ? ' hot' : ''}`} title={`~${context.tokens.toLocaleString()} tokens in context · auto-compacts when full`}>
+								<span className="cbar-ctx-bar"><i style={{ width: `${context.pct}%` }} /></span>
+								{context.pct}%
+							</span>
 							<button className="cbar-collapse" title="Collapse" onClick={() => setOpen(false)}><Icon.chevron /></button>
 						</div>
 						<AgentThread brainKey={brainKey} />

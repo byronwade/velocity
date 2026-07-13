@@ -258,6 +258,10 @@ const GREETING: AgentMessage = {
 	tools: [],
 };
 
+/** Compaction thresholds: fold older turns once a thread grows past this. */
+const CONTEXT_LIMIT_CHARS = 24000; // ≈ 6k tokens
+const KEEP_RECENT = 6;
+
 export class AgentService {
 	private threads = new Map<string, AgentMessage[]>();
 	private busy = new Set<string>();
@@ -292,6 +296,32 @@ export class AgentService {
 		return this.queues.get(paneId) ?? [];
 	}
 
+	/** Approximate context usage of a thread (chars ≈ 4 chars/token). */
+	contextInfo(paneId: string): { tokens: number; pct: number } {
+		const chars = this.thread(paneId).reduce((n, m) => n + m.text.length + m.tools.reduce((a, t) => a + t.label.length + (t.output?.length ?? 0), 0), 0);
+		return { tokens: Math.round(chars / 4), pct: Math.min(100, Math.round((chars / CONTEXT_LIMIT_CHARS) * 100)) };
+	}
+
+	/** Automatic compaction: once a thread gets long, fold older turns into a
+	 *  one-line summary so the model context (and the UI) stays bounded. */
+	private compact(paneId: string): void {
+		const t = this.thread(paneId);
+		const chars = t.reduce((n, m) => n + m.text.length, 0);
+		if (chars < CONTEXT_LIMIT_CHARS || t.length <= KEEP_RECENT + 2) return;
+		const head = t[0]?.id === 'greeting' ? [t[0]] : [];
+		const tail = t.slice(-KEEP_RECENT);
+		const dropped = t.slice(head.length, t.length - KEEP_RECENT);
+		if (dropped.length <= 0) return;
+		const files = new Set<string>();
+		for (const m of dropped) for (const c of m.changes ?? []) files.add(c.path);
+		const summary: AgentMessage = {
+			id: uid('m'), role: 'assistant', tools: [],
+			text: `_Compacted ${dropped.length} earlier message${dropped.length === 1 ? '' : 's'} to save context${files.size ? ` · touched ${[...files].slice(0, 6).join(', ')}` : ''}._`,
+		};
+		this.threads.set(paneId, [...head, summary, ...tail]);
+		this.bump();
+	}
+
 	async send(paneId: string, input: string): Promise<void> {
 		const text = input.trim();
 		if (!text) {
@@ -303,6 +333,8 @@ export class AgentService {
 			this.bump();
 			return;
 		}
+		// Keep context bounded before we build history for the model.
+		this.compact(paneId);
 		// Snapshot prior turns (text only) as history for a model backend.
 		const history: ChatMsg[] = this.thread(paneId)
 			.filter((m) => m.id !== 'greeting' && m.text.trim())
@@ -401,8 +433,8 @@ export class AgentService {
 import { useServices } from './container';
 
 /** The agent conversation for a pane, re-rendering as events stream in. */
-export function useAgentThread(paneId: string): { thread: AgentMessage[]; busy: boolean; queued: string[] } {
+export function useAgentThread(paneId: string): { thread: AgentMessage[]; busy: boolean; queued: string[]; context: { tokens: number; pct: number } } {
 	const { agent } = useServices();
 	useSyncExternalStore(agent.subscribe, agent.getSnapshot);
-	return { thread: agent.thread(paneId), busy: agent.isBusy(paneId), queued: agent.queued(paneId) };
+	return { thread: agent.thread(paneId), busy: agent.isBusy(paneId), queued: agent.queued(paneId), context: agent.contextInfo(paneId) };
 }
