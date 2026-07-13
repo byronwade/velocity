@@ -33,6 +33,7 @@ const MODE_APP: Partial<Record<CockpitMode, Mode>> = {
 	test: 'test',
 	ship: 'ship',
 	agents: 'mission',
+	library: 'library',
 };
 
 /** Enter a cockpit mode: set the lens and, where one exists, switch the stage app. */

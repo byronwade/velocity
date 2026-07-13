@@ -1037,3 +1037,68 @@ svg { display: block; }
 .adock-foot.pending { color: var(--warn); width: 100%; text-align: left; }
 .adock-foot.pending:hover { background: color-mix(in srgb, var(--warn) 10%, transparent); }
 .adock-foot.pending svg { color: var(--warn); }
+
+/* ---------------------------------------------------------------------------
+   API studio — endpoints + a real request runner
+--------------------------------------------------------------------------- */
+.apistudio { display: flex; height: 100%; min-height: 0; }
+.api-side { width: 264px; flex: none; border-right: 1px solid var(--line); overflow: auto; padding: 8px; display: flex; flex-direction: column; gap: 3px; }
+.api-side-head { display: flex; align-items: center; gap: 8px; padding: 8px 8px 10px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--faint); font-weight: 600; }
+.api-side-head svg { width: 14px; height: 14px; }
+.api-route { display: grid; grid-template-columns: auto 1fr; gap: 3px 8px; padding: 8px 10px; border-radius: var(--r-sm); text-align: left; cursor: pointer; transition: background var(--dur); }
+.api-route:hover { background: color-mix(in srgb, var(--fg) 5%, transparent); }
+.api-route.on { background: color-mix(in srgb, var(--fg) 9%, transparent); }
+.api-m { font-family: var(--mono); font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 5px; align-self: start; letter-spacing: 0.02em; }
+.m-get { color: var(--good); background: color-mix(in srgb, var(--good) 15%, transparent); }
+.m-post { color: var(--accent); background: color-mix(in srgb, var(--accent) 15%, transparent); }
+.m-put, .m-patch { color: var(--warn); background: color-mix(in srgb, var(--warn) 15%, transparent); }
+.m-delete { color: var(--danger); background: color-mix(in srgb, var(--danger) 15%, transparent); }
+.api-path { font-family: var(--mono); font-size: 12px; color: var(--fg); align-self: center; overflow: hidden; text-overflow: ellipsis; }
+.api-sum { grid-column: 2; font-size: 11px; color: var(--muted); }
+.api-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.api-bar { display: flex; gap: 8px; padding: 12px; border-bottom: 1px solid var(--line); }
+.api-method { font-family: var(--mono); font-weight: 700; font-size: 12px; padding: 0 10px; border-radius: var(--r-sm); border: 1px solid var(--line-2); background: var(--panel); color: var(--fg); cursor: pointer; }
+.api-url { flex: 1; min-width: 0; font-family: var(--mono); font-size: 13px; padding: 8px 12px; border-radius: var(--r-sm); border: 1px solid var(--line-2); background: var(--panel); color: var(--fg); outline: none; transition: border-color var(--dur); }
+.api-url:focus { border-color: color-mix(in srgb, var(--fg) 40%, transparent); }
+.api-send { display: inline-flex; align-items: center; gap: 6px; background: var(--fg); color: var(--panel); font-size: 12.5px; font-weight: 600; padding: 0 16px; border-radius: var(--r-sm); flex: none; }
+.api-send svg { width: 12px; height: 12px; }
+.api-send:disabled { opacity: 0.5; cursor: default; }
+.api-body { border-bottom: 1px solid var(--line); }
+.api-body-head { padding: 9px 12px 4px; font-size: 11px; color: var(--faint); text-transform: uppercase; letter-spacing: 0.04em; }
+.api-body textarea { width: 100%; min-height: 88px; border: 0; background: var(--code-bg); color: var(--fg); font-family: var(--mono); font-size: 12.5px; line-height: 1.6; padding: 8px 12px; resize: vertical; outline: none; }
+.api-res { flex: 1; min-height: 0; overflow: auto; }
+.api-res-empty { height: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--faint); font-size: 13px; }
+.api-res-empty svg { width: 15px; height: 15px; }
+.api-res-head { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--panel); }
+.api-status { font-family: var(--mono); font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 6px; }
+.api-status.ok { color: var(--good); background: color-mix(in srgb, var(--good) 14%, transparent); }
+.api-status.err { color: var(--danger); background: color-mix(in srgb, var(--danger) 14%, transparent); }
+.api-ms { font-size: 11.5px; color: var(--faint); font-variant-numeric: tabular-nums; }
+.api-json { margin: 0; padding: 12px 14px; font-family: var(--mono); font-size: 12.5px; line-height: 1.6; color: var(--fg); white-space: pre-wrap; word-break: break-word; }
+
+/* ---------------------------------------------------------------------------
+   Library studio — component catalog over the project graph
+--------------------------------------------------------------------------- */
+.library { height: 100%; overflow: auto; padding: 16px 18px; }
+.lib-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+.lib-title { display: flex; align-items: center; gap: 9px; font-size: 15px; font-weight: 650; color: var(--fg); }
+.lib-title svg { width: 17px; height: 17px; color: var(--muted); }
+.lib-stats { display: flex; gap: 14px; font-size: 12px; color: var(--muted); }
+.lib-stat b { color: var(--fg); font-variant-numeric: tabular-nums; }
+.lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(244px, 1fr)); gap: 12px; }
+.lib-card { text-align: left; display: flex; flex-direction: column; gap: 8px; padding: 14px; border-radius: var(--r-lg); background: var(--panel); box-shadow: var(--elev-1); transition: box-shadow var(--dur), transform 90ms var(--ease); cursor: pointer; }
+.lib-card:hover { box-shadow: var(--elev-2); }
+.lib-card:active { transform: scale(0.99); }
+.lib-card-top { display: flex; align-items: center; gap: 9px; }
+.lib-badge { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: color-mix(in srgb, var(--fg) 7%, transparent); color: var(--fg); flex: none; }
+.lib-badge svg { width: 15px; height: 15px; }
+.lib-name { font-size: 13.5px; font-weight: 600; color: var(--fg); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lib-card-top > svg:last-child { width: 14px; height: 14px; color: var(--faint); flex: none; }
+.lib-path { font-family: var(--mono); font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lib-rel { display: flex; flex-direction: column; gap: 5px; margin-top: 1px; }
+.lib-rel-row { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
+.lib-rel-k { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--faint); font-weight: 600; }
+.lib-chip { font-size: 11px; color: var(--muted); background: color-mix(in srgb, var(--fg) 6%, transparent); border-radius: 5px; padding: 2px 7px; }
+.lib-rel-none { font-size: 11px; color: var(--faint); font-style: italic; }
+.lib-empty { padding: 48px; text-align: center; color: var(--faint); font-size: 13px; }
+.lib-empty code { font-family: var(--mono); background: color-mix(in srgb, var(--fg) 7%, transparent); padding: 1px 5px; border-radius: 4px; }
