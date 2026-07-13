@@ -32,6 +32,7 @@ import { editorTheme } from './theme';
 import { languageForPath } from './languages';
 import { formatSource } from '../services/format';
 import { getEditorPrefs } from '../services/editorPrefs';
+import { richEditing } from './richEditing';
 
 /** Format the view's buffer with Prettier and replace it, keeping the cursor at
  *  roughly the same document offset. No-ops for unsupported files or if the
@@ -60,6 +61,7 @@ const baseExtensions = [
 	EditorState.allowMultipleSelections.of(true),
 	indentOnInput(),
 	bracketMatching(),
+	richEditing,
 	closeBrackets(),
 	autocompletion(),
 	rectangularSelection(),
