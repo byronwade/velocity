@@ -4,6 +4,7 @@ import { leaves } from './lib/tree';
 import { AgentPanel } from './components/AgentPanel';
 import { AppsPanel } from './components/AppsPanel';
 import { CommandPalette } from './components/CommandPalette';
+import { CommandBar } from './components/CommandBar';
 import { APP_MODES } from './lib/types';
 import { getServices } from './services/container';
 import { closeTabWithCleanup } from './lib/closeTab';
@@ -135,6 +136,7 @@ export function App() {
 				</button>
 			)}
 			<AppsPanel />
+			<CommandBar />
 			<CommandPalette />
 		</div>
 	);

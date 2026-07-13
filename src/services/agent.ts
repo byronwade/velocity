@@ -261,6 +261,7 @@ const GREETING: AgentMessage = {
 export class AgentService {
 	private threads = new Map<string, AgentMessage[]>();
 	private busy = new Set<string>();
+	private queues = new Map<string, string[]>();
 	private listeners = new Set<() => void>();
 	private rev = 0;
 
@@ -286,9 +287,20 @@ export class AgentService {
 		return this.busy.has(paneId);
 	}
 
+	/** Queued follow-ups waiting to run after the current turn. */
+	queued(paneId: string): string[] {
+		return this.queues.get(paneId) ?? [];
+	}
+
 	async send(paneId: string, input: string): Promise<void> {
 		const text = input.trim();
-		if (!text || this.busy.has(paneId)) {
+		if (!text) {
+			return;
+		}
+		// While a turn is running, a follow-up is queued and dispatched after.
+		if (this.busy.has(paneId)) {
+			this.queues.set(paneId, [...(this.queues.get(paneId) ?? []), text]);
+			this.bump();
 			return;
 		}
 		// Snapshot prior turns (text only) as history for a model backend.
@@ -313,6 +325,15 @@ export class AgentService {
 		this.patch(paneId, asst.id, (m) => ({ ...m, pending: false }));
 		this.busy.delete(paneId);
 		this.bump();
+
+		// Dispatch the next queued follow-up, if any.
+		const q = this.queues.get(paneId);
+		if (q && q.length) {
+			const [next, ...rest] = q;
+			if (rest.length) this.queues.set(paneId, rest); else this.queues.delete(paneId);
+			this.bump();
+			void this.send(paneId, next);
+		}
 	}
 
 	release(paneId: string): void {
@@ -380,8 +401,8 @@ export class AgentService {
 import { useServices } from './container';
 
 /** The agent conversation for a pane, re-rendering as events stream in. */
-export function useAgentThread(paneId: string): { thread: AgentMessage[]; busy: boolean } {
+export function useAgentThread(paneId: string): { thread: AgentMessage[]; busy: boolean; queued: string[] } {
 	const { agent } = useServices();
 	useSyncExternalStore(agent.subscribe, agent.getSnapshot);
-	return { thread: agent.thread(paneId), busy: agent.isBusy(paneId) };
+	return { thread: agent.thread(paneId), busy: agent.isBusy(paneId), queued: agent.queued(paneId) };
 }

@@ -1,10 +1,10 @@
-// The Agent "brain" — the persistent left panel that controls the workspace.
-// A view switcher shows different lenses on the project (Chat · Files · Changes)
-// while the composer stays pinned at the bottom. The agent is scoped per project.
+// The workspace navigator — the persistent left panel for the IDE. A view
+// switcher shows different lenses on the project (Files · Map · Review). Talking
+// to the agent lives in the floating command bar, not here, so this panel stays
+// focused on navigating and understanding the workspace.
 
 import { useEffect, useState } from 'react';
 import { useShell } from '../lib/store';
-import { AgentThread, AgentComposer } from '../modes/AgentsMode';
 import { Explorer } from './Sidebar';
 import { MapView } from './MapView';
 import { ReviewView } from './ReviewView';
@@ -13,12 +13,12 @@ import { Icon } from '../lib/icons';
 import type { CockpitMode } from '../lib/types';
 import type { GraphKind } from '../lib/graph';
 
-type View = 'chat' | 'files' | 'map' | 'changes';
+type View = 'files' | 'map' | 'changes';
 
-// The cockpit mode sets the brain's default lens; the view tabs still override.
+// The cockpit mode sets the panel's default lens; the view tabs still override.
 const MODE_VIEW: Record<CockpitMode, View> = {
-	home: 'map', build: 'files', design: 'map', browse: 'chat', data: 'map',
-	test: 'map', ship: 'map', observe: 'changes', agents: 'chat', library: 'map',
+	home: 'map', build: 'files', design: 'map', browse: 'files', data: 'map',
+	test: 'map', ship: 'map', observe: 'changes', agents: 'map', library: 'map',
 };
 // When a mode's lens is the map, focus it on that mode's kinds.
 const MODE_FOCUS: Partial<Record<CockpitMode, GraphKind[]>> = {
@@ -34,9 +34,8 @@ export function AgentPanel() {
 	const addProject = useShell((s) => s.addProject);
 	const cockpitMode = useShell((s) => s.cockpitMode);
 	const toggleBrain = useShell((s) => s.toggleBrain);
-	const [view, setView] = useState<View>('chat');
+	const [view, setView] = useState<View>('files');
 	const [wsOpen, setWsOpen] = useState(false);
-	const brainKey = `proj:${project?.id ?? 'none'}`;
 	const { graph } = useServices();
 
 	// Keep the graph's root project node named after the active workspace.
@@ -87,20 +86,18 @@ export function AgentPanel() {
 				<span className="sp" />
 				<button className="ib bcollapse" onClick={toggleBrain} title="Hide panel (⌘B)" aria-label="Hide panel"><Icon.panelLeft /></button>
 			</div>
-			<div className="bviews" role="tablist" aria-label="Agent views">
-				{(['chat', 'files', 'map', 'changes'] as View[]).map((v) => (
+			<div className="bviews" role="tablist" aria-label="Workspace views">
+				{(['files', 'map', 'changes'] as View[]).map((v) => (
 					<button key={v} role="tab" aria-selected={view === v} className={view === v ? 'on' : ''} onClick={() => setView(v)}>
 						{v === 'changes' ? 'Review' : v[0].toUpperCase() + v.slice(1)}
 					</button>
 				))}
 			</div>
 			<div className="brain-body">
-				{view === 'chat' && <AgentThread brainKey={brainKey} />}
 				{view === 'files' && <div className="brain-files"><Explorer /></div>}
 				{view === 'map' && <MapView focus={mapFocus} />}
 				{view === 'changes' && <ReviewView />}
 			</div>
-			<AgentComposer brainKey={brainKey} />
 		</section>
 	);
 }
