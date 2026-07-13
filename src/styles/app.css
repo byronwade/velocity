@@ -310,6 +310,23 @@ svg { display: block; }
 .editor-tabbar .shared svg { width: 13px; height: 13px; }
 .editor-tabbar .sp { flex: 1; }
 .editor-tabbar .path { font-size: 11px; color: var(--faint); font-family: var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 55%; }
+/* breadcrumbs row (VS Code / Zed) */
+.editor-crumbs { height: 26px; flex: none; display: flex; align-items: center; gap: 1px; padding: 0 12px; border-bottom: 1px solid var(--line); overflow: hidden; }
+.editor-crumbs .crumb { display: inline-flex; align-items: center; gap: 1px; font-size: 11.5px; color: var(--faint); white-space: nowrap; }
+.editor-crumbs .crumb svg { width: 12px; height: 12px; opacity: 0.6; margin: 0 1px; }
+.editor-crumbs .crumb .leaf { color: var(--fg); font-weight: 550; }
+.editor-crumbs .crumb:hover span:not(.leaf) { color: var(--muted); }
+
+/* status bar (VS Code / Cursor / Zed) */
+.editor-status { height: 24px; flex: none; display: flex; align-items: center; gap: 0; padding: 0 6px; border-top: 1px solid var(--line); background: color-mix(in srgb, var(--fg) 3%, transparent); font-size: 11px; color: var(--muted); }
+.editor-status .sp { flex: 1; }
+.editor-status .es-left { display: flex; align-items: center; min-width: 0; overflow: hidden; }
+.editor-status .es-item { padding: 0 8px; white-space: nowrap; font-variant-numeric: tabular-nums; border-radius: 4px; height: 20px; display: inline-flex; align-items: center; }
+.editor-status .es-left .es-item { font-family: var(--mono); font-size: 10.5px; color: var(--faint); overflow: hidden; text-overflow: ellipsis; }
+.editor-status .es-item:not(.es-left .es-item):hover { background: color-mix(in srgb, var(--fg) 7%, transparent); color: var(--fg); cursor: default; }
+.editor-status .es-lang { color: var(--fg); font-weight: 550; }
+.editor-status .es-dirty { color: var(--fg); }
+
 .cm-host { flex: 1; min-height: 0; overflow: hidden; }
 .cm-host .cm-editor { height: 100%; }
 .cm-host .cm-editor.cm-focused { outline: none; }
@@ -376,9 +393,22 @@ svg { display: block; }
 .cr-omni-lead svg { width: 15px; height: 15px; }
 .cr-omni input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--cr-text); font: inherit; font-size: 13.5px; outline: none; }
 .cr-omni input::placeholder { color: color-mix(in srgb, var(--cr-icon) 85%, transparent); }
-.cr-star { flex: none; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; color: var(--cr-icon); transition: background var(--dur); }
+.cr-star { flex: none; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; color: var(--cr-icon); transition: background var(--dur), color var(--dur); }
 .cr-star:hover { background: var(--cr-hover); }
 .cr-star svg { width: 16px; height: 16px; }
+.cr-star.on { color: #f5b400; }
+.cr-star.on svg { fill: #f5b400; }
+
+/* bookmarks bar */
+.cr-bookmarks { flex: none; display: flex; align-items: center; gap: 2px; height: 30px; padding: 0 8px; background: var(--cr-toolbar); border-top: 1px solid var(--cr-sep); overflow-x: auto; }
+.cr-bookmarks::-webkit-scrollbar { height: 0; }
+.cr-bm { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 9px; border-radius: 6px; color: var(--cr-text); font-size: 12px; white-space: nowrap; transition: background var(--dur); }
+.cr-bm:hover { background: var(--cr-hover); }
+.cr-bm svg { width: 13px; height: 13px; color: var(--cr-icon); flex: none; }
+
+/* loading progress bar */
+.cr-progress { position: absolute; top: 0; left: 0; height: 2.5px; width: 100%; z-index: 2; background: linear-gradient(90deg, transparent, var(--cr-ring), transparent); background-size: 40% 100%; background-repeat: no-repeat; animation: cr-load 1s ease-in-out infinite; }
+@keyframes cr-load { 0% { background-position: -40% 0; } 100% { background-position: 140% 0; } }
 .cr-avatar { width: 26px; height: 26px; margin: 0 3px; display: grid; place-items: center; border-radius: 50%; background: var(--brand); color: var(--panel); font-size: 12px; font-weight: 650; flex: none; }
 
 .browser-view { flex: 1; min-height: 0; background: #fff; position: relative; }

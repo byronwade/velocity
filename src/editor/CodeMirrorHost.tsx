@@ -25,7 +25,7 @@ import {
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { bracketMatching, foldGutter, foldKeymap, indentOnInput } from '@codemirror/language';
 import { autocompletion, closeBrackets, closeBracketsKeymap, completionKeymap } from '@codemirror/autocomplete';
-import { highlightSelectionMatches, searchKeymap } from '@codemirror/search';
+import { highlightSelectionMatches, searchKeymap, gotoLine } from '@codemirror/search';
 import { fromDocument, type TextDocument } from '../services/document';
 import { useServices } from '../services/container';
 import { editorTheme } from './theme';
@@ -61,12 +61,22 @@ const baseExtensions = [
 	]),
 ];
 
-export function CodeMirrorHost({ doc, paneId, onSave }: { doc: TextDocument; paneId: string; onSave: () => void }) {
+export interface CursorInfo {
+	line: number;
+	col: number;
+	selLen: number;
+	ranges: number;
+	lines: number;
+}
+
+export function CodeMirrorHost({ doc, paneId, onSave, onCursor }: { doc: TextDocument; paneId: string; onSave: () => void; onCursor?: (info: CursorInfo) => void }) {
 	const hostRef = useRef<HTMLDivElement>(null);
 	const { collab } = useServices();
-	// Track the latest onSave without tearing down the view on every render.
+	// Track the latest callbacks without tearing down the view on every render.
 	const saveRef = useRef(onSave);
 	saveRef.current = onSave;
+	const cursorRef = useRef(onCursor);
+	cursorRef.current = onCursor;
 
 	useEffect(() => {
 		const parent = hostRef.current;
@@ -83,7 +93,29 @@ export function CodeMirrorHost({ doc, paneId, onSave }: { doc: TextDocument; pan
 					return true;
 				},
 			},
+			{ key: 'Mod-g', preventDefault: true, run: gotoLine },
 		]);
+
+		// Report cursor line/column + selection to the status bar.
+		const cursorReporter = EditorView.updateListener.of((update) => {
+			if (!update.selectionSet && !update.docChanged) {
+				return;
+			}
+			const cb = cursorRef.current;
+			if (!cb) {
+				return;
+			}
+			const sel = update.state.selection;
+			const head = sel.main.head;
+			const lineObj = update.state.doc.lineAt(head);
+			cb({
+				line: lineObj.number,
+				col: head - lineObj.from + 1,
+				selLen: sel.ranges.reduce((n, r) => n + (r.to - r.from), 0),
+				ranges: sel.ranges.length,
+				lines: update.state.doc.lines,
+			});
+		});
 
 		// Forward local edits to the shared document; ignore edits it replayed to us.
 		const forward = EditorView.updateListener.of((update) => {
@@ -100,7 +132,7 @@ export function CodeMirrorHost({ doc, paneId, onSave }: { doc: TextDocument; pan
 		const view = new EditorView({
 			state: EditorState.create({
 				doc: doc.text,
-				extensions: [baseExtensions, saveKeymap, languageForPath(doc.path), editorTheme, collab(doc, paneId), forward],
+				extensions: [baseExtensions, saveKeymap, cursorReporter, languageForPath(doc.path), editorTheme, collab(doc, paneId), forward],
 			}),
 			parent,
 		});

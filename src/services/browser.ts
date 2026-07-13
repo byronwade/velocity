@@ -11,8 +11,24 @@ export interface BrowserState {
 	index: number;
 }
 
+export interface Bookmark {
+	title: string;
+	url: string;
+}
+
+const BM_KEY = 'velocity.bookmarks.v1';
+const DEFAULT_BOOKMARKS: Bookmark[] = [
+	{ title: 'Local app', url: 'http://localhost:3000' },
+	{ title: 'MDN', url: 'https://developer.mozilla.org' },
+	{ title: 'GitHub', url: 'https://github.com' },
+	{ title: 'Wikipedia', url: 'https://wikipedia.org' },
+];
+
 export class BrowserService {
 	private states = new Map<string, BrowserState>();
+	private bookmarks: Bookmark[] = load();
+	private listeners = new Set<() => void>();
+	private rev = 0;
 
 	for(paneId: string): BrowserState {
 		let s = this.states.get(paneId);
@@ -26,6 +42,47 @@ export class BrowserService {
 	release(paneId: string): void {
 		this.states.delete(paneId);
 	}
+
+	// --- bookmarks ---------------------------------------------------------
+	getBookmarks(): Bookmark[] {
+		return this.bookmarks;
+	}
+	isBookmarked(url: string): boolean {
+		return this.bookmarks.some((b) => b.url === url);
+	}
+	toggleBookmark(url: string): void {
+		if (url === BROWSER_HOME) return;
+		if (this.isBookmarked(url)) {
+			this.bookmarks = this.bookmarks.filter((b) => b.url !== url);
+		} else {
+			this.bookmarks = [...this.bookmarks, { title: titleFor(url), url }];
+		}
+		this.persist();
+		this.bump();
+	}
+	private persist(): void {
+		try { localStorage.setItem(BM_KEY, JSON.stringify(this.bookmarks)); } catch { /* ignore */ }
+	}
+	private bump(): void {
+		this.rev++;
+		for (const l of this.listeners) l();
+	}
+	readonly subscribe = (l: () => void): (() => void) => {
+		this.listeners.add(l);
+		return () => this.listeners.delete(l);
+	};
+	readonly getSnapshot = (): number => this.rev;
+}
+
+function load(): Bookmark[] {
+	try {
+		const raw = localStorage.getItem(BM_KEY);
+		if (raw) {
+			const parsed = JSON.parse(raw) as Bookmark[];
+			if (Array.isArray(parsed)) return parsed;
+		}
+	} catch { /* ignore */ }
+	return DEFAULT_BOOKMARKS;
 }
 
 /** Turn a typed address or query into a navigable URL. */

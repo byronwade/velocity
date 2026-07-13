@@ -9,7 +9,7 @@
 // render inline; those that don't get an "open externally" affordance).
 // ---------------------------------------------------------------------------
 
-import { useEffect, useMemo, useReducer, useState } from 'react';
+import { useEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore } from 'react';
 import { useServices } from '../services/container';
 import { useShell } from '../lib/store';
 import { leaves } from '../lib/tree';
@@ -25,12 +25,23 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 	const state = useMemo(() => browser.for(paneId), [browser, paneId]);
 	const [, bump] = useReducer((x: number) => x + 1, 0);
 	const [loadKey, setLoadKey] = useState(0);
+	const [loading, setLoading] = useState(false);
+	const inputRef = useRef<HTMLInputElement>(null);
 	const current = state.history[state.index];
 	const [urlInput, setUrlInput] = useState(current === BROWSER_HOME ? '' : current);
+	useSyncExternalStore(browser.subscribe, browser.getSnapshot);
+	const bookmarks = browser.getBookmarks();
 
 	useEffect(() => {
 		setUrlInput(current === BROWSER_HOME ? '' : current);
 	}, [current]);
+
+	// Show a loading bar until the frame reports load (or a short timeout).
+	useEffect(() => {
+		setLoading(true);
+		const t = window.setTimeout(() => setLoading(false), 1600);
+		return () => window.clearTimeout(t);
+	}, [current, loadKey]);
 
 	// Reflect the page into the workspace tab title — but only for a tab that is
 	// a single browser pane (don't hijack a split tab), and not the start page.
@@ -84,22 +95,30 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 	const isStart = current === BROWSER_HOME;
 	const isLocal = !isStart && isLocalUrl(current);
 	const isExternal = !isStart && !isLocal;
+	const bookmarked = browser.isBookmarked(current);
+
+	// Chrome-style keyboard shortcuts, scoped to the browser pane.
+	function onKeyDown(e: React.KeyboardEvent) {
+		const mod = e.metaKey || e.ctrlKey;
+		if (mod && e.key.toLowerCase() === 'l') { e.preventDefault(); inputRef.current?.focus(); inputRef.current?.select(); }
+		else if (mod && e.key.toLowerCase() === 'r') { e.preventDefault(); setLoadKey((k) => k + 1); }
+	}
 
 	return (
-		<div className="mode browser chrome">
+		<div className="mode browser chrome" onKeyDown={onKeyDown}>
 			{/* Chrome toolbar: nav cluster · omnibox · actions. The page tab is the
 			    workspace tab above this pane. */}
 			<div className="cr-toolbar">
 				<div className="cr-nav">
 					<button className="cr-icb" title="Back" aria-label="Back" disabled={state.index === 0} onClick={back}><Icon.back /></button>
 					<button className="cr-icb" title="Forward" aria-label="Forward" disabled={state.index >= state.history.length - 1} onClick={forward}><Icon.forward /></button>
-					<button className="cr-icb" title="Reload" aria-label="Reload" onClick={() => setLoadKey((k) => k + 1)}><Icon.reload /></button>
+					<button className="cr-icb" title="Reload (⌘R)" aria-label="Reload" onClick={() => setLoadKey((k) => k + 1)}><Icon.reload /></button>
 				</div>
 				<form className="cr-omni" onSubmit={(e) => { e.preventDefault(); navigate(urlInput); }}>
 					<span className="cr-omni-lead">{isStart ? <Icon.search /> : <Icon.lock />}</span>
-					<input value={urlInput} spellCheck={false} placeholder="Search or type a URL — try localhost:3000" aria-label="Address and search bar" onChange={(e) => setUrlInput(e.target.value)} />
+					<input ref={inputRef} value={urlInput} spellCheck={false} placeholder="Search or type a URL — try localhost:3000" aria-label="Address and search bar" onChange={(e) => setUrlInput(e.target.value)} />
 					{isLocal && <span className="cr-live" title="Live workspace preview">● Live</span>}
-					<button type="button" className="cr-star" title="Bookmark this tab" aria-label="Bookmark this tab"><Icon.star /></button>
+					<button type="button" className={`cr-star${bookmarked ? ' on' : ''}`} title={bookmarked ? 'Remove bookmark' : 'Bookmark this tab'} aria-label="Bookmark this tab" aria-pressed={bookmarked} onClick={() => browser.toggleBookmark(current)}><Icon.star /></button>
 				</form>
 				<div className="cr-actions">
 					<button className="cr-icb" title="Extensions" aria-label="Extensions"><Icon.puzzle /></button>
@@ -110,12 +129,22 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 				</div>
 			</div>
 
+			{/* Bookmarks bar (Chrome / Arc) */}
+			<div className="cr-bookmarks">
+				{bookmarks.map((b) => (
+					<button key={b.url} className="cr-bm" title={b.url} onClick={() => navigate(b.url)}>
+						<Icon.browser /><span>{b.title}</span>
+					</button>
+				))}
+			</div>
+
 			<div className="browser-view">
+				{loading && <div className="cr-progress" aria-hidden />}
 				{isStart && (
-					<iframe key={`start-${theme}-${loadKey}`} className="frame" title="New tab" srcDoc={startPage(theme)} sandbox="allow-scripts" />
+					<iframe key={`start-${theme}-${loadKey}`} className="frame" title="New tab" srcDoc={startPage(theme)} sandbox="allow-scripts" onLoad={() => setLoading(false)} />
 				)}
 				{isLocal && (
-					<iframe key={`local-${loadKey}-${previewHtml.length}`} className="frame" title="Live preview" srcDoc={previewHtml} sandbox="allow-scripts allow-forms" />
+					<iframe key={`local-${loadKey}-${previewHtml.length}`} className="frame" title="Live preview" srcDoc={previewHtml} sandbox="allow-scripts allow-forms" onLoad={() => setLoading(false)} />
 				)}
 				{isExternal && (
 					<iframe
@@ -125,6 +154,7 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 						src={current}
 						sandbox="allow-scripts allow-forms allow-popups allow-same-origin"
 						referrerPolicy="no-referrer"
+						onLoad={() => setLoading(false)}
 					/>
 				)}
 			</div>
