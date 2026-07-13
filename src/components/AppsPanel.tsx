@@ -62,7 +62,11 @@ export function AppsPanel() {
 				<CockpitModeMenu />
 				<div className="apps-tabs" role="tablist" aria-label="Apps">
 					{appTabs.map((t) => {
-						const Glyph = Icon[MODE_DEFS[tabMode(t)].icon];
+						const mode = tabMode(t);
+						const Glyph = Icon[MODE_DEFS[mode].icon];
+						// Editor/browser tabs keep their file/site title; a studio tab
+						// shows the studio name so it isn't mislabeled "App.tsx".
+						const label = mode === 'editor' || mode === 'browser' || mode === 'terminal' ? t.title : MODE_DEFS[mode].name;
 						const active = t.id === activeTabId;
 						return (
 							<div
@@ -77,7 +81,7 @@ export function AppsPanel() {
 								title={t.title}
 							>
 								<span className="glyph"><Glyph /></span>
-								<span className="tt">{t.title}</span>
+								<span className="tt">{label}</span>
 								<button className="x" aria-label={`Close ${t.title}`} onClick={(e) => { e.stopPropagation(); closeTabWithCleanup(t.id); }}><Icon.close /></button>
 							</div>
 						);

@@ -37,7 +37,10 @@ export function MapView({ focus }: { focus?: GraphKind[] }) {
 	const graph = useGraph();
 	const { editor } = useServices();
 	const allGroups = useMemo(() => groupByKind(graph), [graph]);
-	const groups = focus ? allGroups.filter((g) => focus.includes(g.kind)) : allGroups.filter((g) => g.kind !== 'project');
+	// Focus on the mode's kinds when any exist; otherwise show the whole map so
+	// it never reads as empty just because this project has none of that kind.
+	const focused = focus ? allGroups.filter((g) => focus.includes(g.kind)) : null;
+	const groups = focused && focused.length > 0 ? focused : allGroups.filter((g) => g.kind !== 'project');
 	const [selectedId, setSelectedId] = useState<string | null>(null);
 
 	const selected = selectedId ? connected(graph, selectedId) : null;
@@ -84,10 +87,6 @@ export function MapView({ focus }: { focus?: GraphKind[] }) {
 						</ul>
 					)}
 				</div>
-			)}
-
-			{focus && groups.length === 0 && (
-				<div className="brain-empty">Nothing here yet.<br />The agent will populate this as the project grows.</div>
 			)}
 
 			<div className="map-groups">
