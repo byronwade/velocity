@@ -1,10 +1,8 @@
-// The floating command bar — the primary way to tell the agent what to do.
-//
-// Centered near the bottom on every page. Idle: a slim input. Focus/history:
-// it morphs upward into a thread panel (emphasizing what the agent is thinking
-// and doing — tool activity — over prose). Send: it collapses to a compact
-// "working…" strip with a spinner; you can still queue follow-ups. This moves
-// the agent from a persistent chat window to a command surface.
+// The agent surface — a slim launcher that expands into a docked chat panel and
+// collapses back to an icon. Idle: a small, solid, legible pill in the corner,
+// out of the way. Open: a proper chat dock (thread + composer) with a solid
+// background so it's always readable and its menus never get clipped. Working:
+// the collapsed pill shows a spinner + what the agent is doing.
 
 import { useEffect, useRef, useState } from 'react';
 import { useShell } from '../lib/store';
@@ -30,17 +28,21 @@ export function CommandBar() {
 	const runningTool = lastAsst?.tools.find((t) => t.status === 'running');
 	const activity = runningTool ? runningTool.label : busy ? 'Thinking…' : '';
 
-	// Attach context: reference the file open in the editor (like @-mentions), so
-	// the agent knows which file you mean. Falls back to a bare "@" to type one.
+	function expand() {
+		setOpen(true);
+		requestAnimationFrame(() => taRef.current?.focus());
+	}
+
+	// Attach context: reference the file open in the editor (like @-mentions).
 	function addContext() {
 		const path = getActiveEditor()?.path;
 		const ref = path ? `@${path} ` : '@';
 		setInput((v) => (!v || v.endsWith(' ') ? v : v + ' ') + ref);
-		if (hasHistory) setOpen(true);
+		setOpen(true);
 		taRef.current?.focus();
 	}
 
-	// Collapse the thread panel on Escape.
+	// Collapse the dock on Escape (unless a menu inside handles it first).
 	useEffect(() => {
 		if (!open) return;
 		const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') { setOpen(false); taRef.current?.blur(); } };
@@ -48,68 +50,77 @@ export function CommandBar() {
 		return () => document.removeEventListener('keydown', esc);
 	}, [open]);
 
-	// Focus the command bar from anywhere. The keybinding (⌘J by default) is owned
-	// by the central keybinding service, which dispatches this event.
+	// Open + focus from anywhere (⌘J by default, dispatched by the keybinding service).
 	useEffect(() => {
-		const focus = () => { taRef.current?.focus(); if (hasHistory) setOpen(true); };
+		const focus = () => expand();
 		window.addEventListener('velocity:focus-commandbar', focus);
 		return () => window.removeEventListener('velocity:focus-commandbar', focus);
-	}, [hasHistory]);
+	}, []);
 
 	function send() {
 		const t = input.trim();
 		if (!t) return;
 		setInput('');
 		void agent.send(brainKey, t);
+		setOpen(true);
 	}
 
+	// Collapsed → a slim launcher pill (shows live status while the agent works).
+	if (!open) {
+		return (
+			<button className={`agent-launch${busy ? ' busy' : ''}`} onClick={expand} title="Ask the agent (⌘J)">
+				{busy ? <span className="spin" /> : <Icon.sparkle />}
+				<span className="agent-launch-label">{busy ? (activity || 'Working…') : 'Ask agent'}</span>
+				{busy && queued.length > 0 && <span className="agent-launch-q">{queued.length}</span>}
+			</button>
+		);
+	}
+
+	// Expanded → a docked chat panel (solid, legible, self-contained).
 	return (
-		<>
-			{open && <div className="cbar-scrim" onMouseDown={() => setOpen(false)} />}
-			<div className={`cbar${open ? ' open' : ''}${busy ? ' busy' : ''}`}>
-				{open && (
-					<div className="cbar-thread">
-						<div className="cbar-thread-head">
-							<span><Icon.sparkle />Agent</span>
-							<span className="cbar-sp" />
-							<span className={`cbar-ctx${context.pct >= 80 ? ' hot' : ''}`} title={`~${context.tokens.toLocaleString()} tokens in context · auto-compacts when full`}>
-								<span className="cbar-ctx-bar"><i style={{ width: `${context.pct}%` }} /></span>
-								{context.pct}%
-							</span>
-							<button className="cbar-collapse" title="New chat" onClick={() => agent.reset(brainKey)}><Icon.plus /></button>
-							<button className="cbar-collapse" title="Collapse" onClick={() => setOpen(false)}><Icon.chevron /></button>
-						</div>
-						<AgentThread brainKey={brainKey} />
-					</div>
-				)}
-
-				{busy && !open && (
-					<button className="cbar-activity" onClick={() => setOpen(true)} title="Show what the agent is doing">
-						<span className="spin" />
-						<b>Agent is working</b>
-						{activity && <span className="cbar-act">{activity}</span>}
-						{queued.length > 0 && <span className="cbar-q">{queued.length} queued</span>}
-						<span className="cbar-up"><Icon.chevron /></span>
-					</button>
-				)}
-
-				<div className="cbar-input">
-					<button className="cbar-plus" title="Attach the current file as context" aria-label="Add context" onClick={addContext}><Icon.plus /></button>
-					<textarea
-						ref={taRef}
-						rows={1}
-						value={input}
-						placeholder={busy ? 'Queue a follow-up…' : 'Tell the agent what to do…'}
-						onFocus={() => { if (hasHistory) setOpen(true); }}
-						onChange={(e) => setInput(e.target.value)}
-						onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
-					/>
-					<ModelPicker />
-					<button className="cbar-send" onClick={send} disabled={!input.trim()} title={busy ? 'Queue follow-up' : 'Send'} aria-label="Send">
-						{busy ? <Icon.plus /> : <Icon.send />}
-					</button>
-				</div>
+		<div className="agent-dock" role="dialog" aria-label="Agent chat">
+			<div className="agent-dock-head">
+				<span className="agent-dock-title"><Icon.sparkle />Agent</span>
+				<span className="agent-dock-sp" />
+				<span className={`cbar-ctx${context.pct >= 80 ? ' hot' : ''}`} title={`~${context.tokens.toLocaleString()} tokens in context · auto-compacts when full`}>
+					<span className="cbar-ctx-bar"><i style={{ width: `${context.pct}%` }} /></span>{context.pct}%
+				</span>
+				<button className="cbar-collapse" title="New chat" aria-label="New chat" onClick={() => agent.reset(brainKey)}><Icon.plus /></button>
+				<button className="cbar-collapse" title="Collapse" aria-label="Collapse" onClick={() => setOpen(false)}><Icon.chevron /></button>
 			</div>
-		</>
+
+			{hasHistory ? (
+				<div className="agent-dock-thread"><AgentThread brainKey={brainKey} /></div>
+			) : (
+				<div className="agent-dock-empty">
+					<Icon.sparkle />
+					<p>Tell the agent what to build or change. It can read and edit files, run commands, and drive the browser.</p>
+				</div>
+			)}
+
+			{busy && (
+				<div className="agent-dock-working">
+					<span className="spin" /><b>Agent is working</b>
+					{activity && <span className="cbar-act">{activity}</span>}
+					{queued.length > 0 && <span className="cbar-q">{queued.length} queued</span>}
+				</div>
+			)}
+
+			<div className="agent-dock-composer">
+				<button className="cbar-plus" title="Attach the current file as context" aria-label="Add context" onClick={addContext}><Icon.plus /></button>
+				<textarea
+					ref={taRef}
+					rows={1}
+					value={input}
+					placeholder={busy ? 'Queue a follow-up…' : 'Ask the agent…'}
+					onChange={(e) => setInput(e.target.value)}
+					onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
+				/>
+				<ModelPicker />
+				<button className="cbar-send" onClick={send} disabled={!input.trim()} title={busy ? 'Queue follow-up' : 'Send'} aria-label="Send">
+					{busy ? <Icon.plus /> : <Icon.send />}
+				</button>
+			</div>
+		</div>
 	);
 }
