@@ -37,10 +37,24 @@ export function normalizeUrl(raw: string): string {
 	if (s === BROWSER_HOME || /^https?:\/\//i.test(s)) {
 		return s;
 	}
+	// Local dev server addresses navigate to the live workspace preview.
+	if (/^(localhost|127\.0\.0\.1)(:\d+)?(\/.*)?$/i.test(s)) {
+		return `http://${s}`;
+	}
 	if (/^[^\s]+\.[^\s]{2,}(\/.*)?$/.test(s)) {
 		return `https://${s}`;
 	}
 	return `https://duckduckgo.com/?q=${encodeURIComponent(s)}`;
+}
+
+/** True if a URL points at the local dev server — rendered as the live app preview. */
+export function isLocalUrl(url: string): boolean {
+	try {
+		const h = new URL(url).hostname;
+		return h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0';
+	} catch {
+		return false;
+	}
 }
 
 /** A short, stable-ish title/host for an address. */

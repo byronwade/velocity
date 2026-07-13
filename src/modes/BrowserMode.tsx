@@ -1,51 +1,27 @@
 // ---------------------------------------------------------------------------
-// Browser — a real embedded browser (an <iframe>) styled to look, act, and
-// feel like a Google Chrome tab: a rounded tab strip, the Chrome nav cluster,
-// a pill "omnibox" address bar with a lock/search glyph and a star, and the
-// right-hand action cluster (extensions · profile · menu). Navigating renames
-// the workspace tab and the on-screen Chrome tab to the current site's title.
+// Browser — a real, working embedded browser with Chrome's look and feel.
+//
+// The workspace tab above this pane IS the browser's page tab (there's no
+// second tab strip). A local address (localhost / 127.0.0.1) renders the LIVE
+// workspace app preview — a real, interactive page built from the project's
+// files — so the browser actually runs what you're building. External http(s)
+// addresses load in a sandboxed iframe (best-effort: sites that permit framing
+// render inline; those that don't get an "open externally" affordance).
 // ---------------------------------------------------------------------------
 
 import { useEffect, useMemo, useReducer, useState } from 'react';
 import { useServices } from '../services/container';
 import { useShell } from '../lib/store';
 import { leaves } from '../lib/tree';
-import { BROWSER_HOME, normalizeUrl, titleFor } from '../services/browser';
+import { BROWSER_HOME, isLocalUrl, normalizeUrl, titleFor } from '../services/browser';
+import { usePreview } from '../services/preview';
 import { startPage } from './browserStart';
 import { Icon } from '../lib/icons';
-
-/** Hostname for a URL, for the tab favicon + omnibox. */
-function hostOf(url: string): string {
-	try {
-		return new URL(url).hostname.replace(/^www\./, '');
-	} catch {
-		return '';
-	}
-}
-
-/** A real favicon for the site (Chrome-style), falling back to a globe glyph. */
-function FavIcon({ url, start }: { url: string; start: boolean }) {
-	const host = hostOf(url);
-	const [failed, setFailed] = useState(false);
-	useEffect(() => setFailed(false), [host]);
-	if (start || !host || failed) {
-		return <span className="cr-fav cr-fav-globe"><Icon.browser /></span>;
-	}
-	return (
-		<img
-			className="cr-fav"
-			src={`https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=32`}
-			alt=""
-			width={16}
-			height={16}
-			onError={() => setFailed(true)}
-		/>
-	);
-}
 
 export function BrowserMode({ paneId }: { paneId: string }) {
 	const { browser } = useServices();
 	const theme = useShell((s) => s.theme);
+	const previewHtml = usePreview();
 	const state = useMemo(() => browser.for(paneId), [browser, paneId]);
 	const [, bump] = useReducer((x: number) => x + 1, 0);
 	const [loadKey, setLoadKey] = useState(0);
@@ -106,22 +82,13 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 	}, [state]);
 
 	const isStart = current === BROWSER_HOME;
-	const tabTitle = isStart ? 'New tab' : titleFor(current);
+	const isLocal = !isStart && isLocalUrl(current);
+	const isExternal = !isStart && !isLocal;
 
 	return (
 		<div className="mode browser chrome">
-			{/* Chrome tab strip */}
-			<div className="cr-tabs">
-				<div className="cr-tab active" title={tabTitle}>
-					<FavIcon url={current} start={isStart} />
-					<span className="cr-tab-title">{tabTitle}</span>
-					<button className="cr-tab-x" aria-label="New tab" title="New tab" onClick={() => navigate(BROWSER_HOME)}><Icon.close /></button>
-				</div>
-				<button className="cr-newtab" aria-label="New tab" title="New tab" onClick={() => navigate(BROWSER_HOME)}><Icon.plus /></button>
-				<span className="cr-tabs-sp" />
-			</div>
-
-			{/* Chrome toolbar: nav cluster · omnibox · actions */}
+			{/* Chrome toolbar: nav cluster · omnibox · actions. The page tab is the
+			    workspace tab above this pane. */}
 			<div className="cr-toolbar">
 				<div className="cr-nav">
 					<button className="cr-icb" title="Back" aria-label="Back" disabled={state.index === 0} onClick={back}><Icon.back /></button>
@@ -130,21 +97,27 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 				</div>
 				<form className="cr-omni" onSubmit={(e) => { e.preventDefault(); navigate(urlInput); }}>
 					<span className="cr-omni-lead">{isStart ? <Icon.search /> : <Icon.lock />}</span>
-					<input value={urlInput} spellCheck={false} placeholder="Search Google or type a URL" aria-label="Address and search bar" onChange={(e) => setUrlInput(e.target.value)} />
+					<input value={urlInput} spellCheck={false} placeholder="Search or type a URL — try localhost:3000" aria-label="Address and search bar" onChange={(e) => setUrlInput(e.target.value)} />
+					{isLocal && <span className="cr-live" title="Live workspace preview">● Live</span>}
 					<button type="button" className="cr-star" title="Bookmark this tab" aria-label="Bookmark this tab"><Icon.star /></button>
 				</form>
 				<div className="cr-actions">
 					<button className="cr-icb" title="Extensions" aria-label="Extensions"><Icon.puzzle /></button>
 					<button className="cr-icb" title="Home" aria-label="Home" onClick={() => navigate(BROWSER_HOME)}><Icon.home /></button>
+					{isExternal && <a className="cr-icb" title="Open in a new tab" aria-label="Open externally" href={current} target="_blank" rel="noreferrer noopener"><Icon.share /></a>}
 					<span className="cr-avatar" title="Profile" aria-hidden>B</span>
 					<button className="cr-icb" title="Menu" aria-label="Menu"><Icon.dots /></button>
 				</div>
 			</div>
 
 			<div className="browser-view">
-				{isStart ? (
+				{isStart && (
 					<iframe key={`start-${theme}-${loadKey}`} className="frame" title="New tab" srcDoc={startPage(theme)} sandbox="allow-scripts" />
-				) : (
+				)}
+				{isLocal && (
+					<iframe key={`local-${loadKey}-${previewHtml.length}`} className="frame" title="Live preview" srcDoc={previewHtml} sandbox="allow-scripts allow-forms" />
+				)}
+				{isExternal && (
 					<iframe
 						key={`${current}-${loadKey}`}
 						className="frame"

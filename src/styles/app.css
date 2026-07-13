@@ -992,6 +992,37 @@ svg { display: block; }
 .dz-chip { width: 22px; height: 22px; border-radius: 6px; flex: none; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fg) 12%, transparent); }
 .dz-sw-name { font-family: var(--mono); font-size: 10.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dz-insp-hint { padding: 14px; font-size: 11.5px; color: var(--faint); text-align: center; }
+.dz-insp-hint.left { text-align: left; padding: 8px 0 0; }
+
+/* panel tabs (Pages/Layers/Assets · Style/Inspect) — Framer-style */
+.dz-panel-tabs { display: flex; gap: 2px; padding: 8px 8px 6px; }
+.dz-panel-tabs button { flex: 1; padding: 5px 8px; border-radius: var(--r-sm); font-size: 11.5px; font-weight: 550; color: var(--faint); transition: background var(--dur), color var(--dur); }
+.dz-panel-tabs button:hover { color: var(--fg); }
+.dz-panel-tabs button.on { color: var(--fg); background: color-mix(in srgb, var(--fg) 8%, transparent); }
+
+/* device artboards — clean white frame with the live app inside */
+.dz-frame.device { background: #fff; border-radius: 3px; box-shadow: 0 0 0 1px var(--line), 0 12px 40px -12px rgba(0,0,0,0.35); }
+.dz-frame-frame { width: 100%; height: 100%; border: 0; display: block; background: #fff; }
+.dz-frame.device .dz-frame-label { font-size: 13px; }
+
+/* editable colour token rows */
+.dz-tokens { display: flex; flex-direction: column; gap: 1px; }
+.dz-token { display: flex; align-items: center; gap: 9px; padding: 5px 6px; border-radius: var(--r-sm); cursor: pointer; transition: background var(--dur); }
+.dz-token:hover { background: color-mix(in srgb, var(--fg) 5%, transparent); }
+.dz-color { width: 22px; height: 22px; flex: none; padding: 0; border: 0; border-radius: 6px; background: none; cursor: pointer; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fg) 14%, transparent); }
+.dz-color::-webkit-color-swatch-wrapper { padding: 0; }
+.dz-color::-webkit-color-swatch { border: 0; border-radius: 6px; }
+.dz-tk-name { flex: 1; font-family: var(--mono); font-size: 11px; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dz-tk-val { font-family: var(--mono); font-size: 10.5px; color: var(--faint); flex: none; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* floating canvas toolbar (Framer-style, bottom-center) */
+.dz-float { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); display: flex; align-items: center; gap: 2px; padding: 5px; border-radius: 12px; background: var(--panel); box-shadow: var(--elev-3), 0 0 0 1px var(--line); z-index: 5; }
+.dz-float button { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; color: var(--muted); transition: background var(--dur), color var(--dur); }
+.dz-float button:hover { background: color-mix(in srgb, var(--fg) 8%, transparent); color: var(--fg); }
+.dz-float button.on { color: var(--fg); background: color-mix(in srgb, var(--fg) 10%, transparent); }
+.dz-float button svg { width: 16px; height: 16px; }
+.dz-float-sep { width: 1px; height: 20px; background: var(--line); margin: 0 3px; }
+.dz-float-z { width: auto !important; padding: 0 8px; font-size: 12px; font-variant-numeric: tabular-nums; }
 
 /* ---------------------------------------------------------------------------
    Test studio — real checks over the live workspace

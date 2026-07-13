@@ -19,6 +19,7 @@ import { GraphService } from './graph';
 import { ReviewService } from './review';
 import { DbService } from './db';
 import { ApiService } from './api';
+import { PreviewService } from './preview';
 import { ObservabilityService } from './observability';
 import { DesignService } from './design';
 import { DeployService } from './deploy';
@@ -39,6 +40,8 @@ export interface Services {
 	db: DbService;
 	/** In-process request router over real workspace state — the API studio. */
 	api: ApiService;
+	/** Runnable HTML preview of the workspace app — the browser + design canvas. */
+	preview: PreviewService;
 	/** Real runtime telemetry (errors, rejections, console) — the observe studio. */
 	observability: ObservabilityService;
 	/** Design tokens parsed from the workspace CSS — the design studio. */
@@ -63,6 +66,7 @@ export function createServices(): Services {
 	const review = new ReviewService(fs);
 	const db = new DbService(fs);
 	const api = new ApiService(fs, db);
+	const preview = new PreviewService(fs);
 	const observability = new ObservabilityService();
 	observability.install();
 	const design = new DesignService(fs);
@@ -70,7 +74,7 @@ export function createServices(): Services {
 	// The orchestrator drives the other services via a lazy getter (no self-ref).
 	let services: Services;
 	const mission = new MissionService(() => services);
-	services = { fs, editor, shell, browser: new BrowserService(), agent, graph, review, db, api, observability, design, deploy, mission, collab: noCollab };
+	services = { fs, editor, shell, browser: new BrowserService(), agent, graph, review, db, api, preview, observability, design, deploy, mission, collab: noCollab };
 	return services;
 }
 
