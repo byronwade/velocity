@@ -1,45 +1,70 @@
-/* Velocity design tokens — one system, light + dark + high-contrast.
-   Neutral surfaces with a single confident accent for primary actions.
-   `color-scheme` is declared per theme so native controls (buttons, inputs,
-   scrollbars, caret) render the correct chrome from first paint and can never
-   desync from the `data-theme` attribute. */
+/* Geist — the same family v0 ships. Loaded via @font-face with
+   `font-display: swap`, which is NON-render-blocking: the app paints
+   immediately in the system fallback (--sans/--mono) and swaps to Geist
+   only once it loads. A slow, blocked, or offline CDN therefore never
+   blanks the page — unlike a top-level CSS @import, which is. */
+@font-face {
+	font-family: "Geist";
+	font-style: normal;
+	font-weight: 100 900;
+	font-display: swap;
+	src: url("https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-sans/Geist-Variable.woff2") format("woff2");
+}
+@font-face {
+	font-family: "Geist Mono";
+	font-style: normal;
+	font-weight: 100 900;
+	font-display: swap;
+	src: url("https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-mono/GeistMono-Variable.woff2") format("woff2");
+}
+
+/* Velocity design tokens — matched 1:1 to v0.dev's compiled Geist/Vercel
+   design system. Neutrals are the exact `--v0-gray-*` ramp, radius base is
+   Geist's 0.5rem, elevation is the layered Geist shadow set, and the type
+   stack leads with Geist (system fallback). `color-scheme` is declared per
+   theme so native controls render correct chrome from first paint. */
 
 :root {
 	color-scheme: light;
-	--brand: #5b5bd6;
-	--accent: #3b82f6;
-	--good: #1f7d49;
-	--warn: #c98a2f;
-	--danger: #d05a5a;
-	--live: #e0457b;
+	/* v0/Cursor are monochrome: primary actions and brand accents are the
+	   foreground color, never a hue. --brand tracks --fg so it inverts per
+	   theme. --accent (v0 blue-700) is reserved for links/focus only. */
+	--brand: var(--fg);
+	--accent: #0072f5;
+	--good: #45a557;
+	--warn: #ff990a;
+	--danger: #e5484d;
+	--live: #ea3e83;
 
-	/* light (default) */
-	--shell: #f4f5f7;
+	/* light — v0 gray ramp. body = background-200, cards = background-100. */
+	--shell: #fafafa;
 	--panel: #ffffff;
-	--panel-2: #fafbfc;
-	--sunk: #eef0f2;
-	--rail: #eceef0;
-	--fg: #1a1c20;
-	--muted: #666b74;
-	--faint: #5c626b;
-	--fg-rgb: 26, 28, 32;
-	--line: rgba(26, 28, 32, 0.06);
-	--line-2: rgba(26, 28, 32, 0.10);
+	--panel-2: #f7f7f7;
+	--sunk: #f2f2f2;
+	--rail: #fafafa;
+	--fg: #171717;      /* v0-gray-1000 (foreground) */
+	--muted: #666666;   /* v0-gray-900 (muted-foreground) */
+	--faint: #8f8f8f;   /* v0-gray-700 */
+	--fg-rgb: 23, 23, 23;
+	--line: rgba(0, 0, 0, 0.08);   /* ≈ v0-gray-300 / alpha-400 border */
+	--line-2: rgba(0, 0, 0, 0.13);
 
-	--code-bg: #f6f7f9;
-	--user-bubble: #eef0f2;
+	--code-bg: #f7f7f7;
+	--user-bubble: #f2f2f2;
 
 	--k: #8250df; --s: #0a7d3e; --n: #b3611d; --c: #6b7280; --ty: #1a7f8e; --f: #0a56c2;
 
-	/* Polaris-style elevation — separate surfaces with light, not lines. */
-	--elev-1: 0 1px 2px rgba(20, 22, 28, 0.05), 0 4px 14px rgba(20, 22, 28, 0.06);
-	--elev-2: 0 2px 6px rgba(20, 22, 28, 0.07), 0 16px 40px rgba(20, 22, 28, 0.10);
+	/* Geist elevation — a hairline plus a soft, tight drop. */
+	--elev-1: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 1px rgba(0, 0, 0, 0.03);
+	--elev-2: 0 1px 1px rgba(0, 0, 0, 0.03), 0 4px 8px -4px rgba(0, 0, 0, 0.05), 0 16px 24px -8px rgba(0, 0, 0, 0.06);
 
-	--r-lg: 14px; --r-md: 9px; --r-sm: 6px;
+	/* v0 radius: --radius 0.5rem. lg = base+4 (cards), md = base, sm = base-2. */
+	--r-lg: 12px; --r-md: 8px; --r-sm: 6px;
 	--h-tab: 38px; --h-header: 46px; --h-status: 24px;
 
-	--sans: ui-sans-serif, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-	--mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+	/* Geist first — matches v0's rendering wherever the family is present. */
+	--sans: "Geist", ui-sans-serif, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+	--mono: "Geist Mono", ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
 
 	--ease: cubic-bezier(0.32, 0.72, 0, 1);
 	--dur: 160ms;
@@ -48,34 +73,50 @@
 @media (prefers-color-scheme: dark) {
 	:root:not([data-theme="light"]) {
 		color-scheme: dark;
-		--good: #4ec98a;
-		--shell: #0f0f11; --panel: #17181b; --panel-2: #1c1d21; --sunk: #111214; --rail: #131417;
-		--fg: #e8e9ec; --muted: #9a9ea6; --faint: #8b9099; --fg-rgb: 232, 233, 236;
-		--line: rgba(232, 233, 236, 0.07); --line-2: rgba(232, 233, 236, 0.11);
-		--code-bg: #141518; --user-bubble: #26272b;
-		--elev-1: 0 1px 2px rgba(0, 0, 0, 0.28), 0 6px 20px rgba(0, 0, 0, 0.34);
-		--elev-2: 0 2px 8px rgba(0, 0, 0, 0.38), 0 20px 48px rgba(0, 0, 0, 0.48);
+		--accent: #52a8ff;
+		--good: #62c073;
+		--warn: #f2a20d;
+		--danger: #ff6166;
+		--live: #f75f8f;
+		--shell: #0a0a0a; --panel: #1a1a1a; --panel-2: #1f1f1f; --sunk: #000000; --rail: #121212;
+		--fg: #ededed; --muted: #a1a1a1; --faint: #8f8f8f; --fg-rgb: 237, 237, 237;
+		--line: rgba(255, 255, 255, 0.10); --line-2: rgba(255, 255, 255, 0.145);
+		--code-bg: #1a1a1a; --user-bubble: #1f1f1f;
+		--elev-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 1px rgba(0, 0, 0, 0.3);
+		--elev-2: 0 1px 1px rgba(0, 0, 0, 0.3), 0 4px 8px -4px rgba(0, 0, 0, 0.5), 0 16px 24px -8px rgba(0, 0, 0, 0.6);
 		--k: #c297ff; --s: #7ee787; --n: #ffa657; --c: #7d8590; --ty: #79c0ff; --f: #79c0ff;
 	}
 }
 
 :root[data-theme="dark"] {
 	color-scheme: dark;
-	--good: #4ec98a;
-	--shell: #0f0f11; --panel: #17181b; --panel-2: #1c1d21; --sunk: #111214; --rail: #131417;
-	--fg: #e8e9ec; --muted: #9a9ea6; --faint: #8b9099; --fg-rgb: 232, 233, 236;
-	--line: rgba(232, 233, 236, 0.07); --line-2: rgba(232, 233, 236, 0.11);
-	--code-bg: #141518; --user-bubble: #26272b;
+	--accent: #52a8ff;
+	--good: #62c073;
+	--warn: #f2a20d;
+	--danger: #ff6166;
+	--live: #f75f8f;
+	--shell: #0a0a0a; --panel: #1a1a1a; --panel-2: #1f1f1f; --sunk: #000000; --rail: #121212;
+	--fg: #ededed; --muted: #a1a1a1; --faint: #8f8f8f; --fg-rgb: 237, 237, 237;
+	--line: rgba(255, 255, 255, 0.10); --line-2: rgba(255, 255, 255, 0.145);
+	--code-bg: #1a1a1a; --user-bubble: #1f1f1f;
+	--elev-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 1px rgba(0, 0, 0, 0.3);
+	--elev-2: 0 1px 1px rgba(0, 0, 0, 0.3), 0 4px 8px -4px rgba(0, 0, 0, 0.5), 0 16px 24px -8px rgba(0, 0, 0, 0.6);
 	--k: #c297ff; --s: #7ee787; --n: #ffa657; --c: #7d8590; --ty: #79c0ff; --f: #79c0ff;
 }
 
 :root[data-theme="light"] {
 	color-scheme: light;
-	--good: #1f7d49;
-	--shell: #f4f5f7; --panel: #fff; --panel-2: #fafbfc; --sunk: #eef0f2; --rail: #eceef0;
-	--fg: #1a1c20; --muted: #666b74; --faint: #5c626b; --fg-rgb: 26, 28, 32;
-	--line: rgba(26, 28, 32, 0.06); --line-2: rgba(26, 28, 32, 0.10);
-	--code-bg: #f6f7f9; --user-bubble: #eef0f2;
+	--accent: #0072f5;
+	--good: #45a557;
+	--warn: #ff990a;
+	--danger: #e5484d;
+	--live: #ea3e83;
+	--shell: #fafafa; --panel: #fff; --panel-2: #f7f7f7; --sunk: #f2f2f2; --rail: #fafafa;
+	--fg: #171717; --muted: #666666; --faint: #8f8f8f; --fg-rgb: 23, 23, 23;
+	--line: rgba(0, 0, 0, 0.08); --line-2: rgba(0, 0, 0, 0.13);
+	--code-bg: #f7f7f7; --user-bubble: #f2f2f2;
+	--elev-1: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 1px rgba(0, 0, 0, 0.03);
+	--elev-2: 0 1px 1px rgba(0, 0, 0, 0.03), 0 4px 8px -4px rgba(0, 0, 0, 0.05), 0 16px 24px -8px rgba(0, 0, 0, 0.06);
 	--k: #8250df; --s: #0a7d3e; --n: #b3611d; --c: #6b7280; --ty: #1a7f8e; --f: #0a56c2;
 }
 

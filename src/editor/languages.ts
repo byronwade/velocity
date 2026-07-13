@@ -10,6 +10,19 @@ import { html } from '@codemirror/lang-html';
 import { json } from '@codemirror/lang-json';
 import { markdown } from '@codemirror/lang-markdown';
 
+const LANG_NAME: Record<string, string> = {
+	ts: 'TypeScript', tsx: 'TypeScript JSX', jsx: 'JavaScript JSX', js: 'JavaScript',
+	mjs: 'JavaScript', cjs: 'JavaScript', css: 'CSS', html: 'HTML', htm: 'HTML',
+	json: 'JSON', md: 'Markdown', markdown: 'Markdown', sql: 'SQL', txt: 'Plain Text',
+};
+
+/** Human-readable language name for the editor status bar. */
+export function languageName(path: string): string {
+	const dot = path.lastIndexOf('.');
+	const ext = dot === -1 ? '' : path.slice(dot + 1).toLowerCase();
+	return LANG_NAME[ext] ?? (ext ? ext.toUpperCase() : 'Plain Text');
+}
+
 export function languageForPath(path: string): Extension {
 	const dot = path.lastIndexOf('.');
 	const ext = dot === -1 ? '' : path.slice(dot + 1).toLowerCase();

@@ -16,13 +16,21 @@ import { normalizePath } from './filesystem';
 import type { EditorService } from './editorService';
 import { ShellService, type Shell } from './shell';
 import { generate } from './generator';
+import { addMemory, getMemories } from './memory';
 import { openFileInActivePane } from '../lib/openFile';
 import { uid } from '../lib/tree';
+
+export interface ChatMsg {
+	role: 'user' | 'assistant';
+	content: string;
+}
 
 export interface AgentContext {
 	fs: IFileSystem;
 	editor: EditorService;
 	shell: Shell;
+	/** Prior conversation turns (text only), oldest first — for model backends. */
+	history: ChatMsg[];
 }
 
 export interface FileChange {
@@ -33,6 +41,7 @@ export interface FileChange {
 
 export type AgentEvent =
 	| { type: 'text'; text: string }
+	| { type: 'text-delta'; text: string }
 	| { type: 'tool'; id: string; tool: string; label: string }
 	| { type: 'tool-done'; id: string; status?: 'done' | 'error'; output?: string }
 	| { type: 'changes'; files: FileChange[] };
@@ -53,6 +62,21 @@ export class LocalAgent implements AgentBackend {
 		const text = input.trim();
 		const lower = text.toLowerCase();
 		let m: RegExpMatchArray | null;
+
+		// Save a durable memory.
+		if ((m = text.match(/^remember(?:\s+that)?\s+(.+)/i))) {
+			const note = m[1].trim();
+			addMemory(note);
+			yield { type: 'tool', id: uid('tool'), tool: 'plan', label: `Remember "${note.slice(0, 40)}"` };
+			yield { type: 'text', text: `Got it — I'll remember that: "${note}".` };
+			return;
+		}
+		// Recall memories.
+		if (/^(what do you remember|list memor|show memor|what.s in memor)/i.test(lower)) {
+			const notes = getMemories();
+			yield { type: 'text', text: notes.length ? `I remember:\n${notes.map((n) => `• ${n.text}`).join('\n')}` : "I don't have any saved memories yet. Tell me to “remember …” and I'll keep it." };
+			return;
+		}
 
 		// Run a shell command (explicit `run …` / `$ …`, or a known command first).
 		const firstWord = lower.split(/\s+/)[0];
@@ -234,18 +258,59 @@ const GREETING: AgentMessage = {
 	tools: [],
 };
 
+/** Compaction thresholds: fold older turns once a thread grows past this. */
+const CONTEXT_LIMIT_CHARS = 24000; // ≈ 6k tokens
+const KEEP_RECENT = 6;
+const THREADS_KEY = 'velocity.agent.threads.v1';
+
 export class AgentService {
 	private threads = new Map<string, AgentMessage[]>();
 	private busy = new Set<string>();
+	private queues = new Map<string, string[]>();
 	private listeners = new Set<() => void>();
 	private rev = 0;
+	private saveTimer: ReturnType<typeof setTimeout> | null = null;
 
 	constructor(
 		private fs: IFileSystem,
 		private editor: EditorService,
 		private shells: ShellService,
 		public backend: AgentBackend,
-	) {}
+		/** Resolves the active backend at send time (e.g. Local vs Ollama). */
+		private resolve?: () => AgentBackend,
+	) {
+		this.load();
+	}
+
+	/** Restore persisted conversations (sanitizing any mid-stream state). */
+	private load(): void {
+		try {
+			const raw = localStorage.getItem(THREADS_KEY);
+			if (!raw) return;
+			const data = JSON.parse(raw) as Record<string, AgentMessage[]>;
+			for (const [k, msgs] of Object.entries(data)) {
+				if (Array.isArray(msgs)) {
+					this.threads.set(k, msgs.map((m) => ({ ...m, pending: false, tools: (m.tools ?? []).map((t) => ({ ...t, status: t.status === 'running' ? 'done' : t.status })) })));
+				}
+			}
+		} catch { /* ignore */ }
+	}
+
+	/** Persist conversations (debounced — bump() fires often during streaming). */
+	private save(): void {
+		if (this.saveTimer !== null) return;
+		this.saveTimer = setTimeout(() => {
+			this.saveTimer = null;
+			try { localStorage.setItem(THREADS_KEY, JSON.stringify(Object.fromEntries(this.threads))); } catch { /* quota */ }
+		}, 500);
+	}
+
+	/** Clear a conversation back to the greeting. */
+	reset(paneId: string): void {
+		this.threads.set(paneId, [GREETING]);
+		this.queues.delete(paneId);
+		this.bump();
+	}
 
 	thread(paneId: string): AgentMessage[] {
 		let t = this.threads.get(paneId);
@@ -260,28 +325,81 @@ export class AgentService {
 		return this.busy.has(paneId);
 	}
 
+	/** Queued follow-ups waiting to run after the current turn. */
+	queued(paneId: string): string[] {
+		return this.queues.get(paneId) ?? [];
+	}
+
+	/** Approximate context usage of a thread (chars ≈ 4 chars/token). */
+	contextInfo(paneId: string): { tokens: number; pct: number } {
+		const chars = this.thread(paneId).reduce((n, m) => n + m.text.length + m.tools.reduce((a, t) => a + t.label.length + (t.output?.length ?? 0), 0), 0);
+		return { tokens: Math.round(chars / 4), pct: Math.min(100, Math.round((chars / CONTEXT_LIMIT_CHARS) * 100)) };
+	}
+
+	/** Automatic compaction: once a thread gets long, fold older turns into a
+	 *  one-line summary so the model context (and the UI) stays bounded. */
+	private compact(paneId: string): void {
+		const t = this.thread(paneId);
+		const chars = t.reduce((n, m) => n + m.text.length, 0);
+		if (chars < CONTEXT_LIMIT_CHARS || t.length <= KEEP_RECENT + 2) return;
+		const head = t[0]?.id === 'greeting' ? [t[0]] : [];
+		const tail = t.slice(-KEEP_RECENT);
+		const dropped = t.slice(head.length, t.length - KEEP_RECENT);
+		if (dropped.length <= 0) return;
+		const files = new Set<string>();
+		for (const m of dropped) for (const c of m.changes ?? []) files.add(c.path);
+		const summary: AgentMessage = {
+			id: uid('m'), role: 'assistant', tools: [],
+			text: `_Compacted ${dropped.length} earlier message${dropped.length === 1 ? '' : 's'} to save context${files.size ? ` · touched ${[...files].slice(0, 6).join(', ')}` : ''}._`,
+		};
+		this.threads.set(paneId, [...head, summary, ...tail]);
+		this.bump();
+	}
+
 	async send(paneId: string, input: string): Promise<void> {
 		const text = input.trim();
-		if (!text || this.busy.has(paneId)) {
+		if (!text) {
 			return;
 		}
+		// While a turn is running, a follow-up is queued and dispatched after.
+		if (this.busy.has(paneId)) {
+			this.queues.set(paneId, [...(this.queues.get(paneId) ?? []), text]);
+			this.bump();
+			return;
+		}
+		// Keep context bounded before we build history for the model.
+		this.compact(paneId);
+		// Snapshot prior turns (text only) as history for a model backend.
+		const history: ChatMsg[] = this.thread(paneId)
+			.filter((m) => m.id !== 'greeting' && m.text.trim())
+			.map((m) => ({ role: m.role, content: m.text }));
 		const asst: AgentMessage = { id: uid('m'), role: 'assistant', text: '', tools: [], pending: true };
 		this.threads.set(paneId, [...this.thread(paneId), { id: uid('m'), role: 'user', text, tools: [] }, asst]);
 		this.busy.add(paneId);
 		this.bump();
 
-		const ctx: AgentContext = { fs: this.fs, editor: this.editor, shell: this.shells.for(`agent:${paneId}`) };
+		const ctx: AgentContext = { fs: this.fs, editor: this.editor, shell: this.shells.for(`agent:${paneId}`), history };
+		const backend = this.resolve?.() ?? this.backend;
 		try {
-			for await (const ev of this.backend.run(text, ctx)) {
+			for await (const ev of backend.run(text, ctx)) {
 				this.apply(paneId, asst.id, ev);
 				this.bump();
 			}
 		} catch (e) {
 			this.apply(paneId, asst.id, { type: 'text', text: `\n\n_Error: ${e instanceof Error ? e.message : String(e)}_` });
 		}
-		asst.pending = false;
+		this.patch(paneId, asst.id, (m) => ({ ...m, pending: false }));
 		this.busy.delete(paneId);
 		this.bump();
+
+		// Dispatch the next queued follow-up, if any.
+		const q = this.queues.get(paneId);
+		if (q && q.length) {
+			const [next, ...rest] = q;
+			if (rest.length) this.queues.set(paneId, rest); else this.queues.delete(paneId);
+			this.bump();
+			void this.send(paneId, next);
+		}
 	}
 
 	release(paneId: string): void {
@@ -290,28 +408,43 @@ export class AgentService {
 		this.shells.release(`agent:${paneId}`);
 	}
 
-	private apply(paneId: string, msgId: string, ev: AgentEvent): void {
+	/** Immutably replace one message in a thread: new message object + new
+	 *  array, untouched messages keep their reference. This lets the UI wrap
+	 *  each message in React.memo so only the changed (streaming) message
+	 *  re-renders, not the whole conversation. */
+	private patch(paneId: string, msgId: string, fn: (m: AgentMessage) => AgentMessage): void {
 		const t = this.threads.get(paneId);
 		if (!t) {
 			return;
 		}
-		const msg = t.find((x) => x.id === msgId);
-		if (!msg) {
+		const idx = t.findIndex((x) => x.id === msgId);
+		if (idx === -1) {
 			return;
 		}
-		if (ev.type === 'text') {
-			msg.text = msg.text ? `${msg.text}\n\n${ev.text}` : ev.text;
-		} else if (ev.type === 'tool') {
-			msg.tools.push({ id: ev.id, tool: ev.tool, label: ev.label, status: 'running' });
-		} else if (ev.type === 'tool-done') {
-			const tc = msg.tools.find((x) => x.id === ev.id);
-			if (tc) {
-				tc.status = ev.status ?? 'done';
-				tc.output = ev.output;
+		const arr = t.slice();
+		arr[idx] = fn(t[idx]);
+		this.threads.set(paneId, arr);
+	}
+
+	private apply(paneId: string, msgId: string, ev: AgentEvent): void {
+		this.patch(paneId, msgId, (msg) => {
+			if (ev.type === 'text') {
+				return { ...msg, text: msg.text ? `${msg.text}\n\n${ev.text}` : ev.text };
 			}
-		} else if (ev.type === 'changes') {
-			msg.changes = [...(msg.changes ?? []), ...ev.files];
-		}
+			if (ev.type === 'text-delta') {
+				return { ...msg, text: msg.text + ev.text };
+			}
+			if (ev.type === 'tool') {
+				return { ...msg, tools: [...msg.tools, { id: ev.id, tool: ev.tool, label: ev.label, status: 'running' as const }] };
+			}
+			if (ev.type === 'tool-done') {
+				return { ...msg, tools: msg.tools.map((tc) => tc.id === ev.id ? { ...tc, status: ev.status ?? 'done', output: ev.output } : tc) };
+			}
+			if (ev.type === 'changes') {
+				return { ...msg, changes: [...(msg.changes ?? []), ...ev.files] };
+			}
+			return msg;
+		});
 	}
 
 	readonly subscribe = (l: () => void): (() => void) => {
@@ -322,6 +455,7 @@ export class AgentService {
 
 	private bump(): void {
 		this.rev++;
+		this.save();
 		for (const l of this.listeners) {
 			l();
 		}
@@ -334,8 +468,8 @@ export class AgentService {
 import { useServices } from './container';
 
 /** The agent conversation for a pane, re-rendering as events stream in. */
-export function useAgentThread(paneId: string): { thread: AgentMessage[]; busy: boolean } {
+export function useAgentThread(paneId: string): { thread: AgentMessage[]; busy: boolean; queued: string[]; context: { tokens: number; pct: number } } {
 	const { agent } = useServices();
 	useSyncExternalStore(agent.subscribe, agent.getSnapshot);
-	return { thread: agent.thread(paneId), busy: agent.isBusy(paneId) };
+	return { thread: agent.thread(paneId), busy: agent.isBusy(paneId), queued: agent.queued(paneId), context: agent.contextInfo(paneId) };
 }

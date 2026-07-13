@@ -13,9 +13,13 @@ import { normalizePath } from './filesystem';
 import { TextDocument } from './document';
 import { useServices } from './container';
 
+/** Shared stable empty list — see openFilesForPane. */
+const EMPTY_FILES: string[] = [];
+
 export class EditorService {
 	private docs = new Map<string, TextDocument>(); // path -> shared document
-	private paneToPath = new Map<string, string>(); // paneId -> committed path
+	private paneToPath = new Map<string, string>(); // paneId -> committed (active) path
+	private paneOpen = new Map<string, string[]>(); // paneId -> open file tabs (order)
 	private panePending = new Map<string, string>(); // paneId -> path currently loading
 	private paneSeq = new Map<string, number>(); // paneId -> latest bind sequence
 	private bindSeq = 0; // monotonic; guards against stale/cancelled binds
@@ -74,11 +78,43 @@ export class EditorService {
 			return doc; // superseded by a newer bind, or the pane was released
 		}
 		this.paneToPath.set(paneId, doc.path);
+		// Track the open-file tab list for this pane (VS Code-style tab strip).
+		const open = this.paneOpen.get(paneId) ?? [];
+		if (!open.includes(doc.path)) {
+			this.paneOpen.set(paneId, [...open, doc.path]);
+		}
 		if (this.panePending.get(paneId) === p) {
 			this.panePending.delete(paneId);
 		}
 		this.bump();
 		return doc;
+	}
+
+	/** The open-file tabs for a pane, in order. A stable empty array is returned
+	 *  when none are open, so useSyncExternalStore doesn't see a new snapshot
+	 *  every render (that would be an infinite loop). */
+	openFilesForPane(paneId: string): string[] {
+		return this.paneOpen.get(paneId) ?? EMPTY_FILES;
+	}
+
+	/** Close one open-file tab. If it was active, activate a neighbour. */
+	closeFile(paneId: string, path: string): void {
+		const p = normalizePath(path);
+		const open = this.paneOpen.get(paneId) ?? [];
+		const idx = open.indexOf(p);
+		if (idx === -1) return;
+		const next = open.filter((x) => x !== p);
+		this.paneOpen.set(paneId, next);
+		if (this.paneToPath.get(paneId) === p) {
+			const neighbour = next[idx] ?? next[idx - 1] ?? next[next.length - 1];
+			if (neighbour) {
+				void this.bindPane(paneId, neighbour);
+			} else {
+				this.paneToPath.delete(paneId);
+			}
+		}
+		this.gc();
+		this.bump();
 	}
 
 	/** Copy one pane's open file to another (used when a pane is split). */
@@ -95,6 +131,7 @@ export class EditorService {
 		// (its resolution will find no matching seq and discard itself).
 		this.paneSeq.delete(paneId);
 		this.panePending.delete(paneId);
+		this.paneOpen.delete(paneId);
 		const had = this.paneToPath.delete(paneId);
 		if (had) {
 			this.gc();
@@ -151,6 +188,12 @@ export function usePaneDoc(paneId: string): TextDocument | null {
 export function usePanePath(paneId: string): string | undefined {
 	const { editor } = useServices();
 	return useSyncExternalStore(editor.subscribe, () => editor.pathForPane(paneId));
+}
+
+/** The open-file tabs for a pane (VS Code-style strip). */
+export function usePaneOpenFiles(paneId: string): string[] {
+	const { editor } = useServices();
+	return useSyncExternalStore(editor.subscribe, () => editor.openFilesForPane(paneId));
 }
 
 /** A document's dirty (unsaved) state, tracked live. */

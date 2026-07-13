@@ -5,12 +5,12 @@
 // single pane, and every pane runs one of the five modes. Mode is per-pane, so a
 // tab can show (e.g.) a Live Editor split beside a Browser with a Terminal below.
 
-export type Mode = 'agents' | 'editor' | 'terminal' | 'browser' | 'builder';
+export type Mode = 'agents' | 'editor' | 'terminal' | 'browser' | 'builder' | 'database' | 'api' | 'observe' | 'design' | 'test' | 'ship' | 'home' | 'mission' | 'library';
 
-export const MODES: Mode[] = ['agents', 'editor', 'terminal', 'browser', 'builder'];
+export const MODES: Mode[] = ['agents', 'editor', 'terminal', 'browser', 'builder', 'database', 'api', 'observe', 'design', 'test', 'ship', 'home', 'mission', 'library'];
 
 /** The modes an "app" tab can be — the agent is the persistent brain, not an app. */
-export const APP_MODES: Mode[] = ['editor', 'terminal', 'browser', 'builder'];
+export const APP_MODES: Mode[] = ['editor', 'terminal', 'browser', 'builder', 'database', 'api', 'observe', 'design', 'test', 'ship'];
 
 /** Split direction. `row` = side-by-side (vertical divider); `col` = stacked (horizontal divider). */
 export type Axis = 'row' | 'col';
@@ -54,5 +54,13 @@ export interface Project {
 	name: string;
 	color: string;
 }
+
+/** The cockpit's operating modes — the far-left global rail. Each is a lens over
+ *  the one project graph, not a separate app. */
+export type CockpitMode =
+	| 'home' | 'build' | 'design' | 'browse' | 'data'
+	| 'test' | 'ship' | 'observe' | 'agents' | 'library';
+
+export const COCKPIT_MODES: CockpitMode[] = ['home', 'build', 'design', 'browse', 'data', 'test', 'ship', 'observe', 'agents', 'library'];
 
 export type Theme = 'light' | 'dark';

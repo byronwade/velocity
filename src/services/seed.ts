@@ -143,6 +143,45 @@ export function TodoItem({ todo }: { todo: Todo }) {
 }
 `,
 
+	'db/schema.sql': `-- Velocity sample schema. The Database studio parses this file for its
+-- schema, then runs real SELECT / INSERT queries against an in-memory store.
+
+CREATE TABLE users (
+  id         INTEGER PRIMARY KEY,
+  email      TEXT,
+  name       TEXT,
+  created_at TEXT
+);
+
+CREATE TABLE todos (
+  id      INTEGER PRIMARY KEY,
+  user_id INTEGER,
+  title   TEXT,
+  done    INTEGER
+);
+`,
+
+	'src/api/health.ts': `// Liveness probe. The API studio runs this route for real.
+export function GET() {
+  return Response.json({ status: 'ok', service: 'velocity' });
+}
+`,
+
+	'src/api/users.ts': `// Lists users from the database. Backed by the same store the
+// Database studio queries — GET /api/users runs SELECT * FROM users.
+export async function GET() {
+  const users = await db.query('SELECT * FROM users');
+  return Response.json({ count: users.length, rows: users });
+}
+`,
+
+	'src/api/echo.ts': `// Echoes the JSON request body back to the caller.
+export async function POST(req: Request) {
+  const body = await req.json();
+  return Response.json({ received: body }, { status: 201 });
+}
+`,
+
 	'src/lib/store.ts': `import { create } from 'zustand';
 import type { Todo } from './types';
 

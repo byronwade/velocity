@@ -5,7 +5,7 @@
 // ---------------------------------------------------------------------------
 
 import { create } from 'zustand';
-import type { Axis, Mode, Project, Tab, Theme } from './types';
+import type { Axis, CockpitMode, Mode, Project, Tab, Theme } from './types';
 import { closePane as closePaneOp, makeLeaf, setPaneMode as setPaneModeOp, setRatio as setRatioOp, splitPane as splitPaneOp, uid } from './tree';
 
 const PERSIST_KEY = 'velocity.shell.v3';
@@ -17,6 +17,11 @@ interface PersistShape {
 	activeTabId: string;
 	collapsedProjects: string[];
 	sidebarCollapsed: boolean;
+	brainWidth: number;
+	brainCollapsed: boolean;
+	cockpitMode: CockpitMode;
+	dockCollapsed: boolean;
+	shelfCollapsed: boolean;
 	theme: Theme;
 }
 
@@ -44,9 +49,15 @@ interface ShellState extends PersistShape {
 	closePane: (paneId: string) => void;
 	setRatio: (splitId: string, ratio: number) => void;
 	toggleMaximizePane: (paneId: string) => void;
+	setMaximizedPane: (paneId: string | null) => void;
 
 	// chrome
 	toggleSidebar: () => void;
+	setBrainWidth: (w: number) => void;
+	toggleBrain: () => void;
+	setCockpitMode: (mode: CockpitMode) => void;
+	toggleDock: () => void;
+	toggleShelf: () => void;
 	setTheme: (theme: Theme) => void;
 }
 
@@ -87,8 +98,17 @@ const seed: PersistShape = load() ?? (() => {
 	const p1 = newProject('streamline', PROJECT_COLORS[0]);
 	const p2 = newProject('contextds', PROJECT_COLORS[1]);
 	const tabs = [workspaceTab(p1.id), newTab('browser', 'localhost:3000', p1.id), newTab('builder', 'New app', p2.id)];
-	return { projects: [p1, p2], tabs, activeTabId: tabs[0].id, collapsedProjects: [], sidebarCollapsed: false, theme: 'dark' as Theme };
+	return { projects: [p1, p2], tabs, activeTabId: tabs[0].id, collapsedProjects: [], sidebarCollapsed: false, brainWidth: 424, brainCollapsed: false, cockpitMode: 'build' as CockpitMode, dockCollapsed: false, shelfCollapsed: true, theme: 'dark' as Theme };
 })();
+if (!seed.cockpitMode) {
+	seed.cockpitMode = 'build';
+}
+if (seed.shelfCollapsed === undefined) {
+	seed.shelfCollapsed = true;
+}
+if (!seed.brainWidth) {
+	seed.brainWidth = 424;
+}
 
 function withActiveTab(state: ShellState, fn: (tab: Tab) => Tab): Partial<ShellState> {
 	const tabs = state.tabs.map((t) => (t.id === state.activeTabId ? fn(t) : t));
@@ -182,15 +202,21 @@ export const useShell = create<ShellState>((set) => ({
 	setRatio: (splitId, ratio) => set((s) => withActiveTab(s, (t) => ({ ...t, tree: setRatioOp(t.tree, splitId, ratio) }))),
 
 	toggleMaximizePane: (paneId) => set((s) => ({ maximizedPaneId: s.maximizedPaneId === paneId ? null : paneId })),
+	setMaximizedPane: (paneId) => set({ maximizedPaneId: paneId }),
 
 	toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
+	setBrainWidth: (w) => set({ brainWidth: Math.max(320, Math.min(680, Math.round(w))) }),
+	toggleBrain: () => set((s) => ({ brainCollapsed: !s.brainCollapsed })),
+	setCockpitMode: (mode) => set({ cockpitMode: mode }),
+	toggleDock: () => set((s) => ({ dockCollapsed: !s.dockCollapsed })),
+	toggleShelf: () => set((s) => ({ shelfCollapsed: !s.shelfCollapsed })),
 	setTheme: (theme) => set({ theme }),
 }));
 
 // Persist a minimal slice on change.
 useShell.subscribe((s) => {
 	try {
-		const data: PersistShape = { projects: s.projects, tabs: s.tabs, activeTabId: s.activeTabId, collapsedProjects: s.collapsedProjects, sidebarCollapsed: s.sidebarCollapsed, theme: s.theme };
+		const data: PersistShape = { projects: s.projects, tabs: s.tabs, activeTabId: s.activeTabId, collapsedProjects: s.collapsedProjects, sidebarCollapsed: s.sidebarCollapsed, brainWidth: s.brainWidth, brainCollapsed: s.brainCollapsed, cockpitMode: s.cockpitMode, dockCollapsed: s.dockCollapsed, shelfCollapsed: s.shelfCollapsed, theme: s.theme };
 		localStorage.setItem(PERSIST_KEY, JSON.stringify(data));
 	} catch {
 		/* ignore quota / private-mode errors */

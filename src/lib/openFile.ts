@@ -9,9 +9,11 @@
 
 import { useShell } from './store';
 import { findLeafByPane, leaves } from './tree';
+import { pushRecent } from './recentFiles';
 import type { EditorService } from '../services/editorService';
 
 export function openFileInActivePane(editor: EditorService, path: string): void {
+	pushRecent(path);
 	const s = useShell.getState();
 	const tab = s.tabs.find((t) => t.id === s.activeTabId) ?? s.tabs[0];
 

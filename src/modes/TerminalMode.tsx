@@ -47,10 +47,50 @@ export function TerminalMode({ paneId }: { paneId: string }) {
 		setLines((prev) => [...prev, prompt, ...result]);
 	}
 
+	async function complete() {
+		const tokens = input.split(/\s+/);
+		const isFirst = tokens.length === 1;
+		const token = tokens[tokens.length - 1] ?? '';
+		const cands = await sh.complete(token, isFirst);
+		if (cands.length === 0) {
+			return;
+		}
+		if (cands.length === 1) {
+			tokens[tokens.length - 1] = cands[0].endsWith('/') ? cands[0] : `${cands[0]} `;
+			setInput(tokens.join(' '));
+			return;
+		}
+		// Multiple: fill the longest common prefix, and list the options.
+		let common = cands[0];
+		for (const c of cands) { while (!c.startsWith(common)) common = common.slice(0, -1); }
+		if (common.length > token.length) {
+			tokens[tokens.length - 1] = common;
+			setInput(tokens.join(' '));
+		}
+		const promptLine: ShellLine = { kind: 'in', text: `${sh.promptPath()} $ ${input}` };
+		setLines((prev) => [...prev, promptLine, { kind: 'out', text: cands.join('   ') }]);
+	}
+
 	function onKey(e: React.KeyboardEvent<HTMLInputElement>) {
+		// Ctrl+L clears the screen; Ctrl+C cancels the current line (like a shell).
+		if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'l') {
+			e.preventDefault();
+			setLines([]);
+			return;
+		}
+		if (e.ctrlKey && e.key.toLowerCase() === 'c') {
+			e.preventDefault();
+			setLines((prev) => [...prev, { kind: 'in', text: `${sh.promptPath()} $ ${input}^C` }]);
+			setInput('');
+			setHistIdx(-1);
+			return;
+		}
 		if (e.key === 'Enter') {
 			e.preventDefault();
 			void submit();
+		} else if (e.key === 'Tab') {
+			e.preventDefault();
+			void complete();
 		} else if (e.key === 'ArrowUp') {
 			e.preventDefault();
 			const h = sh.history;

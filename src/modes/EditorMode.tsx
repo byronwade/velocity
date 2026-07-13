@@ -6,10 +6,12 @@
 // "· N panes" badge shows when a document is shared.
 // ---------------------------------------------------------------------------
 
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useServices } from '../services/container';
-import { useDocDirty, usePaneDoc, useDocViewCount } from '../services/editorService';
+import { useDocDirty, usePaneDoc, useDocViewCount, usePaneOpenFiles } from '../services/editorService';
+import { languageName } from '../editor/languages';
 import { Icon } from '../lib/icons';
+import type { CursorInfo } from '../editor/CodeMirrorHost';
 
 // The CodeMirror core + language grammars are ~600KB; load them only when an
 // editor pane is actually shown, so the shell's first paint stays light.
@@ -27,6 +29,8 @@ export function EditorMode({ paneId }: { paneId: string }) {
 	const doc = usePaneDoc(paneId);
 	const dirty = useDocDirty(doc);
 	const views = useDocViewCount(doc);
+	const openFiles = usePaneOpenFiles(paneId);
+	const [cursor, setCursor] = useState<CursorInfo | null>(null);
 
 	// A fresh editor pane opens a sensible default so it never shows blank code.
 	// Panes created by splitting already carry an inherited binding, so this is
@@ -48,28 +52,67 @@ export function EditorMode({ paneId }: { paneId: string }) {
 		);
 	}
 
-	const { name, dir } = splitPath(doc.path);
+	const { dir } = splitPath(doc.path);
+	const crumbs = doc.path.split('/');
 
 	return (
 		<div className="editor">
 			<div className="editor-tabbar">
-				<div className="editor-tab active" title={doc.path}>
-					<Icon.file />
-					<span className="nm">{name}</span>
-					{dirty && <span className="dot" aria-label="Unsaved changes" />}
-				</div>
+				{(openFiles.length ? openFiles : [doc.path]).map((path) => {
+					const active = path === doc.path;
+					const tabName = splitPath(path).name;
+					const tabDirty = active ? dirty : (editor.getDoc(path)?.isDirty ?? false);
+					return (
+						<div
+							key={path}
+							className={`editor-tab${active ? ' active' : ''}`}
+							title={path}
+							onClick={() => { if (!active) void editor.bindPane(paneId, path); }}
+							onAuxClick={(e) => { if (e.button === 1) { e.preventDefault(); editor.closeFile(paneId, path); } }}
+						>
+							<Icon.file />
+							<span className="nm">{tabName}</span>
+							{tabDirty
+								? <span className="dot" aria-label="Unsaved changes" />
+								: <button className="tx" aria-label={`Close ${tabName}`} onClick={(e) => { e.stopPropagation(); editor.closeFile(paneId, path); }}><Icon.close /></button>}
+						</div>
+					);
+				})}
 				{views > 1 && (
 					<span className="shared" title={`Editing live in ${views} panes`}>
 						<Icon.splitRight />
 						{views}
 					</span>
 				)}
-				{dir && <span className="path">{dir}</span>}
 				<span className="sp" />
 			</div>
+			{/* breadcrumbs (VS Code / Zed style) */}
+			<div className="editor-crumbs" aria-label="Breadcrumbs">
+				{crumbs.map((c, i) => (
+					<span key={i} className="crumb">
+						{i > 0 && <Icon.forward />}
+						<span className={i === crumbs.length - 1 ? 'leaf' : ''}>{c}</span>
+					</span>
+				))}
+			</div>
 			<Suspense fallback={<div className="cm-host cm-skeleton" aria-hidden />}>
-				<CodeMirrorHost doc={doc} paneId={paneId} onSave={() => void editor.save(doc.path)} />
+				<CodeMirrorHost doc={doc} paneId={paneId} onSave={() => void editor.save(doc.path)} onCursor={setCursor} />
 			</Suspense>
+			{/* status bar (VS Code / Cursor / Zed style) */}
+			<div className="editor-status">
+				<span className="es-left">
+					{dir && <span className="es-item">{dir}</span>}
+				</span>
+				<span className="sp" />
+				<span className="es-item">{cursor ? `Ln ${cursor.line}, Col ${cursor.col}` : 'Ln 1, Col 1'}</span>
+				{cursor && cursor.selLen > 0 && <span className="es-item">{`(${cursor.selLen} selected)`}</span>}
+				{cursor && cursor.ranges > 1 && <span className="es-item">{`${cursor.ranges} cursors`}</span>}
+				<span className="es-item">Spaces: 2</span>
+				<span className="es-item">UTF-8</span>
+				<span className="es-item">LF</span>
+				<span className="es-item es-lang">{languageName(doc.path)}</span>
+				{dirty ? <span className="es-item es-dirty">● Unsaved</span> : <span className="es-item">Saved</span>}
+			</div>
 		</div>
 	);
 }

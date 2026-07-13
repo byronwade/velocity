@@ -11,13 +11,15 @@ import { Icon } from '../lib/icons';
 import { SplitView } from './SplitView';
 import { PaneChrome } from './PaneChrome';
 import { ShareSheet } from './ShareSheet';
+import { ActivityShelf } from './ActivityShelf';
+import { AgentsMenu } from './AgentsMenu';
+import { CockpitModeMenu } from './CockpitModeMenu';
+import { HeaderMenu } from './HeaderMenu';
 import { closeTabWithCleanup } from '../lib/closeTab';
 
-const PEOPLE = [
-	{ initial: 'B', color: 'linear-gradient(135deg,#7c5cff,#d94fb0)' },
-	{ initial: 'M', color: 'linear-gradient(135deg,#0ea5e9,#22d3ee)' },
-	{ initial: 'K', color: 'linear-gradient(135deg,#f59e0b,#ef4444)' },
-];
+// The signed-in user. Real collaborator presence would extend this from the
+// collab service; until then we show only the current user (no fake avatars).
+const PEOPLE = [{ initial: 'B', color: 'linear-gradient(135deg,#7c5cff,#d94fb0)' }];
 
 function tabMode(tab: Tab) {
 	const active = leaves(tab.tree).find((l) => l.pane.id === tab.activePaneId) ?? leaves(tab.tree)[0];
@@ -38,6 +40,20 @@ export function AppsPanel() {
 	const appTabs = tabs.filter((t) => t.projectId === projectId);
 	const maximizedLeaf = maximizedPaneId ? findLeafByPane(activeTab.tree, maximizedPaneId) : undefined;
 
+	// Run / Preview: focus an existing Browser app (or open one) and point it at
+	// the local dev URL, which renders the live workspace preview. Runs the real
+	// app without disturbing the editor pane.
+	function runPreview() {
+		const s = useShell.getState();
+		const existing = s.tabs.find((t) => t.projectId === projectId && tabMode(t) === 'browser');
+		if (existing) {
+			s.setActiveTab(existing.id);
+		} else {
+			s.addTab('browser', projectId);
+		}
+		setTimeout(() => window.dispatchEvent(new CustomEvent('velocity:navigate', { detail: { url: 'localhost:3000' } })), 90);
+	}
+
 	useEffect(() => {
 		if (!addOpen) {
 			return;
@@ -54,9 +70,14 @@ export function AppsPanel() {
 	return (
 		<section className="apps">
 			<div className="apps-head">
+				<CockpitModeMenu />
 				<div className="apps-tabs" role="tablist" aria-label="Apps">
 					{appTabs.map((t) => {
-						const Glyph = Icon[MODE_DEFS[tabMode(t)].icon];
+						const mode = tabMode(t);
+						const Glyph = Icon[MODE_DEFS[mode].icon];
+						// Editor/browser tabs keep their file/site title; a studio tab
+						// shows the studio name so it isn't mislabeled "App.tsx".
+						const label = mode === 'editor' || mode === 'browser' || mode === 'terminal' ? t.title : MODE_DEFS[mode].name;
 						const active = t.id === activeTabId;
 						return (
 							<div
@@ -71,7 +92,7 @@ export function AppsPanel() {
 								title={t.title}
 							>
 								<span className="glyph"><Glyph /></span>
-								<span className="tt">{t.title}</span>
+								<span className="tt">{label}</span>
 								<button className="x" aria-label={`Close ${t.title}`} onClick={(e) => { e.stopPropagation(); closeTabWithCleanup(t.id); }}><Icon.close /></button>
 							</div>
 						);
@@ -95,17 +116,19 @@ export function AppsPanel() {
 					</div>
 				</div>
 				<span className="sp" />
-				<button className="ib" title="Run / Preview" aria-label="Run"><Icon.play /></button>
-				<div className="presence" title="3 collaborators live">
+				<button className="ib" title="Run / Preview live app" aria-label="Run" onClick={runPreview}><Icon.play /></button>
+				<button className="presence" title="Invite people" aria-label="Invite people" onClick={() => setSheet('invite')}>
 					{PEOPLE.map((p) => (<span key={p.initial} className="av" style={{ background: p.color }}>{p.initial}</span>))}
-					<span className="av more">+4</span>
-				</div>
-				<button className="btn ghost" onClick={() => setSheet('invite')}><Icon.invite />Invite</button>
+					<span className="av-invite"><Icon.plus /></span>
+				</button>
+				<AgentsMenu />
 				<button className="btn brand" onClick={() => setSheet('share')}><Icon.share />Share</button>
+				<HeaderMenu />
 			</div>
 			<div className="apps-stage">
 				{maximizedLeaf ? <PaneChrome pane={maximizedLeaf.pane} /> : <SplitView key={activeTab.id} node={activeTab.tree} />}
 			</div>
+			<ActivityShelf />
 			{sheet && <ShareSheet kind={sheet} onClose={() => setSheet(null)} />}
 		</section>
 	);

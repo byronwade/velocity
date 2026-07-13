@@ -5,9 +5,11 @@
 // services/agent.ts); the review card lists the files the agent actually wrote.
 // ---------------------------------------------------------------------------
 
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { useServices } from '../services/container';
 import { useAgentThread, type AgentMessage, type FileChange, type ToolCall } from '../services/agent';
+import { ModelPicker } from '../components/ModelPicker';
+import { getActiveEditor } from '../editor/activeView';
 import { Icon, type IconName } from '../lib/icons';
 
 const TOOL_ICON: Record<string, IconName> = {
@@ -119,7 +121,25 @@ function ChangesCard({ files }: { files: FileChange[] }) {
 	);
 }
 
-function MessageView({ m }: { m: AgentMessage }) {
+// Memoized: with the agent service updating messages immutably, only the
+// message whose object identity changed (the streaming one) re-renders — the
+// Response actions — a local rating (thumbs) plus copy. The rating is a real,
+// per-message toggle; wiring it to durable telemetry is a future step.
+function MsgActions({ text }: { text: string }) {
+	const [rating, setRating] = useState<'up' | 'down' | null>(null);
+	const [copied, setCopied] = useState(false);
+	function copyText() { void navigator.clipboard?.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1200); }
+	return (
+		<div className="msg-actions">
+			<button className={rating === 'up' ? 'on' : ''} title="Good response" aria-pressed={rating === 'up'} onClick={() => setRating((r) => (r === 'up' ? null : 'up'))}><Icon.thumbUp /></button>
+			<button className={rating === 'down' ? 'on' : ''} title="Bad response" aria-pressed={rating === 'down'} onClick={() => setRating((r) => (r === 'down' ? null : 'down'))}><Icon.thumbDown /></button>
+			<button title={copied ? 'Copied' : 'Copy'} onClick={copyText}>{copied ? <Icon.check /> : <Icon.copy />}</button>
+		</div>
+	);
+}
+
+// rest of the conversation is skipped.
+const MessageView = memo(function MessageView({ m }: { m: AgentMessage }) {
 	if (m.role === 'user') {
 		return (
 			<div className="msg req">
@@ -135,19 +155,13 @@ function MessageView({ m }: { m: AgentMessage }) {
 			{m.tools.map((tc) => (
 				<ToolCardView key={tc.id} tc={tc} />
 			))}
-			{m.text && <div className="prose"><Prose text={m.text} /></div>}
+			{m.text && <div className="prose"><Prose text={m.text} />{m.pending && <span className="stream-caret" aria-hidden />}</div>}
 			{m.changes && m.changes.length > 0 && <ChangesCard files={m.changes} />}
 			{m.pending && !m.text && m.tools.length === 0 && <div className="typing"><i /><i /><i /></div>}
-			{!m.pending && m.text && (
-				<div className="msg-actions">
-					<button title="Good response"><Icon.thumbUp /></button>
-					<button title="Bad response"><Icon.thumbDown /></button>
-					<button title="Copy" onClick={() => navigator.clipboard?.writeText(m.text)}><Icon.copy /></button>
-				</div>
-			)}
+			{!m.pending && m.text && <MsgActions text={m.text} />}
 		</div>
 	);
-}
+});
 
 /** The scrollable conversation for an agent brain (keyed by `brainKey`). */
 export function AgentThread({ brainKey }: { brainKey: string }) {
@@ -183,6 +197,13 @@ export function AgentComposer({ brainKey }: { brainKey: string }) {
 		void agent.send(brainKey, t);
 	}
 
+	// Attach the current editor file to the prompt as @-context.
+	function addContext() {
+		const path = getActiveEditor()?.path;
+		const ref = path ? `@${path} ` : '@';
+		setInput((v) => (!v || v.endsWith(' ') ? v : v + ' ') + ref);
+	}
+
 	const lastChanges = [...thread].reverse().find((m) => m.changes && m.changes.length)?.changes;
 	const added = lastChanges?.reduce((s, f) => s + f.added, 0) ?? 0;
 	const removed = lastChanges?.reduce((s, f) => s + f.removed, 0) ?? 0;
@@ -194,12 +215,11 @@ export function AgentComposer({ brainKey }: { brainKey: string }) {
 					<span className="achip"><Icon.diff />Changes <b className="add">+{added}</b> <b className="del">−{removed}</b></span>
 				</div>
 			)}
-			<div className="ac-bar">
-				<button className="ac-plus" title="Add context" aria-label="Add context"><Icon.plus /></button>
+			<div className="ac-box">
 				<textarea
 					rows={1}
 					value={input}
-					placeholder="Ask the agent to build, run, open, or explain…"
+					placeholder="Ask for follow-up changes…"
 					onChange={(e) => setInput(e.target.value)}
 					onKeyDown={(e) => {
 						if (e.key === 'Enter' && !e.shiftKey) {
@@ -208,8 +228,14 @@ export function AgentComposer({ brainKey }: { brainKey: string }) {
 						}
 					}}
 				/>
-				<button className="ac-model" title="Model">Velocity · Local <Icon.chevron /></button>
-				<button className="ac-mic" title="Voice" aria-label="Voice"><Icon.mic /></button>
+				<div className="ac-row">
+					<button className="ac-plus" title="Attach the current file as context" aria-label="Add context" onClick={addContext}><Icon.plus /></button>
+					<span className="ac-sp" />
+					<ModelPicker />
+					<button className="ac-send" onClick={send} disabled={!input.trim() || busy} title="Send" aria-label="Send">
+						{busy ? <span className="spin" /> : <Icon.send />}
+					</button>
+				</div>
 			</div>
 			<div className="ac-foot">
 				<Icon.git />
