@@ -1,17 +1,56 @@
-<!-- Velocity shell view: markup over the core's model, embedded at build
-     time and hot-reloaded while `native dev` runs. Fields bind by the
-     names core.ts wrote ({welcomed}). Validate with: native check.
-     Stage 2 placeholder; Stage 4 replaces this with the Settings screen. -->
-<column gap="16" padding="24" main="center" cross="center" grow="1">
-  <text>Velocity</text>
-  <text>A fast, tiny, native AI code editor.</text>
-  <if test="{welcomed}">
-    <column gap="8" cross="center">
-      <status-bar>workspace coming online…</status-bar>
-      <button size="sm" variant="ghost" on-press="show_welcome">Back</button>
+<!-- Velocity shell view. In the zero-config ts-core build the runtime embeds
+     ONLY this file (src/app_runner/ts_core_main.zig: @embedFile("app.native"))
+     as a bare MarkupView, which does not resolve cross-file <import>s — so the
+     shared UI primitives live here as in-file <template>s (define once, <use>
+     many). When multiple view files justify it (Stage 5), `native eject` +
+     CompiledMarkupImports unlocks real component files under src/components/.
+     Fields bind by the names src/core.ts wrote ({welcomed}). -->
+
+<!-- ── Velocity UI primitives ─────────────────────────────────────────── -->
+
+<template name="section-header" args="title">
+  <text size="heading">{title}</text>
+</template>
+
+<!-- A surface panel. Children build into the slot. -->
+<template name="card">
+  <column background="surface" radius="md" padding="16" gap="12">
+    <slot/>
+  </column>
+</template>
+
+<!-- One settings/list row: label (+ optional hint) on the left, a control in
+     the slot on the right, aligned to one control height. -->
+<template name="field-row" args="label hint=">
+  <row gap="12" cross="center" padding="8">
+    <column gap="2" grow="1">
+      <text>{label}</text>
+      <if test="{hint != ''}">
+        <text size="sm" foreground="text_muted">{hint}</text>
+      </if>
     </column>
+    <slot/>
+  </row>
+</template>
+
+<!-- ── View root ──────────────────────────────────────────────────────── -->
+
+<column gap="16" padding="24" grow="1">
+  <use template="section-header" title="Velocity"/>
+  <text foreground="text_muted">A fast, tiny, native AI code editor.</text>
+  <use template="card">
+    <use template="field-row" label="Workspace" hint="Open the workspace to begin">
+      <row cross="center">
+        <if test="{welcomed}">
+          <button size="sm" variant="ghost" on-press="show_welcome">Reset</button>
+        </if>
+        <else>
+          <button size="sm" variant="primary" on-press="dismiss_welcome">Open</button>
+        </else>
+      </row>
+    </use>
+  </use>
+  <if test="{welcomed}">
+    <status-bar>workspace coming online…</status-bar>
   </if>
-  <else>
-    <button variant="primary" on-press="dismiss_welcome">Get started</button>
-  </else>
 </column>

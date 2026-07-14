@@ -81,6 +81,25 @@ compile-checked set only.
 8. **Docs & cleanup** — rewrite root README; finalize this doc as parity/status; confirm
    `native check --strict`, `pnpm build`, site build green. **→ FINAL PUSH; PR out of draft.**
 
+## Findings during execution (supersede earlier assumptions)
+
+- **Zig 0.16.0 installs on Windows via winget** (`zig.zig`), and `native build` produces
+  real `.exe`s here (~4 MB). So Zig is available; the no-Zig fallback is a backup, not the plan.
+- **`native build` success ≠ a working app.** It compiles the binary but does not prove the
+  view renders. The authoritative per-stage gate is now **`native build -Dautomation=true`
+  + launch + `native automate` snapshot**, asserting `dispatch_errors=0`, `widget_nodes>0`,
+  and no `error event=` lines. Automation works headless on Windows (verified).
+- **Cross-file markup `<import>` is NOT supported by the zero-config ts-core build.** The
+  runtime embeds only `src/app.native` (`app_runner/ts_core_main.zig: @embedFile("app.native")`)
+  as a bare MarkupView that doesn't resolve imports; importing a component file renders an
+  empty view with `error event=... name=MarkupImport`. Import paths also may not escape the
+  view-root dir (`../` is a hard error). **Decision:** UI primitives live as **in-file
+  `<template>`s in `app.native`** (folded ui-native into the app, per advisor). A shared
+  `packages/ui-native` / `src/components/*.native` is deferred until multiple view files
+  justify `native eject` + `CompiledMarkupImports`.
+- `native check`'s markup step also can't resolve cross-file imports; use `native markup
+  check <root> --strict` for markup and `native build`+automation for the real gate.
+
 ## Risks
 
 - **Zig 0.16.0 is nightly/unreleased** — Windows install may be fiddly. If `native dev`
