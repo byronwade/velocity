@@ -87,6 +87,12 @@
           <text>Live Editor</text>
           <spacer grow="1"/>
           <text size="sm" foreground="text_muted">{statusLabel}</text>
+          <if test="{preview}">
+            <button size="sm" variant="ghost" on-press="toggle_preview">Edit</button>
+          </if>
+          <else>
+            <button size="sm" variant="ghost" on-press="toggle_preview">Preview</button>
+          </else>
           <button size="sm" variant="ghost" on-press="reload_file">Reload</button>
           <button size="sm" variant="primary" on-press="save_file">Save</button>
         </row>
@@ -102,7 +108,26 @@
           </if>
           <text size="sm" foreground="text_muted">velocity / {activeName}</text>
         </row>
-        <textarea grow="1" label="Code editor" text="{doc.text}" on-input="edit" placeholder="Start typing…"/>
+        <if test="{preview}">
+          <scroll grow="1">
+            <column padding="12" gap="0">
+              <for each="codeLines" key="n" as="ln">
+                <row gap="16" cross="start">
+                  <text size="sm" foreground="text_muted">{ln.n}</text>
+                  <if test="{ln.comment}">
+                    <text grow="1"><span mono="true" foreground="text_muted">{ln.text}</span></text>
+                  </if>
+                  <else>
+                    <text grow="1"><span mono="true">{ln.text}</span></text>
+                  </else>
+                </row>
+              </for>
+            </column>
+          </scroll>
+        </if>
+        <else>
+          <textarea grow="1" label="Code editor" text="{doc.text}" on-input="edit" placeholder="Start typing…"/>
+        </else>
         <status-bar>{activeName}  ·  Ln 1, Col 1  ·  Spaces 2  ·  UTF-8  ·  LF  ·  TypeScript</status-bar>
       </column>
 

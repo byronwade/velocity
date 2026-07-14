@@ -112,6 +112,7 @@ export interface Model {
   readonly dirty: boolean;
   readonly saveStatus: SaveStatus;
   readonly paletteOpen: boolean;
+  readonly preview: boolean;
   // Agent pane
   readonly agentOpen: boolean;
   readonly messages: readonly ChatMsg[];
@@ -142,6 +143,7 @@ export function initialModel(): [Model, Cmd<Msg>] {
     dirty: false,
     saveStatus: "none",
     paletteOpen: false,
+    preview: false,
     agentOpen: true,
     messages: [{ id: 0, fromUser: false, text: GREETING }],
     compose: { text: EMPTY_TEXT, selection: { anchor: 0, focus: 0 }, composition: null },
@@ -167,6 +169,35 @@ export function categories(_model: Model): readonly Category[] {
 // Editor status readout: byte length of the active buffer.
 export function byteCount(model: Model): number {
   return model.doc.text.length;
+}
+
+// One rendered code line: its bytes and whether it's a `//` comment.
+export interface CodeLine {
+  readonly n: number;
+  readonly text: Uint8Array;
+  readonly comment: boolean;
+}
+
+// Split the active buffer into lines for the read-only highlighted preview.
+export function codeLines(model: Model): readonly CodeLine[] {
+  const text = model.doc.text;
+  const out: CodeLine[] = [];
+  let start = 0;
+  let lineNo = 1;
+  for (let i = 0; i <= text.length; i++) {
+    if (i === text.length || text[i] === 10) {
+      let j = start;
+      while (j < i && (text[j] === 32 || text[j] === 9)) {
+        j++;
+      }
+      const isComment = j + 1 < i && text[j] === 47 && text[j + 1] === 47;
+      const entry: CodeLine = { n: lineNo, text: text.subarray(start, i), comment: isComment };
+      out.push(entry);
+      start = i + 1;
+      lineNo = lineNo + 1;
+    }
+  }
+  return out;
 }
 
 // The active file's name / on-disk path, for the title bar and effects.
@@ -262,6 +293,7 @@ export type Msg =
   | { readonly kind: "sidebar_files" }
   | { readonly kind: "sidebar_map" }
   | { readonly kind: "sidebar_review" }
+  | { readonly kind: "toggle_preview" }
   | { readonly kind: "toggle_agent" }
   | { readonly kind: "compose_edit"; readonly edit: TextInputEvent }
   | { readonly kind: "send_message" }
@@ -416,6 +448,8 @@ export function update(model: Model, msg: Msg): Model | [Model, Cmd<Msg>] {
       return { ...model, sidebar: "map" };
     case "sidebar_review":
       return { ...model, sidebar: "review" };
+    case "toggle_preview":
+      return { ...model, preview: !model.preview };
     case "toggle_agent":
       return { ...model, agentOpen: !model.agentOpen, paletteOpen: false };
     case "compose_edit": {
