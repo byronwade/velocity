@@ -75,7 +75,8 @@ pnpm --filter web build
 ## Status
 
 Done: monorepo skeleton, native desktop scaffold, UI primitives, Settings screen, native
-editor (code buffer + file explorer + tabs), agent pane, cross-platform CI. Remaining:
-filesystem-backed files via SDK effects, the marketing site, and final docs. See the
+editor (code buffer + file explorer + tabs), agent pane, cross-platform CI, and the marketing
+site. Remaining: wiring the editor's files to the real filesystem via SDK `Cmd`/`Sub` effects
+(the buffers are currently a seeded in-memory workspace). See the
 [migration spec](docs/superpowers/specs/2026-07-13-native-sdk-migration-design.md) for the
 staged plan.
