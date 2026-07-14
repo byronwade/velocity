@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Play, Check, X, RotateCcw, Rocket, ShieldCheck, Sparkles, ArrowRight } from 'lucide-react';
+import { Play, Check, X, RotateCcw, Rocket, ShieldCheck, Sparkles, ArrowRight, Server, Database, Clock, Gauge, Circle } from 'lucide-react';
 import { EditorMode } from '../modes/EditorMode';
 import { useWorkspace, runtime } from './useWorkspace';
 import type { Coworker, Lens } from './model';
@@ -65,61 +65,151 @@ function PreviewLens({ candidate }: { candidate: boolean }) {
 	);
 }
 
+const SYS_NODES = [
+	{ id: 'client', label: 'Client', kind: 'edge', health: 'healthy', meta: 'React SPA', icon: Sparkles },
+	{ id: 'checkout', label: '/checkout', kind: 'route', health: 'healthy', meta: '33ms · 200', icon: ArrowRight },
+	{ id: 'session', label: '/session', kind: 'route', health: 'building', meta: '41ms · 200', icon: Server },
+	{ id: 'sessions', label: 'sessions', kind: 'store', health: 'healthy', meta: '+1 column', icon: Database },
+] as const;
+
+const TRACE = [
+	{ step: 'POST /session', detail: 'passkey credential attached', ms: 41, ok: true },
+	{ step: 'verify credential', detail: 'WebAuthn assertion valid', ms: 12, ok: true },
+	{ step: 'GET /checkout', detail: 'session resolved · cart hydrated', ms: 33, ok: true },
+	{ step: 'render onboarding', detail: 'passkey-first, email fallback', ms: 18, ok: true },
+];
+
 function SystemLens() {
 	return (
 		<div className="vs-system">
-			<div className="vs-sys-flow">
-				{['Client', '/checkout', '/session', 'sessions db'].map((n, i, arr) => (
-					<div key={n} className="vs-sys-step">
-						<Region id={`sys-${n}`} label={n} className={`vs-sys-node${i === 2 ? ' hot' : ''}`}>{n}</Region>
-						{i < arr.length - 1 && <ArrowRight size={16} className="vs-sys-arrow" />}
+			<div className="vs-sys-head"><h2>System</h2><span className="vs-tag good">healthy</span><span className="vs-sys-sub">Services, endpoints, request flow</span></div>
+			<div className="vs-sys-topo">
+				{SYS_NODES.map((n, i) => (
+					<div key={n.id} className="vs-sys-step">
+						<Region id={`sys-${n.id}`} label={n.label} className={`vs-sys-card ${n.health}`}>
+							<div className="vs-sys-card-top"><n.icon size={14} /><b>{n.label}</b></div>
+							<div className="vs-sys-card-meta"><span className={`vs-hdot ${n.health}`} />{n.meta}</div>
+						</Region>
+						{i < SYS_NODES.length - 1 && <ArrowRight size={15} className="vs-sys-arrow" />}
 					</div>
 				))}
 			</div>
-			<div className="vs-sys-detail">
-				<div className="vs-sys-row"><span className="vs-tag good">200</span><code>POST /session</code><span>· passkey credential attached</span></div>
-				<div className="vs-sys-row"><span className="vs-tag">contract</span><code>Session.credential: PasskeyRef</code><span>· new field</span></div>
-				<div className="vs-sys-row"><span className="vs-tag good">12/12</span><span>checks · p95 42ms</span></div>
-				<button className="vs-run"><Play size={14} />Run checkout scenario</button>
+			<div className="vs-sys-grid">
+				<div className="vs-panel-card">
+					<div className="vs-panel-head"><span>Request trace</span><span className="vs-tag good">200 · 104ms</span></div>
+					<div className="vs-trace">
+						{TRACE.map((t, i) => (
+							<div key={i} className="vs-trace-row">
+								<span className="vs-trace-node"><Check size={11} /></span>
+								<div className="vs-trace-body"><code>{t.step}</code><span>{t.detail}</span></div>
+								<span className="vs-trace-ms">{t.ms}ms</span>
+							</div>
+						))}
+					</div>
+					<button className="vs-run"><Play size={14} />Run checkout scenario</button>
+				</div>
+				<div className="vs-panel-card">
+					<div className="vs-panel-head"><span>Contract change</span><span className="vs-tag">Rowan</span></div>
+					<div className="vs-contract">
+						<div className="vs-contract-row add"><span>+</span><code>Session.credential: PasskeyRef</code></div>
+						<div className="vs-contract-row"><span>&nbsp;</span><code>Session.userId: string</code></div>
+						<div className="vs-contract-row"><span>&nbsp;</span><code>Session.expiresAt: Date</code></div>
+					</div>
+					<div className="vs-sys-metrics">
+						<div className="vs-metric"><Gauge size={14} /><b>42ms</b><span>p95 latency</span></div>
+						<div className="vs-metric"><Check size={14} /><b>12/12</b><span>contract checks</span></div>
+						<div className="vs-metric"><Clock size={14} /><b>0</b><span>rows lost</span></div>
+					</div>
+				</div>
 			</div>
 		</div>
 	);
 }
 
+const DATA_TABLES = [
+	{ name: 'sessions', rows: '2,481', delta: '+1 col', active: true },
+	{ name: 'users', rows: '9,204', delta: '', active: false },
+	{ name: 'orders', rows: '14,067', delta: '', active: false },
+];
+const DATA_ROWS = [
+	['sess_1', 'ada@aurora.dev', 'passkey', '2026-07-14 09:41'],
+	['sess_2', 'grace@aurora.dev', 'passkey', '2026-07-14 09:12'],
+	['sess_3', 'linus@aurora.dev', 'email', '2026-07-13 22:04'],
+	['sess_4', 'edsger@aurora.dev', 'passkey', '2026-07-13 18:55'],
+];
+
 function DataLens() {
 	const cols = ['id', 'email', 'credential', 'created'];
-	const rows = [['1', 'ada@aurora.dev', 'passkey', '2026-01-04'], ['2', 'grace@aurora.dev', 'passkey', '2026-01-09'], ['3', 'linus@aurora.dev', 'email', '2026-02-02']];
 	return (
 		<div className="vs-data">
 			<aside className="vs-data-schema">
-				<div className="vs-data-table active">sessions <em>+1</em></div>
-				<div className="vs-data-table">users</div>
-				<div className="vs-data-table">orders</div>
+				<div className="vs-data-schema-head"><Database size={13} />Schema</div>
+				{DATA_TABLES.map((t) => (
+					<div key={t.name} className={`vs-data-table${t.active ? ' active' : ''}`}>
+						<span>{t.name}</span>
+						{t.delta ? <em>{t.delta}</em> : <span className="vs-data-rows">{t.rows}</span>}
+					</div>
+				))}
 			</aside>
 			<div className="vs-data-main">
-				<div className="vs-data-q"><code>SELECT * FROM sessions</code><button className="vs-run"><Play size={13} />Run</button></div>
-				<table className="vs-data-grid"><thead><tr>{cols.map((c) => <th key={c}>{c}</th>)}</tr></thead>
-					<tbody>{rows.map((r, i) => <tr key={i}>{r.map((c, j) => <td key={j} className={j === 2 && c === 'passkey' ? 'new' : ''}>{c}</td>)}</tr>)}</tbody>
-				</table>
+				<div className="vs-data-q"><code>SELECT * FROM sessions ORDER BY created DESC</code><button className="vs-run sm"><Play size={13} />Run</button></div>
+				<div className="vs-data-scroll">
+					<table className="vs-data-grid">
+						<thead><tr>{cols.map((c) => <th key={c} className={c === 'credential' ? 'new' : ''}>{c}{c === 'credential' && <span className="vs-th-tag">new</span>}</th>)}</tr></thead>
+						<tbody>{DATA_ROWS.map((r, i) => <tr key={i}>{r.map((c, j) => <td key={j} className={j === 2 ? (c === 'passkey' ? 'new' : 'muted') : ''}>{c}</td>)}</tr>)}</tbody>
+					</table>
+				</div>
+				<div className="vs-data-foot">
+					<div className="vs-data-migration"><ShieldCheck size={14} /><b>Migration 003_passkey</b><span>applied to Candidate · reversible · 0 rows lost</span></div>
+					<span className="vs-tag good">4 rows · 3 passkey</span>
+				</div>
 			</div>
 		</div>
 	);
 }
+
+const SCENARIO_STEPS = [
+	{ label: 'Open checkout as a returning visitor', ms: 120 },
+	{ label: 'Continue with a passkey', ms: 340 },
+	{ label: 'Reach the payment step in one action', ms: 210 },
+	{ label: 'Confirm email fallback still works', ms: 180 },
+];
 
 function VerifyLens() {
 	const state = useWorkspace();
 	const criteria = state.mission?.criteria ?? [];
+	const done = criteria.filter((c) => c.state === 'verified').length;
+	const pct = criteria.length ? Math.round((done / criteria.length) * 100) : 0;
 	return (
 		<div className="vs-verify">
-			<div className="vs-verify-head"><h2>Verification</h2><span className="vs-tag good">{criteria.filter((c) => c.state === 'verified').length}/{criteria.length}</span></div>
-			<div className="vs-verify-list">
-				{criteria.map((c) => (
-					<div key={c.id} className={`vs-verify-row ${c.state}`}>
-						{c.state === 'verified' ? <Check size={15} /> : c.state === 'failed' ? <X size={15} /> : <span className="vs-dot" />}
-						<span>{c.label}</span>
-						<button className="vs-run sm"><Play size={12} />Run</button>
+			<div className="vs-verify-head">
+				<div className="vs-ring" style={{ ['--pct' as string]: `${pct}` }}><span>{done}/{criteria.length}</span></div>
+				<div><h2>Verification</h2><p>Every acceptance criterion, checked against the Candidate.</p></div>
+			</div>
+			<div className="vs-verify-grid">
+				<div className="vs-verify-list">
+					{criteria.map((c) => (
+						<div key={c.id} className={`vs-verify-row ${c.state}`}>
+							{c.state === 'verified' ? <Check size={15} /> : c.state === 'failed' ? <X size={15} /> : c.state === 'checking' ? <span className="vs-spin" /> : <Circle size={13} />}
+							<div className="vs-verify-body"><span>{c.label}</span>
+								<span className="vs-verify-ev">{c.state === 'verified' ? 'test · screenshot · trace' : c.state === 'checking' ? 'running…' : c.state === 'failed' ? 'needs a fix' : 'queued'}</span>
+							</div>
+							<button className="vs-run sm"><Play size={12} />Run</button>
+						</div>
+					))}
+				</div>
+				<div className="vs-panel-card">
+					<div className="vs-panel-head"><span>Checkout scenario</span><span className="vs-tag good">passed · 0.9s</span></div>
+					<div className="vs-scenario-steps">
+						{SCENARIO_STEPS.map((s, i) => (
+							<div key={i} className="vs-scenario-step">
+								<span className="vs-scenario-node"><Check size={11} /></span>
+								<span>{s.label}</span><span className="vs-trace-ms">{s.ms}ms</span>
+							</div>
+						))}
 					</div>
-				))}
+					<button className="vs-run"><Play size={14} />Re-run scenario</button>
+				</div>
 			</div>
 		</div>
 	);
