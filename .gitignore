@@ -7,5 +7,9 @@ zig-out
 *.local
 .DS_Store
 
+# Rust / Tauri build output
+target
+src-tauri/gen/schemas
+
 # runtime workspace written by the desktop app (Cmd.writeFile)
 .velocity-workspace/
