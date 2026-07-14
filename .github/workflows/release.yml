@@ -1,13 +1,10 @@
 name: release
 
-# Cross-platform native binaries. On every push/PR the matrix builds and
-# packages Velocity for macOS, Windows, and Linux and uploads each as an
-# artifact; on a v* tag the packages are also attached to a GitHub Release.
-# A Linux Xvfb job drives the running app headless to prove it renders.
+# Cross-platform native desktop binaries via Tauri. On a v* tag the bundles are
+# built for macOS, Windows, and Linux and attached to a draft GitHub Release.
 
 on:
   push:
-    branches: [main]
     tags: ['v*']
   workflow_dispatch:
 
@@ -15,89 +12,39 @@ permissions:
   contents: write
 
 jobs:
-  build:
-    name: build ${{ matrix.target }}
-    runs-on: ${{ matrix.os }}
+  desktop:
+    name: desktop ${{ matrix.platform }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: macos-latest
-            target: macos
-          - os: windows-latest
-            target: windows
-          - os: ubuntu-latest
-            target: linux
-    defaults:
-      run:
-        working-directory: apps/desktop
+          - platform: macos-latest
+          - platform: ubuntu-22.04
+          - platform: windows-latest
+    runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - uses: mlugg/setup-zig@v2
-        with:
-          version: 0.16.0
-      - name: Linux GTK deps
-        if: matrix.target == 'linux'
-        run: sudo apt-get update && sudo apt-get install -y libgtk-4-dev
-        working-directory: .
-      - name: Install Native SDK CLI
-        run: npm install -g @native-sdk/cli@0.5.1
-        working-directory: .
-      - name: Check
-        run: native check --strict
-      - name: Package
-        run: native package --target ${{ matrix.target }} --output dist
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: velocity-${{ matrix.target }}
-          path: apps/desktop/dist/*
-          if-no-files-found: error
-      - name: Attach to release
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: apps/desktop/dist/*
-
-  smoke:
-    name: automation smoke (Linux)
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/desktop
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - uses: mlugg/setup-zig@v2
-        with:
-          version: 0.16.0
-      - name: GTK + Xvfb
-        run: sudo apt-get update && sudo apt-get install -y libgtk-4-dev xvfb
-        working-directory: .
-      - name: Install Native SDK CLI
-        run: npm install -g @native-sdk/cli@0.5.1
-        working-directory: .
-      - name: Build with automation
-        run: native build --yes -Dautomation=true
-      - name: Drive the app headless
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Linux WebKitGTK deps
+        if: matrix.platform == 'ubuntu-22.04'
         run: |
-          set -euo pipefail
-          rm -rf .zig-cache/native-sdk-automation
-          xvfb-run -a ./zig-out/bin/velocity &
-          pid=$!
-          trap 'kill "$pid" >/dev/null 2>&1 || true' EXIT
-          native automate wait
-          native automate assert 'EXPLORER' 'welcome.ts' 'AGENT' 'applyTextInputEvent'
-          native automate screenshot main-canvas
-          test -s .zig-cache/native-sdk-automation/screenshot-main-canvas.png
-      - name: Upload screenshot
-        uses: actions/upload-artifact@v4
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+      - run: pnpm install --frozen-lockfile
+      - name: Build & bundle (Tauri)
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: velocity-smoke-screenshot
-          path: apps/desktop/.zig-cache/native-sdk-automation/screenshot-main-canvas.png
-          if-no-files-found: warn
+          projectPath: apps/web
+          tagName: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}
+          releaseName: Velocity ${{ github.ref_name }}
+          releaseDraft: true
+          prerelease: false

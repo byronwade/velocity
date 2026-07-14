@@ -1,8 +1,6 @@
 name: check
 
-# Fast gate on every PR/push: validate the desktop app's core (src/core.ts
-# through the subset checker), src/app.native markup, and app.zon. No Zig
-# needed — `native check` runs standalone from the npm-published CLI.
+# Fast gate on every PR/push: the web (desktop frontend) and marketing site build.
 
 on:
   pull_request:
@@ -13,19 +11,20 @@ permissions:
   contents: read
 
 jobs:
-  native-check:
-    name: native check --strict
+  build:
+    name: build web + site
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/desktop
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Install Native SDK CLI
-        run: npm install -g @native-sdk/cli@0.5.1
-        working-directory: .
-      - name: Check core + markup + app.zon
-        run: native check --strict
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build web (Tauri frontend)
+        run: pnpm --filter web build
+      - name: Build marketing site
+        run: pnpm --filter site build

@@ -1,12 +1,12 @@
 # Velocity → Native SDK Monorepo — Migration Design
 
 **Date:** 2026-07-13
-**Status:** Feature-complete — all stages (0–8, including 5.1–5.4) shipped on branch
-`native-sdk-migration` (PR #3). Each stage is render/behaviour-verified via the automation
-harness (widget snapshots, click-driven flows, and a real Save→disk round-trip); web + site
-build clean, desktop passes `native check --strict`, CI `check` is green. Polish also landed:
-VS Code-style activity rail, ⌘K command palette (app.zon shortcut + `commandMsg`), and
-boot-loading the active file from disk on startup. The workbench is a full native IDE shell.
+**Status:** SUPERSEDED (2026-07-14). The Native SDK desktop app (`apps/desktop`) was removed.
+The desktop target is now the existing React app (`apps/web`) wrapped in **Tauri** — the same
+React components ship in a small native WebView shell, so the polished web UI is the desktop
+UI. See [`apps/web/src-tauri`](../../../apps/web/src-tauri) and the root
+[`README.md`](../../../README.md). The staged history below is kept for reference only; the
+Native SDK toolchain (ts-core, `.native` markup, `native` CLI, Zig) is no longer used.
 **Owner:** Byron Wade
 
 ## Goal
