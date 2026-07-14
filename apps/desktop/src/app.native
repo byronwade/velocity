@@ -1,7 +1,7 @@
 <!-- Velocity workbench (Geist/v0 register via app.zon `theme = "geist"`).
-     One shared <topbar> header renders identically on every screen; below it
-     each screen lays out its own body. Zero-config ts-core embeds only this
-     file, so UI primitives live here as templates. -->
+     Design: floating rounded panels (surface) on a darker shell (background),
+     separated by gaps — one shared <topbar> header on every screen. Zero-config
+     ts-core embeds only this file, so UI primitives live here as templates. -->
 
 <!-- ── UI primitives ──────────────────────────────────────────────────── -->
 
@@ -10,7 +10,7 @@
 </template>
 
 <template name="card">
-  <column background="surface" radius="md" padding="16" gap="8">
+  <column background="surface_subtle" radius="md" border-color="border" padding="16" gap="8">
     <slot/>
   </column>
 </template>
@@ -27,56 +27,74 @@
   </row>
 </template>
 
-<!-- The one header, shared across every screen. `title` names the current
-     context (the active file, or "Settings"). -->
+<!-- The one header, a floating panel shared across every screen — full parity
+     with the reference: a brand nav dropdown, an icon toolbar, a centered
+     title + badge, and a right cluster of icons, avatar, and primary action. -->
 <template name="topbar" args="title">
-  <column>
-    <row background="surface" padding="10" gap="10" cross="center">
-      <text>Velocity</text>
-      <row background="surface_subtle" radius="sm" padding="4">
-        <text size="sm" foreground="text_muted">main</text>
-      </row>
-      <spacer grow="1"/>
-      <text foreground="text_muted">{title}</text>
-      <spacer grow="1"/>
-      <button size="sm" variant="ghost" selected="{screen == 'editor'}" on-press="open_editor">Editor</button>
-      <button size="sm" variant="ghost" selected="{screen == 'settings'}" on-press="open_settings">Settings</button>
-      <button size="sm" variant="ghost" on-press="open_palette">Commands</button>
-      <button size="sm" variant="ghost" on-press="toggle_agent">Agent</button>
-      <button size="sm" variant="primary" on-press="save_file">Save</button>
-      <avatar>BW</avatar>
+  <row background="surface" radius="lg" border-color="border" padding="8" gap="6" cross="center">
+    <!-- brand + navigation dropdown -->
+    <column>
+      <button size="sm" variant="ghost" icon="chevron-down" on-press="toggle_nav_menu">Velocity</button>
+      <if test="{navMenuOpen}">
+        <dropdown-menu anchor="below" anchor-alignment="start" on-dismiss="close_nav_menu">
+          <menu-item icon="file-text" on-press="open_editor">Editor</menu-item>
+          <menu-item icon="settings" on-press="open_settings">Settings</menu-item>
+          <menu-item icon="search" on-press="open_palette">Command palette</menu-item>
+          <menu-item icon="panel-right" on-press="toggle_agent">Toggle agent</menu-item>
+          <menu-item icon="plus" on-press="new_file">New file</menu-item>
+        </dropdown-menu>
+      </if>
+    </column>
+    <!-- icon toolbar -->
+    <button size="icon" variant="ghost" icon="plus" label="New file" on-press="new_file"/>
+    <button size="icon" variant="ghost" icon="folder" label="Explorer" on-press="sidebar_files"/>
+    <button size="icon" variant="ghost" icon="search" label="Command palette" on-press="open_palette"/>
+    <button size="icon" variant="ghost" icon="panel-right" label="Toggle agent" on-press="toggle_agent"/>
+
+    <spacer grow="1"/>
+    <!-- center: context title + badge -->
+    <text foreground="text_muted">{title}</text>
+    <row background="surface_subtle" radius="sm" border-color="border" padding="4">
+      <text size="sm" foreground="text_muted">main</text>
     </row>
-    <separator/>
-  </column>
+    <spacer grow="1"/>
+
+    <!-- right cluster -->
+    <button size="icon" variant="ghost" icon="settings" label="Settings" on-press="open_settings"/>
+    <button size="icon" variant="ghost" icon="refresh-cw" label="Reload" on-press="reload_file"/>
+    <button size="icon" variant="ghost" icon="play" label="Run" on-press="save_file"/>
+    <avatar>BW</avatar>
+    <button size="sm" variant="primary" on-press="save_file">Save</button>
+  </row>
 </template>
 
 <!-- ── Workbench ──────────────────────────────────────────────────────── -->
 
-<column grow="1">
+<column grow="1" background="background">
 <if test="{screen == 'editor'}">
 
-  <column grow="1">
+  <column grow="1" padding="12" gap="12">
 
     <use template="topbar" title="{activeName}"/>
 
-    <!-- Body: sidebar | editor | agent -->
-    <row grow="1">
+    <!-- Body: three floating panels -->
+    <row grow="1" gap="12">
 
-      <!-- Sidebar -->
-      <column width="240" background="surface_subtle">
+      <!-- Sidebar panel -->
+      <column width="248" background="surface" radius="lg" border-color="border" padding="10" gap="10">
         <tabs>
           <button selected="{sidebar == 'files'}" on-press="sidebar_files">Files</button>
           <button selected="{sidebar == 'map'}" on-press="sidebar_map">Map</button>
           <button selected="{sidebar == 'review'}" on-press="sidebar_review">Review</button>
         </tabs>
         <if test="{sidebar == 'files'}">
-          <column grow="1">
-            <row padding="8" gap="8" cross="center">
+          <column grow="1" gap="6">
+            <row gap="8" cross="center">
               <text size="sm" foreground="text_muted">EXPLORER</text>
               <spacer grow="1"/>
               <button size="icon" variant="ghost" icon="plus" label="New file" on-press="new_file"/>
             </row>
-            <tree gap="1" label="Files">
+            <tree gap="2" label="Files">
               <for each="files" key="id" as="f">
                 <list-item role="treeitem" selected="{f.id == activeFile}" on-press="open_file:{f.id}">{f.name}</list-item>
               </for>
@@ -84,18 +102,16 @@
           </column>
         </if>
         <else>
-          <column padding="16" grow="1">
+          <column padding="12" grow="1">
             <text size="sm" foreground="text_muted">Coming soon</text>
           </column>
         </else>
       </column>
 
-      <separator/>
-
       <!-- Editor panel -->
-      <column grow="1">
-        <row background="surface" padding="8" gap="8" cross="center">
-          <text>Live Editor</text>
+      <column grow="1" background="surface" radius="lg" border-color="border" padding="10" gap="8">
+        <row gap="8" cross="center">
+          <text size="lg">Live Editor</text>
           <spacer grow="1"/>
           <text size="sm" foreground="text_muted">{statusLabel}</text>
           <if test="{preview}">
@@ -106,62 +122,71 @@
           </else>
           <button size="sm" variant="ghost" on-press="reload_file">Reload</button>
         </row>
-        <tabs>
-          <for each="files" key="id" as="f">
-            <button selected="{f.id == activeFile}" on-press="open_file:{f.id}">{f.name}</button>
-          </for>
-          <button variant="ghost" on-press="new_file" label="New file">+</button>
-        </tabs>
-        <row padding="8" cross="center">
+        <row gap="6" cross="center">
+          <tabs grow="1">
+            <for each="files" key="id" as="f">
+              <button selected="{f.id == activeFile}" on-press="open_file:{f.id}">{f.name}</button>
+            </for>
+          </tabs>
+          <button size="sm" variant="ghost" on-press="new_file" label="New file">+</button>
+        </row>
+        <row gap="6" cross="center">
           <if test="{dirty}">
             <text size="sm" foreground="warning">●</text>
           </if>
           <text size="sm" foreground="text_muted">velocity / {activeName}</text>
         </row>
-        <if test="{preview}">
-          <scroll grow="1">
-            <column padding="12" gap="0">
-              <for each="codeLines" key="n" as="ln">
-                <row gap="16" cross="start">
-                  <text size="sm" foreground="text_muted">{ln.n}</text>
-                  <if test="{ln.comment}">
-                    <text grow="1"><span mono="true" foreground="text_muted">{ln.text}</span></text>
-                  </if>
-                  <else>
-                    <text grow="1"><span mono="true">{ln.text}</span></text>
-                  </else>
-                </row>
-              </for>
-            </column>
-          </scroll>
-        </if>
-        <else>
-          <textarea grow="1" label="Code editor" text="{doc.text}" on-input="edit" placeholder="Start typing…"/>
-        </else>
-        <status-bar>{activeName}  ·  Ln 1, Col 1  ·  Spaces 2  ·  UTF-8  ·  LF  ·  TypeScript</status-bar>
+        <!-- Code surface, inset on the darker shell -->
+        <column grow="1" background="background" radius="md" border-color="border" padding="12">
+          <if test="{preview}">
+            <scroll grow="1">
+              <column gap="0">
+                <for each="codeLines" key="n" as="ln">
+                  <row gap="16" cross="start">
+                    <text size="sm" foreground="text_muted">{ln.n}</text>
+                    <if test="{ln.comment}">
+                      <text grow="1"><span mono="true" foreground="text_muted">{ln.text}</span></text>
+                    </if>
+                    <else>
+                      <text grow="1"><span mono="true">{ln.text}</span></text>
+                    </else>
+                  </row>
+                </for>
+              </column>
+            </scroll>
+          </if>
+          <else>
+            <textarea grow="1" label="Code editor" text="{doc.text}" on-input="edit" placeholder="Start typing…"/>
+          </else>
+        </column>
+        <row gap="4" cross="center">
+          <text size="sm" foreground="text_muted">{activeName}  ·  Ln 1, Col 1  ·  Spaces 2  ·  UTF-8  ·  LF  ·  TypeScript</text>
+        </row>
       </column>
 
-      <!-- Agent thread (toggle via the header Agent button) -->
+      <!-- Agent panel (toggle via the header Agent button) -->
       <if test="{agentOpen}">
-        <separator/>
-        <column width="320" background="surface_subtle">
-          <row padding="10" gap="8" cross="center">
-            <text size="sm" foreground="text_muted">AGENT</text>
+        <column width="336" background="surface" radius="lg" border-color="border" padding="10" gap="8">
+          <row gap="8" cross="center">
+            <text size="lg">Agent</text>
             <spacer grow="1"/>
             <button size="sm" variant="ghost" on-press="toggle_agent">Hide</button>
           </row>
           <scroll grow="1">
-            <column padding="12" gap="12">
+            <column gap="14">
               <for each="messages" key="id" as="m">
-                <column gap="2">
-                  <if test="{m.fromUser}">
+                <if test="{m.fromUser}">
+                  <column background="surface_subtle" radius="md" padding="10" gap="2">
                     <text size="sm" foreground="accent">You</text>
-                  </if>
-                  <else>
+                    <text>{m.text}</text>
+                  </column>
+                </if>
+                <else>
+                  <column gap="2" padding="2">
                     <text size="sm" foreground="text_muted">Velocity</text>
-                  </else>
-                  <text>{m.text}</text>
-                </column>
+                    <text>{m.text}</text>
+                  </column>
+                </else>
               </for>
             </column>
           </scroll>
@@ -170,10 +195,8 @@
 
     </row>
 
-    <separator/>
-
-    <!-- Bottom agent bar -->
-    <row background="surface" padding="8" gap="8" cross="center">
+    <!-- Bottom agent bar, a floating panel -->
+    <row background="surface" radius="lg" border-color="border" padding="10" gap="10" cross="center">
       <input-group grow="1">
         <textarea label="Message the agent" text="{compose.text}" on-input="compose_edit" on-submit="send_message" placeholder="Tell the agent what to do…"/>
       </input-group>
@@ -186,14 +209,14 @@
 </if>
 <else>
 
-  <column grow="1">
+  <column grow="1" padding="12" gap="12">
 
     <use template="topbar" title="Settings"/>
 
-    <row grow="1">
+    <row grow="1" gap="12">
 
-      <!-- Category rail -->
-      <column width="240" background="surface_subtle" padding="12" gap="8">
+      <!-- Category panel -->
+      <column width="248" background="surface" radius="lg" border-color="border" padding="10" gap="8">
         <text size="sm" foreground="text_muted">SETTINGS</text>
         <column gap="2">
           <for each="categories" key="id" as="c">
@@ -201,7 +224,7 @@
           </for>
         </column>
         <spacer grow="1"/>
-        <row background="surface" radius="md" padding="8" gap="8" cross="center">
+        <row background="surface_subtle" radius="md" padding="8" gap="8" cross="center">
           <avatar>BW</avatar>
           <column grow="1" gap="2">
             <text size="sm">Byron Wade</text>
@@ -210,74 +233,75 @@
         </row>
       </column>
 
-      <separator/>
+      <!-- Content panel -->
+      <column grow="1" background="surface" radius="lg" border-color="border">
+        <scroll grow="1">
+          <column padding="28" gap="18" grow="1">
 
-      <scroll grow="1">
-        <column padding="24" gap="16" grow="1">
+            <if test="{category == 'general'}">
+              <column gap="18">
+                <use template="section-header" title="General"/>
 
-          <if test="{category == 'general'}">
-            <column gap="16">
-              <use template="section-header" title="General"/>
-
-              <use template="card">
-                <use template="field-row" label="Account" hint="Signed in to Velocity">
-                  <row cross="center">
-                    <if test="{loggedIn}">
-                      <button size="sm" variant="ghost" on-press="log_out">Log out</button>
-                    </if>
-                    <else>
-                      <text size="sm" foreground="text_muted">Signed out</text>
-                    </else>
-                  </row>
+                <use template="card">
+                  <use template="field-row" label="Account" hint="Signed in to Velocity">
+                    <row cross="center">
+                      <if test="{loggedIn}">
+                        <button size="sm" variant="ghost" on-press="log_out">Log out</button>
+                      </if>
+                      <else>
+                        <text size="sm" foreground="text_muted">Signed out</text>
+                      </else>
+                    </row>
+                  </use>
                 </use>
-              </use>
 
-              <use template="card">
-                <use template="field-row" label="Show tips" hint="Show tips when Velocity starts">
-                  <switch checked="{showTips}" on-toggle="toggle_tips" label="Show tips"/>
+                <use template="card">
+                  <use template="field-row" label="Show tips" hint="Show tips when Velocity starts">
+                    <switch checked="{showTips}" on-toggle="toggle_tips" label="Show tips"/>
+                  </use>
+                  <use template="field-row" label="On launch" hint="What to open when Velocity starts">
+                    <row gap="4">
+                      <button size="sm" selected="{startupMode == 'restore'}" on-press="set_startup_restore">Restore</button>
+                      <button size="sm" selected="{startupMode == 'welcome'}" on-press="set_startup_welcome">Welcome</button>
+                      <button size="sm" selected="{startupMode == 'empty'}" on-press="set_startup_empty">Empty</button>
+                    </row>
+                  </use>
                 </use>
-                <use template="field-row" label="On launch" hint="What to open when Velocity starts">
-                  <row gap="4">
-                    <button size="sm" selected="{startupMode == 'restore'}" on-press="set_startup_restore">Restore</button>
-                    <button size="sm" selected="{startupMode == 'welcome'}" on-press="set_startup_welcome">Welcome</button>
-                    <button size="sm" selected="{startupMode == 'empty'}" on-press="set_startup_empty">Empty</button>
-                  </row>
-                </use>
-              </use>
 
-              <use template="section-header" title="Notifications"/>
-              <use template="card">
-                <use template="field-row" label="Product updates" hint="Notify about new releases">
-                  <switch checked="{notifyUpdates}" on-toggle="toggle_notify_updates" label="Product updates"/>
+                <use template="section-header" title="Notifications"/>
+                <use template="card">
+                  <use template="field-row" label="Product updates" hint="Notify about new releases">
+                    <switch checked="{notifyUpdates}" on-toggle="toggle_notify_updates" label="Product updates"/>
+                  </use>
+                  <use template="field-row" label="Sounds" hint="Play a sound for notifications">
+                    <switch checked="{notifySounds}" on-toggle="toggle_notify_sounds" label="Notification sounds"/>
+                  </use>
                 </use>
-                <use template="field-row" label="Sounds" hint="Play a sound for notifications">
-                  <switch checked="{notifySounds}" on-toggle="toggle_notify_sounds" label="Notification sounds"/>
-                </use>
-              </use>
 
-              <use template="section-header" title="Privacy"/>
-              <use template="card">
-                <use template="field-row" label="Data sharing" hint="What diagnostics Velocity may send">
-                  <row gap="4">
-                    <button size="sm" selected="{dataSharing == 'none'}" on-press="set_sharing_none">None</button>
-                    <button size="sm" selected="{dataSharing == 'errors'}" on-press="set_sharing_errors">Errors</button>
-                    <button size="sm" selected="{dataSharing == 'usage'}" on-press="set_sharing_usage">Usage</button>
-                  </row>
+                <use template="section-header" title="Privacy"/>
+                <use template="card">
+                  <use template="field-row" label="Data sharing" hint="What diagnostics Velocity may send">
+                    <row gap="4">
+                      <button size="sm" selected="{dataSharing == 'none'}" on-press="set_sharing_none">None</button>
+                      <button size="sm" selected="{dataSharing == 'errors'}" on-press="set_sharing_errors">Errors</button>
+                      <button size="sm" selected="{dataSharing == 'usage'}" on-press="set_sharing_usage">Usage</button>
+                    </row>
+                  </use>
                 </use>
-              </use>
-            </column>
-          </if>
-          <else>
-            <column gap="16">
-              <use template="section-header" title="Coming soon"/>
-              <use template="card">
-                <text foreground="text_muted">This section isn't built yet.</text>
-              </use>
-            </column>
-          </else>
+              </column>
+            </if>
+            <else>
+              <column gap="18">
+                <use template="section-header" title="Coming soon"/>
+                <use template="card">
+                  <text foreground="text_muted">This section isn't built yet.</text>
+                </use>
+              </column>
+            </else>
 
-        </column>
-      </scroll>
+          </column>
+        </scroll>
+      </column>
 
     </row>
 

@@ -112,6 +112,7 @@ export interface Model {
   readonly dirty: boolean;
   readonly saveStatus: SaveStatus;
   readonly paletteOpen: boolean;
+  readonly navMenuOpen: boolean;
   readonly preview: boolean;
   // Agent pane
   readonly agentOpen: boolean;
@@ -143,6 +144,7 @@ export function initialModel(): [Model, Cmd<Msg>] {
     dirty: false,
     saveStatus: "none",
     paletteOpen: false,
+    navMenuOpen: false,
     preview: false,
     agentOpen: true,
     messages: [{ id: 0, fromUser: false, text: GREETING }],
@@ -290,6 +292,8 @@ export type Msg =
   | { readonly kind: "boot_missing"; readonly error: Uint8Array }
   | { readonly kind: "open_palette" }
   | { readonly kind: "close_palette" }
+  | { readonly kind: "toggle_nav_menu" }
+  | { readonly kind: "close_nav_menu" }
   | { readonly kind: "sidebar_files" }
   | { readonly kind: "sidebar_map" }
   | { readonly kind: "sidebar_review" }
@@ -329,9 +333,9 @@ export function commandMsg(name: string): Msg | null {
 export function update(model: Model, msg: Msg): Model | [Model, Cmd<Msg>] {
   switch (msg.kind) {
     case "open_settings":
-      return { ...model, screen: "settings", paletteOpen: false };
+      return { ...model, screen: "settings", paletteOpen: false, navMenuOpen: false };
     case "open_editor":
-      return { ...model, screen: "editor" };
+      return { ...model, screen: "editor", navMenuOpen: false };
     case "open_file": {
       if (msg.index < 0 || msg.index >= model.files.length) return model;
       if (msg.index === model.activeFile) return { ...model, screen: "editor" };
@@ -439,9 +443,13 @@ export function update(model: Model, msg: Msg): Model | [Model, Cmd<Msg>] {
     case "boot_missing":
       return model;
     case "open_palette":
-      return { ...model, paletteOpen: true };
+      return { ...model, paletteOpen: true, navMenuOpen: false };
     case "close_palette":
       return { ...model, paletteOpen: false };
+    case "toggle_nav_menu":
+      return { ...model, navMenuOpen: !model.navMenuOpen };
+    case "close_nav_menu":
+      return { ...model, navMenuOpen: false };
     case "sidebar_files":
       return { ...model, sidebar: "files" };
     case "sidebar_map":
@@ -451,7 +459,7 @@ export function update(model: Model, msg: Msg): Model | [Model, Cmd<Msg>] {
     case "toggle_preview":
       return { ...model, preview: !model.preview };
     case "toggle_agent":
-      return { ...model, agentOpen: !model.agentOpen, paletteOpen: false };
+      return { ...model, agentOpen: !model.agentOpen, paletteOpen: false, navMenuOpen: false };
     case "compose_edit": {
       const next = applyTextInputEvent(model.compose, msg.edit, DOC_CAPACITY);
       if (next === null) return model;
