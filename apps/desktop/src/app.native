@@ -35,6 +35,17 @@
 
   <row grow="1">
 
+    <!-- Activity rail -->
+    <column width="48" background="surface" padding="8" gap="8" cross="center">
+      <button size="icon" variant="ghost" icon="folder" label="Explorer" on-press="open_editor"/>
+      <button size="icon" variant="ghost" icon="search" label="Command palette" on-press="open_palette"/>
+      <button size="icon" variant="ghost" icon="panel-right" label="Toggle agent" on-press="toggle_agent"/>
+      <spacer grow="1"/>
+      <button size="icon" variant="ghost" icon="settings" label="Settings" on-press="open_settings"/>
+    </column>
+
+    <separator/>
+
     <!-- File explorer -->
     <column width="220" background="surface_subtle">
       <row padding="10" cross="center">
