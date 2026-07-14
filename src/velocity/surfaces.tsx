@@ -5,8 +5,8 @@ import {
 	Users, ChevronRight, ArchiveRestore, Terminal as TermIcon, Folder, AlertTriangle, GitBranch, Flag,
 } from 'lucide-react';
 import { useWorkspace, runtime } from './useWorkspace';
-import { AUTONOMY_LABEL, STATE_TONE, STATE_LABEL, LENS_META } from './model';
-import type { Autonomy, Coworker, EvidenceKind, Lens, Risk, ToolId } from './model';
+import { AUTONOMY_LABEL, STATE_TONE, STATE_LABEL, LENS_META, EVENT_TONE } from './model';
+import type { Autonomy, Coworker, EvidenceKind, Lens, Risk, ToolId, WorkspaceEvent } from './model';
 
 // --------------------------------------------------------------------------
 // Mission Sheet — structured intake (no chat composer).
@@ -111,7 +111,47 @@ export function RightRail() {
 			{surface === 'coworkers' && <CoworkersPanel />}
 			{surface === 'checkpoint' && <CheckpointPanel />}
 			{surface === 'decision' && <DecisionPanel />}
+			{surface === 'activity' && <ActivityPanel />}
 		</aside>
+	);
+}
+
+// --------------------------------------------------------------------------
+// Activity — the structured coordination feed (the substitute for chatter).
+// --------------------------------------------------------------------------
+const EVENT_VERB: Record<WorkspaceEvent['kind'], string> = {
+	reserve: 'Reserved', waiting: 'Waiting', 'conflict-avoided': 'Conflict avoided', conflict: 'Conflict',
+	reassign: 'Reassigned', checkpoint: 'Checkpoint', merge: 'Merged', 'verify-fail': 'Check failed',
+	'verify-pass': 'Verified', note: 'Note',
+};
+
+function ActivityPanel() {
+	const state = useWorkspace();
+	const byId = (id: string | null) => state.coworkers.find((c) => c.id === id) ?? state.archived.find((c) => c.id === id);
+	return (
+		<>
+			<header className="vs-rail-head"><Activity size={15} /><h3>Activity</h3><span className="vs-count">{state.events.length}</span>
+				<button className="vs-icon" onClick={() => runtime.closeRight()} aria-label="Close"><X size={16} /></button></header>
+			<div className="vs-rail-body vs-feed">
+				{state.events.length === 0 && <div className="vs-empty-rail">No activity yet.</div>}
+				{state.events.map((e) => {
+					const cw = byId(e.coworkerId);
+					return (
+						<div key={e.id} className="vs-feed-row">
+							<span className={`vs-feed-rail tone-${EVENT_TONE[e.kind]}`} />
+							<div className="vs-feed-main">
+								<div className="vs-feed-top">
+									{cw && <span className="vs-avatar sm" style={{ background: cw.color }}>{cw.initials}</span>}
+									<span className={`vs-feed-kind tone-${EVENT_TONE[e.kind]}`}>{EVENT_VERB[e.kind]}</span>
+									<span className="vs-feed-ts">{e.tsLabel}</span>
+								</div>
+								<div className="vs-feed-text">{e.text}</div>
+							</div>
+						</div>
+					);
+				})}
+			</div>
+		</>
 	);
 }
 
@@ -146,6 +186,10 @@ function CoworkerCard({ c, manager }: { c: Coworker; manager?: boolean }) {
 				<select value={c.autonomy} onChange={(e) => runtime.setAutonomy(c.id, e.target.value as Autonomy)}>
 					{Object.entries(AUTONOMY_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
 				</select>
+			</div>
+			<div className="vs-cw-budget" title={`${c.budget.unit}${c.budget.spent} of ${c.budget.unit}${c.budget.total} budget`}>
+				<div className="vs-cw-budget-bar"><span style={{ width: `${Math.min(100, (c.budget.spent / c.budget.total) * 100)}%` }} /></div>
+				<span className="vs-cw-budget-n">{c.budget.unit}{c.budget.spent} / {c.budget.unit}{c.budget.total}</span>
 			</div>
 			<div className="vs-cw-actions">
 				<button className={`vs-mini${c.following ? ' on' : ''}`} onClick={() => runtime.follow(c.following ? null : c.id)}><Eye size={12} />Follow</button>
@@ -373,6 +417,7 @@ export function CommandBar() {
 		return [
 			{ id: 'mission', label: 'New mission', hint: '⌘⇧N', run: () => runtime.openMissionSheet(true) },
 			{ id: 'coworkers', label: 'Open coworkers', run: () => runtime.openRight('coworkers') },
+			{ id: 'activity', label: 'Open activity feed', run: () => runtime.openRight('activity') },
 			{ id: 'checkpoint', label: 'Review latest checkpoint', run: () => runtime.openRight('checkpoint') },
 			{ id: 'decision', label: 'Open decision', run: () => runtime.openRight('decision') },
 			{ id: 'compare', label: 'Compare Stable vs Candidate', run: () => runtime.toggleCompare() },

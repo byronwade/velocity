@@ -34,6 +34,17 @@
 .vs-proj b { font-size: var(--text-13); font-weight: var(--fw-semibold); }
 .vs-proj span { font-size: var(--text-11); color: var(--faint); }
 
+/* Mission progress chip */
+.vs-mission-chip { display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 10px; margin-left: 4px; border-radius: 9px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); font: inherit; cursor: pointer; max-width: 260px; transition: border-color var(--dur) var(--ease); }
+.vs-mission-chip:hover { border-color: var(--line-2); }
+.vs-mission-title { font-size: var(--text-12); font-weight: var(--fw-medium); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vs-mission-dots { display: inline-flex; gap: 3px; flex: 0 0 auto; }
+.vs-mdot { width: 6px; height: 6px; border-radius: 50%; background: var(--line-2); }
+.vs-mdot.verified { background: var(--good); }
+.vs-mdot.checking { background: var(--warn); }
+.vs-mdot.failed { background: var(--danger); }
+.vs-mission-n { font-size: var(--text-11); color: var(--faint); font-variant-numeric: tabular-nums; flex: 0 0 auto; }
+
 .vs-lenses { display: flex; gap: 2px; padding: 3px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; }
 .vs-lens {
 	appearance: none; border: 0; background: transparent; color: var(--muted);
@@ -61,6 +72,12 @@
 	color: color-mix(in srgb, var(--warn) 60%, var(--fg)); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer;
 }
 .vs-alert.decision { border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); background: color-mix(in srgb, var(--accent) 10%, var(--panel)); color: color-mix(in srgb, var(--accent) 55%, var(--fg)); }
+
+/* Follow-mode banner */
+.vs-followbar { display: flex; align-items: center; gap: 8px; height: 38px; flex: 0 0 38px; padding: 0 14px; font-size: var(--text-12); color: var(--fg); border-bottom: 1px solid color-mix(in srgb, var(--id) 30%, var(--line)); background: color-mix(in srgb, var(--id) 9%, var(--shell)); z-index: 20; }
+.vs-followbar b { font-weight: var(--fw-semibold); }
+.vs-followbar > span:nth-child(3) { color: var(--muted); }
+.vs-followbar-stop { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 10px; border-radius: 7px; border: 1px solid color-mix(in srgb, var(--id) 40%, var(--line)); background: var(--panel); color: color-mix(in srgb, var(--id) 55%, var(--fg)); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer; }
 
 /* --- Main + stage ------------------------------------------------------- */
 .vs-main { flex: 1 1 auto; display: flex; min-height: 0; position: relative; }
@@ -278,6 +295,10 @@
 .vs-cw-scope { display: flex; align-items: center; gap: 5px; font-size: var(--text-11); color: var(--faint); font-family: var(--mono); }
 .vs-cw-infra { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .vs-cw-infra select { appearance: none; height: 30px; border: 1px solid var(--line); background: var(--panel-2); color: var(--muted); border-radius: 7px; padding: 0 8px; font: inherit; font-size: var(--text-11); cursor: pointer; }
+.vs-cw-budget { display: flex; align-items: center; gap: 8px; }
+.vs-cw-budget-bar { flex: 1; height: 4px; border-radius: 3px; background: var(--panel-2); overflow: hidden; }
+.vs-cw-budget-bar span { display: block; height: 100%; border-radius: 3px; background: var(--id, var(--accent)); }
+.vs-cw-budget-n { font-size: var(--text-11); color: var(--faint); font-variant-numeric: tabular-nums; }
 .vs-cw-actions { display: flex; gap: 5px; }
 .vs-mini { display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 9px; border-radius: 7px; border: 1px solid var(--line); background: var(--panel); color: var(--muted); font: inherit; font-size: var(--text-11); font-weight: var(--fw-medium); cursor: pointer; }
 .vs-mini:hover { color: var(--fg); border-color: var(--line-2); }
@@ -344,6 +365,25 @@
 .vs-tag { font-size: 10px; font-weight: var(--fw-medium); padding: 2px 7px; border-radius: 5px; background: var(--panel-2); color: var(--muted); border: 1px solid var(--line); }
 .vs-tag.good { background: color-mix(in srgb, var(--good) 14%, var(--panel)); color: color-mix(in srgb, var(--good) 55%, var(--fg)); border-color: transparent; }
 .vs-tag.warn { background: color-mix(in srgb, var(--warn) 16%, var(--panel)); color: color-mix(in srgb, var(--warn) 60%, var(--fg)); border-color: transparent; }
+
+/* --- Activity feed ------------------------------------------------------ */
+.vs-feed { gap: 0; padding: 6px 0; }
+.vs-feed-row { display: flex; gap: 10px; padding: 10px 16px; }
+.vs-feed-rail { width: 2px; border-radius: 2px; flex: 0 0 auto; background: var(--line-2); }
+.vs-feed-rail.tone-good { background: var(--good); }
+.vs-feed-rail.tone-work { background: var(--accent); }
+.vs-feed-rail.tone-warn { background: var(--warn); }
+.vs-feed-rail.tone-danger { background: var(--danger); }
+.vs-feed-main { flex: 1; min-width: 0; }
+.vs-feed-top { display: flex; align-items: center; gap: 7px; margin-bottom: 3px; }
+.vs-feed-kind { font-size: 11px; font-weight: var(--fw-semibold); }
+.vs-feed-kind.tone-good { color: color-mix(in srgb, var(--good) 60%, var(--fg)); }
+.vs-feed-kind.tone-work { color: color-mix(in srgb, var(--accent) 60%, var(--fg)); }
+.vs-feed-kind.tone-warn { color: color-mix(in srgb, var(--warn) 62%, var(--fg)); }
+.vs-feed-kind.tone-danger { color: color-mix(in srgb, var(--danger) 60%, var(--fg)); }
+.vs-feed-kind.tone-neutral { color: var(--muted); }
+.vs-feed-ts { margin-left: auto; font-size: 10px; color: var(--faint); font-variant-numeric: tabular-nums; }
+.vs-feed-text { font-size: var(--text-12); color: var(--muted); line-height: 1.4; }
 
 /* --- Tool drawer -------------------------------------------------------- */
 .vs-drawer { flex: 0 0 auto; border-top: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; position: relative; }

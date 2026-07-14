@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Sun, Moon, Maximize2, Minimize2, GitCompare, Flag, ShieldQuestion } from 'lucide-react';
+import { Sun, Moon, Maximize2, Minimize2, GitCompare, Flag, ShieldQuestion, EyeOff } from 'lucide-react';
 import { useShell } from '../lib/store';
 import { useWorkspace, runtime } from './useWorkspace';
 import { LENS_META } from './model';
@@ -25,6 +25,19 @@ function TopBar() {
 			<div className="vs-top-left">
 				<span className="vs-logo" />
 				<div className="vs-proj"><b>{state.project.name}</b><span>{state.project.branch} · {state.scenarioLabel}</span></div>
+				{state.mission && (() => {
+					const done = state.mission.criteria.filter((c) => c.state === 'verified').length;
+					const total = state.mission.criteria.length;
+					return (
+						<button className="vs-mission-chip" onClick={() => runtime.setLens('verify')} title="Mission progress → Verify">
+							<span className="vs-mission-title">{state.mission.title}</span>
+							<span className="vs-mission-dots">
+								{state.mission.criteria.map((c) => <span key={c.id} className={`vs-mdot ${c.state}`} />)}
+							</span>
+							<span className="vs-mission-n">{done}/{total}</span>
+						</button>
+					);
+				})()}
 			</div>
 
 			<nav className="vs-lenses" aria-label="Lenses">
@@ -67,6 +80,21 @@ function Toast() {
 	return <div className="vs-toast" role="status">{state.toast}</div>;
 }
 
+function FollowBanner() {
+	const state = useWorkspace();
+	const followed = state.coworkers.find((c) => c.id === state.layout.followingId);
+	if (!followed) return null;
+	return (
+		<div className="vs-followbar" style={{ ['--id' as string]: followed.color }} role="status">
+			<span className="vs-avatar sm" style={{ background: followed.color }}>{followed.initials}</span>
+			<b>Following {followed.name}</b>
+			<span>· {followed.action}</span>
+			<div className="vs-spacer" />
+			<button className="vs-followbar-stop" onClick={() => runtime.follow(null)}><EyeOff size={13} />Stop following</button>
+		</div>
+	);
+}
+
 export function VelocityApp() {
 	// Prototype-scoped keyboard. The production shell routes these through the
 	// keybinding engine; here a single scoped listener keeps the demo self-contained.
@@ -93,6 +121,7 @@ export function VelocityApp() {
 	return (
 		<div className={`vs-root${focusMode ? ' focus' : ''}`}>
 			{!focusMode && <TopBar />}
+			{!focusMode && <FollowBanner />}
 			<div className="vs-main">
 				<Stage />
 				<RightRail />

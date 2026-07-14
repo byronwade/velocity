@@ -1,4 +1,4 @@
-import { Plus, Pause, Play, Command, PanelBottom, Users, Eye } from 'lucide-react';
+import { Plus, Pause, Play, Command, PanelBottom, Users, Eye, Activity } from 'lucide-react';
 import { useWorkspace, runtime } from './useWorkspace';
 import { STATE_TONE, STATE_LABEL } from './model';
 
@@ -36,6 +36,9 @@ export function Dock() {
 
 			<div className="vs-dock-sep" />
 
+			<button className={`vs-dock-btn${state.layout.rightSurface === 'activity' ? ' on' : ''}`} onClick={() => runtime.openRight(state.layout.rightSurface === 'activity' ? 'none' : 'activity')} title="Activity feed">
+				<Activity size={15} />
+			</button>
 			<button className={`vs-dock-btn${state.paused ? ' warn' : ''}`} onClick={() => runtime.togglePause()} title={state.paused ? 'Resume all' : 'Pause all (safe points)'}>
 				{state.paused ? <Play size={15} /> : <Pause size={15} />}
 			</button>

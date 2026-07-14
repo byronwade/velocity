@@ -207,7 +207,7 @@ export interface LayoutState {
 	focusMode: boolean;
 	followingId: string | null;
 	compare: boolean;
-	rightSurface: 'none' | 'checkpoint' | 'coworkers' | 'decision' | 'inspector';
+	rightSurface: 'none' | 'checkpoint' | 'coworkers' | 'decision' | 'inspector' | 'activity';
 	activeCheckpointId: string | null;
 	activeDecisionId: string | null;
 	missionSheetOpen: boolean;
@@ -262,4 +262,10 @@ export const STATE_LABEL: Record<CoworkerState, string> = {
 	idle: 'Idle', planning: 'Planning', active: 'Working', verifying: 'Verifying',
 	waiting: 'Waiting', blocked: 'Blocked', approval: 'Needs approval', paused: 'Paused',
 	completed: 'Done', dismissed: 'Dismissed', archived: 'Archived',
+};
+
+export const EVENT_TONE: Record<EventKind, 'neutral' | 'good' | 'work' | 'warn' | 'danger'> = {
+	reserve: 'work', waiting: 'warn', 'conflict-avoided': 'good', conflict: 'danger',
+	reassign: 'work', checkpoint: 'work', merge: 'good', 'verify-fail': 'danger',
+	'verify-pass': 'good', note: 'neutral',
 };
