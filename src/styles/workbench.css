@@ -84,13 +84,12 @@
 	height: 26px;
 	place-items: center;
 	flex: none;
-	border-radius: 8px;
-	background: linear-gradient(145deg, #9c8cff, #6d5bd0 72%);
-	color: white;
-	box-shadow: 0 6px 18px rgba(109, 91, 208, 0.24), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+	border-radius: 7px;
+	background: var(--brand-mark);
+	color: #fff;
 }
 
-.vw-brand-mark svg { width: 14px; height: 14px; stroke-width: 1.9; }
+.vw-brand-mark svg { width: 14px; height: 14px; stroke-width: 2; }
 .vw-sidebar-top .vw-icon-btn { margin-left: auto; }
 
 .vw-icon-btn {
@@ -115,16 +114,15 @@
 	gap: 9px;
 	margin: 4px 12px 10px;
 	padding: 0 12px;
-	border: 1px solid var(--line-2);
-	border-radius: 10px;
-	background: var(--panel);
-	box-shadow: var(--elev-1);
+	border: 1px solid var(--line);
+	border-radius: 9px;
+	background: transparent;
 	font-size: 12.5px;
-	font-weight: 580;
+	font-weight: 560;
 	text-align: left;
 }
 
-.vw-new-work:hover { background: color-mix(in srgb, var(--panel) 90%, var(--fg)); }
+.vw-new-work:hover { background: color-mix(in srgb, var(--fg) 5%, transparent); }
 .vw-new-work svg { width: 15px; height: 15px; }
 
 .vw-search {
@@ -209,7 +207,7 @@
 .vw-provider-icon { position: relative; display: grid; width: 28px; height: 28px; place-items: center; flex: none; border-radius: 8px; background: color-mix(in srgb, var(--fg) 7%, transparent); color: var(--muted); }
 .vw-provider-icon.connected::after { position: absolute; right: -1px; bottom: -1px; width: 7px; height: 7px; border: 2px solid var(--panel-2); border-radius: 50%; background: var(--good); content: ''; }
 .vw-provider-icon svg { width: 14px; height: 14px; }
-.vw-avatar { display: grid; width: 28px; height: 28px; place-items: center; flex: none; border-radius: 50%; background: linear-gradient(145deg, #8b7cf6, #5a48bd); color: white; font-size: 11px; font-weight: 700; }
+.vw-avatar { display: grid; width: 28px; height: 28px; place-items: center; flex: none; border-radius: 50%; background: var(--brand-mark); color: #fff; font-size: 11px; font-weight: 700; }
 
 .vw-sidebar-backdrop { display: none; }
 
@@ -245,7 +243,7 @@
 .vw-layout-switch { display: flex; height: 32px; align-items: center; padding: 3px; border-radius: 9px; background: color-mix(in srgb, var(--fg) 5%, transparent); }
 .vw-layout-switch button { display: flex; height: 26px; align-items: center; gap: 6px; padding: 0 10px; border-radius: 7px; color: var(--faint); font-size: 10.5px; font-weight: 560; white-space: nowrap; }
 .vw-layout-switch button:hover { color: var(--fg); }
-.vw-layout-switch button.active { background: var(--panel); color: var(--fg); box-shadow: var(--elev-1), 0 0 0 1px var(--line); }
+.vw-layout-switch button.active { background: var(--panel); color: var(--fg); box-shadow: 0 0 0 1px color-mix(in srgb, var(--line) 60%, transparent); }
 .vw-layout-switch svg { width: 12px; height: 12px; }
 .vw-layout-switch button > span { min-width: 25px; padding: 1px 5px; border-radius: 5px; background: color-mix(in srgb, var(--fg) 6%, transparent); font-size: 9px; text-align: center; }
 
@@ -260,13 +258,13 @@
 
 .vw-empty-state { display: grid; width: 100%; height: 100%; place-items: center; overflow: auto; padding: 48px 24px; }
 .vw-empty-inner { width: min(760px, 100%); margin-top: -4vh; text-align: center; }
-.vw-empty-mark { display: grid; width: 42px; height: 42px; place-items: center; margin: 0 auto 18px; border-radius: 13px; background: linear-gradient(145deg, #a698ff, #6855cb); color: white; box-shadow: 0 14px 35px rgba(104, 85, 203, 0.25), inset 0 0 0 1px rgba(255, 255, 255, 0.22); }
+.vw-empty-mark { display: grid; width: 42px; height: 42px; place-items: center; margin: 0 auto 18px; border-radius: 12px; background: var(--brand-mark); color: #fff; }
 .vw-empty-mark svg { width: 20px; height: 20px; }
 .vw-eyebrow, .vw-card-kicker { margin: 0 0 5px; color: #8b7cf6; font-size: 9.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
 .vw-empty-inner h2 { margin: 0; font-size: clamp(25px, 3vw, 34px); font-weight: 610; letter-spacing: -0.045em; }
 .vw-empty-copy { max-width: 520px; margin: 10px auto 25px; color: var(--muted); font-size: 13px; }
-.vw-empty-composer { width: min(680px, 100%); margin: 0 auto; padding: 12px 12px 9px; border: 1px solid var(--line-2); border-radius: 16px; background: var(--panel); box-shadow: 0 18px 55px rgba(0, 0, 0, 0.08), var(--elev-1); text-align: left; transition: border-color var(--dur), box-shadow var(--dur); }
-.vw-empty-composer:focus-within { border-color: color-mix(in srgb, #8b7cf6 55%, var(--line)); box-shadow: 0 18px 55px rgba(0, 0, 0, 0.09), 0 0 0 3px color-mix(in srgb, #8b7cf6 10%, transparent); }
+.vw-empty-composer { width: min(680px, 100%); margin: 0 auto; padding: 13px 13px 10px; border: 1px solid var(--line); border-radius: 15px; background: color-mix(in srgb, var(--fg) 2.5%, var(--panel)); text-align: left; transition: border-color var(--dur), box-shadow var(--dur); }
+.vw-empty-composer:focus-within { border-color: color-mix(in srgb, var(--brand-mark) 45%, var(--line)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-mark) 9%, transparent); }
 .vw-empty-composer textarea { width: 100%; min-height: 52px; resize: none; border: 0; outline: 0; background: transparent; color: var(--fg); font-size: 14px; line-height: 1.5; }
 .vw-empty-composer textarea::placeholder { color: var(--faint); }
 .vw-composer-tools { display: flex; align-items: center; gap: 4px; }
@@ -289,17 +287,17 @@
 .vw-suggestions small { overflow: hidden; color: var(--faint); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
 
 .vw-conversation { display: flex; height: 100%; min-height: 0; flex-direction: column; }
-.vw-conversation-scroll { min-height: 0; flex: 1; overflow: auto; padding: 26px 20px 12px; scroll-behavior: smooth; }
+.vw-conversation-scroll { min-height: 0; flex: 1; overflow: auto; padding: 36px 24px 16px; scroll-behavior: smooth; }
 .vw-thread-column { width: min(820px, 100%); margin: 0 auto; }
 .vw-thread-column > .agent-thread { overflow: visible; max-width: none; min-height: auto; padding: 22px 2px 6px; }
 .vw-thread-column > .agent-thread > * { max-width: none; }
-.vw-thread-column .msg { margin-bottom: 24px; }
+.vw-thread-column .msg { margin-bottom: 28px; }
 .vw-thread-column .msg.req .b { max-width: 72%; padding: 9px 13px; border-radius: 15px 15px 4px 15px; background: color-mix(in srgb, var(--fg) 7%, transparent); }
 .vw-thread-column .msg.res .role { color: var(--faint); }
-.vw-thread-column .msg.res .role .av { border-radius: 7px; background: linear-gradient(145deg, #9c8cff, #6653c8); color: white; }
+.vw-thread-column .msg.res .role .av { border-radius: 7px; background: var(--brand-mark); color: #fff; }
 .vw-thread-column .toolcard { border-color: var(--line); background: color-mix(in srgb, var(--panel-2) 75%, transparent); box-shadow: none; }
 
-.vw-resume-card { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; padding: 15px; border: 1px solid color-mix(in srgb, #8b7cf6 26%, var(--line)); border-radius: 13px; background: linear-gradient(135deg, color-mix(in srgb, #8b7cf6 7%, var(--panel)), var(--panel)); }
+.vw-resume-card { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; padding: 16px; border-radius: 12px; background: color-mix(in srgb, var(--brand-mark) 7%, var(--panel)); }
 .vw-resume-icon { display: grid; width: 31px; height: 31px; place-items: center; flex: none; border-radius: 9px; background: color-mix(in srgb, #8b7cf6 12%, transparent); color: #8b7cf6; }
 .vw-resume-icon svg { width: 15px; height: 15px; }
 .vw-resume-copy { min-width: 0; flex: 1; }
@@ -309,7 +307,7 @@
 .vw-resume-facts span { display: inline-flex; align-items: center; gap: 5px; }
 .vw-resume-facts svg { width: 12px; height: 12px; }
 
-.vw-brief { overflow: hidden; border-radius: 13px; background: color-mix(in srgb, var(--fg) 3%, var(--panel)); box-shadow: var(--elev-1); }
+.vw-brief { overflow: hidden; border-radius: 12px; background: color-mix(in srgb, var(--fg) 3.5%, transparent); }
 .vw-brief-summary { display: grid; width: 100%; min-height: 62px; grid-template-columns: 32px minmax(0, 1fr) 90px auto 18px; align-items: center; gap: 10px; padding: 9px 13px; text-align: left; }
 .vw-brief-summary:hover { background: color-mix(in srgb, var(--fg) 2.5%, transparent); }
 .vw-brief-icon { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 9px; background: color-mix(in srgb, var(--fg) 6%, transparent); color: var(--muted); }
@@ -337,8 +335,8 @@
 .vw-composer-scope { display: flex; min-height: 23px; align-items: center; gap: 8px; padding: 0 5px 5px; color: var(--faint); font-size: 9px; }
 .vw-composer-scope span { display: inline-flex; min-width: 0; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .vw-composer-scope svg { width: 10px; height: 10px; }
-.vw-composer { padding: 10px 10px 8px; border: 1px solid var(--line-2); border-radius: 15px; background: var(--panel); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06), var(--elev-1); transition: border-color var(--dur), box-shadow var(--dur); }
-.vw-composer:focus-within { border-color: color-mix(in srgb, #8b7cf6 48%, var(--line)); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07), 0 0 0 3px color-mix(in srgb, #8b7cf6 9%, transparent); }
+.vw-composer { padding: 10px 10px 8px; border: 1px solid var(--line); border-radius: 14px; background: color-mix(in srgb, var(--fg) 2.5%, var(--panel)); transition: border-color var(--dur), box-shadow var(--dur); }
+.vw-composer:focus-within { border-color: color-mix(in srgb, var(--brand-mark) 45%, var(--line)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-mark) 9%, transparent); }
 .vw-composer textarea { width: 100%; min-height: 30px; max-height: 140px; padding: 0 4px 7px; resize: none; border: 0; outline: 0; background: transparent; color: var(--fg); font-size: 13px; line-height: 1.5; }
 .vw-composer textarea::placeholder { color: var(--faint); }
 .vw-composer-foot { display: flex; align-items: center; gap: 6px; padding: 5px 7px 0; color: var(--faint); font-size: 8.5px; }
@@ -357,16 +355,16 @@
 .vw-artifact-thread .vw-composer-wrap { width: 100%; padding: 5px 10px 10px; }
 .vw-artifact-thread .vw-composer-scope span:nth-child(n + 2) { display: none; }
 .vw-artifact-thread .vw-composer-foot { display: none; }
-.vw-artifact-main { display: flex; min-width: 0; min-height: 0; flex-direction: column; padding: 8px; }
+.vw-artifact-main { display: flex; min-width: 0; min-height: 0; flex-direction: column; padding: 10px 10px 10px 4px; }
 .vw-artifact-bar { display: flex; height: 42px; align-items: center; gap: 5px; flex: none; padding: 0 6px; }
 .vw-artifact-tabs { display: flex; align-items: center; gap: 3px; }
 .vw-artifact-tabs button { display: inline-flex; height: 30px; align-items: center; gap: 6px; padding: 0 9px; border-radius: 8px; color: var(--faint); font-size: 10.5px; font-weight: 550; }
 .vw-artifact-tabs button:hover { background: color-mix(in srgb, var(--fg) 5%, transparent); color: var(--fg); }
-.vw-artifact-tabs button.active { background: var(--panel); color: var(--fg); box-shadow: var(--elev-1), 0 0 0 1px var(--line); }
+.vw-artifact-tabs button.active { background: color-mix(in srgb, var(--fg) 6%, transparent); color: var(--fg); }
 .vw-artifact-tabs svg { width: 12px; height: 12px; }
 .vw-saved { display: inline-flex; align-items: center; gap: 5px; color: var(--faint); font-size: 9px; }
 .vw-saved svg { width: 11px; height: 11px; color: var(--good); }
-.vw-artifact-canvas { min-height: 0; flex: 1; overflow: hidden; border-radius: 13px; background: var(--panel); box-shadow: var(--elev-1), 0 0 0 1px color-mix(in srgb, var(--line) 55%, transparent); }
+.vw-artifact-canvas { min-height: 0; flex: 1; overflow: hidden; border-radius: 12px; background: var(--panel); box-shadow: 0 0 0 1px color-mix(in srgb, var(--line) 50%, transparent); }
 .vw-artifact-canvas > * { width: 100%; height: 100%; min-height: 0; }
 
 /* On-demand studio tabs — appended after the four core surfaces, dismissible. */
@@ -380,7 +378,7 @@
 /* Code surface = collapsible file tree + editor pane. */
 .vw-code-surface { display: flex; min-width: 0; min-height: 0; }
 .vw-code-editor { flex: 1; min-width: 0; min-height: 0; }
-.vw-files { display: flex; width: 212px; min-height: 0; flex: none; flex-direction: column; border-right: 1px solid color-mix(in srgb, var(--line) 60%, transparent); background: color-mix(in srgb, var(--fg) 2.5%, var(--panel)); }
+.vw-files { display: flex; width: 214px; min-height: 0; flex: none; flex-direction: column; border-right: 1px solid color-mix(in srgb, var(--line) 55%, transparent); background: var(--panel); }
 .vw-files-head { flex: none; padding: 11px 14px 7px; color: var(--faint); font-size: 9px; font-weight: 650; letter-spacing: 0.07em; text-transform: uppercase; }
 .vw-files-tree { min-height: 0; flex: 1; overflow: auto; padding: 2px 8px 10px; }
 .vw-file-row { display: flex; width: 100%; height: 25px; align-items: center; gap: 6px; padding-right: 8px; border-radius: 7px; color: var(--muted); font-size: 12px; text-align: left; }
@@ -427,7 +425,7 @@
 .vw-preview-switch svg { width: 11px; height: 11px; }
 .vw-review-canvas { min-height: 0; flex: 1; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); box-shadow: var(--elev-1); }
 
-.vw-preview-stage { display: grid; width: 100%; height: 100%; place-items: center; overflow: auto; padding: 30px; background: radial-gradient(circle at 50% 20%, color-mix(in srgb, #8b7cf6 8%, transparent), transparent 46%), color-mix(in srgb, var(--panel-2) 70%, var(--shell)); }
+.vw-preview-stage { display: grid; width: 100%; height: 100%; place-items: center; overflow: auto; padding: 30px; background: color-mix(in srgb, var(--panel-2) 70%, var(--shell)); }
 .vw-preview-window { width: min(760px, 100%); min-height: 480px; overflow: hidden; border: 1px solid var(--line-2); border-radius: 13px; background: var(--panel); box-shadow: 0 30px 80px rgba(0, 0, 0, 0.16); }
 .vw-preview-chrome { display: flex; height: 37px; align-items: center; gap: 5px; padding: 0 11px; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--panel-2) 80%, var(--panel)); }
 .vw-preview-chrome i { width: 7px; height: 7px; border-radius: 50%; background: var(--line-2); }
@@ -435,7 +433,7 @@
 .vw-preview-chrome i:nth-child(2) { background: #f2bf4f; }
 .vw-preview-chrome i:nth-child(3) { background: #58c467; }
 .vw-preview-chrome span { margin-left: 8px; color: var(--faint); font-family: var(--mono); font-size: 8.5px; }
-.vw-auth-preview { display: flex; min-height: 443px; flex-direction: column; padding: 26px 34px 40px; background: linear-gradient(145deg, color-mix(in srgb, #8b7cf6 5%, var(--panel)), var(--panel)); }
+.vw-auth-preview { display: flex; min-height: 443px; flex-direction: column; padding: 26px 34px 40px; background: var(--panel); }
 .vw-auth-brand { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 650; }
 .vw-auth-brand .vw-brand-mark { width: 23px; height: 23px; border-radius: 7px; }
 .vw-auth-card { width: min(330px, 100%); margin: 42px auto 0; padding: 26px; border: 1px solid var(--line); border-radius: 15px; background: var(--panel); box-shadow: 0 20px 55px rgba(0, 0, 0, 0.08); }

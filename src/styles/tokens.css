@@ -30,6 +30,9 @@
 	   foreground color, never a hue. --brand tracks --fg so it inverts per
 	   theme. --accent (v0 blue-700) is reserved for links/focus only. */
 	--brand: var(--fg);
+	/* Flat brand mark — one solid violet, no gradient, shared by the logo and
+	   avatars. Kept theme-agnostic (a colored chip with a white glyph). */
+	--brand-mark: #6d5bd0;
 	--accent: #0072f5;
 	--good: #45a557;
 	--warn: #ff990a;
