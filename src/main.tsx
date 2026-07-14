@@ -4,6 +4,7 @@ import { App } from './App';
 import { ServicesProvider } from './services/container';
 import './styles/tokens.css';
 import './styles/app.css';
+import './styles/workbench.css';
 
 createRoot(document.getElementById('root')!).render(
 	<StrictMode>

@@ -1,120 +1,91 @@
 # Velocity
 
-**A browser-native, agent-native workspace** — a code editor, a real terminal, an embedded
-browser with live preview, an AI agent command bar, and a Framer-style design canvas, all in one
-tab. Everything runs client-side: no backend, no language server, no container. One workspace with
-many **views over a shared project graph**.
+Velocity is an open-source, local-first developer workstream environment. It keeps a feature's
+conversation, implementation surfaces, acceptance criteria, evidence, and meaningful activity in
+one place.
 
-![Velocity editor](docs/screenshots/editor.png)
+The interface is intentionally closer to ChatGPT and Cursor than a traditional multi-rail IDE:
+one collapsible workstream sidebar and one active piece of work. The sidebar closes completely;
+there is no residual icon rail.
 
----
+## Product model
 
-## Highlights
+Every workstream has three views over the same context:
 
-- **Real editor** — CodeMirror 6 with multi-file tabs, breadcrumbs, a status bar, find/replace,
-  go-to-line, multi-cursor, rainbow bracket colorization, inline color swatches, Prettier
-  formatting, and live editor settings.
-- **Real terminal** — a genuine shell over the in-memory filesystem: pipes, redirection, command
-  chaining, environment variables, globbing, and stdin-aware filters.
-- **Real browser** — an embedded, Chrome-style browser with navigation, bookmarks, zoom, keyboard
-  shortcuts, and a **live preview that runs the actual workspace app**.
-- **Agent command bar** — a floating command surface backed by pluggable models (a built-in local
-  agent and **Ollama** for local LLMs), with a shared tool registry, memory, project indexing, and
-  automatic context compaction.
-- **VS Code-style keybindings** — a full command registry and keybinding engine: chord sequences
-  (`⌘K ⌘S`), `when`-clause contexts, and a searchable Keyboard Shortcuts editor where every command
-  is rebindable, with import/export.
-- **Design canvas, studios & a living map** — a Framer-style artboard canvas over the live app,
-  studios for Data/API/Deploy/Observability/Test, and an architecture map built from a shared
-  project graph derived by static analysis of the real workspace.
+- **Conversation** — the outcome, work brief, agent thread, project scope, and a persistent composer.
+- **Work** — the conversation beside the existing CodeMirror editor, terminal, live browser, or
+  design canvas. Changing tools does not create a new project context.
+- **Review** — definition-of-done criteria beside behavior or diff evidence, with explicit accept
+  and send-back decisions.
 
-Everything is **real** — derived from the actual in-memory filesystem, not mock data — and every
-feature has been exercised end-to-end in a headless browser.
+An attention inbox contains only blockers, requested decisions, and review-ready work. Activity,
+branch, worktree, budget, model, and evidence are progressive details instead of permanent chrome.
 
----
+## Current prototype
 
-## The editor
+This phase focuses on making the desktop product flow tangible before building orchestration and
+persistence behind it.
 
-Multi-file tabs, breadcrumbs, and a status bar; syntax highlighting and rainbow brackets; ⌘P quick
-open, ⌘E recent files, ⇧⌥F format (Prettier, lazy-loaded), ⌘D multi-cursor, ⌘/ comment, and a
-live-applied settings panel (font size, tab width, word wrap, format-on-save).
+Implemented now:
 
-## The terminal
+- Responsive ChatGPT-style workstream sidebar, search, new-work flow, and attention inbox.
+- Conversation, Work, and Review layouts with a shared active workstream.
+- Existing editor, terminal, browser preview, design canvas, command palette, and keyboard shortcut
+  system embedded in the new shell.
+- Interactive criteria selection, behavior/diff switching, activity details, accept/send-back
+  transitions, light/dark appearance, and model settings.
+- A real Ollama model picker and streaming agent transport.
+- A Tauri 2 desktop scaffold with local Ollama access restricted to port `11434`.
 
-Not a command lookup table — a real shell over the workspace filesystem.
+Prototype seams that are intentionally still local or seeded:
 
-![Velocity terminal](docs/screenshots/terminal.png)
+- Workstream metadata, criteria, evidence, and activity examples are in-memory design fixtures.
+- New workstreams live for the current app session; durable project/worktree orchestration comes
+  next.
+- The browser build's filesystem and shell remain the existing in-memory implementations.
 
-- **Pipes** `a | b | c` with stdin-aware filters (`grep`, `wc`, `head`, `tail`, `sort`, `uniq`, `cat`)
-- **Redirection** `> file` and `>> file` for any command
-- **Chaining** `&&`, `||`, `;` with real exit-code semantics
-- **Environment** `export FOO=bar`, `$FOO` / `${FOO}` expansion, `env`
-- **Globbing** `ls *.tsx`, `wc -l src/*.ts`
-- Quote-aware parsing, Tab completion, ↑/↓ history, Ctrl+L clear, Ctrl+C cancel
+## Ollama
 
-## The browser
+Start Ollama normally:
 
-An embedded browser tab that behaves like the real thing — and renders the live workspace app when
-you visit `localhost`.
+```bash
+ollama serve
+```
 
-![Velocity browser](docs/screenshots/browser.png)
+Open **Settings → Ollama**, test `http://localhost:11434`, and choose an installed model. In the
+Tauri app, requests use the native HTTP plugin, so Ollama does not need a permissive browser CORS
+setting. The desktop capability allowlist accepts only:
 
-- Back / forward / reload, an address bar (search **or** URL), and a bookmarks bar
-- Keyboard: ⌘L focus address, ⌘R / F5 reload, Alt+←/→ navigate, ⌘+/−/0 zoom
-- A live-preview pipeline that transpiles the workspace TSX in-browser and runs it in a sandboxed
-  iframe — the **Run** button opens it instantly
+- `http://localhost:11434/*`
+- `http://127.0.0.1:11434/*`
 
-## Command palette & keybindings
+When using the Vite browser preview instead of Tauri, allow only that development origin:
 
-One palette (⌘⇧P) over files, commands, studios, and the agent — each command shows its keybinding.
-
-![Command palette](docs/screenshots/command-palette.png)
-
-The Keyboard Shortcuts editor (⌘K ⌘S) mirrors VS Code: search every command, rebind with a chord
-recorder, remove, reset, and import/export a `keybindings.json`.
-
-![Keyboard Shortcuts editor](docs/screenshots/keybindings.png)
-
-## Design canvas
-
-A Framer-style, pannable/zoomable canvas of artboards rendering the live app at each breakpoint,
-with Pages/Layers/Assets navigation and live-editable design tokens.
-
-![Design canvas](docs/screenshots/design.png)
-
----
+```bash
+OLLAMA_ORIGINS='http://localhost:5199' ollama serve
+```
 
 ## Architecture
 
-- **React 18 + TypeScript + Vite**, state in **zustand** with selective subscriptions; layout,
-  theme, and edits persist to `localStorage`.
-- **Service DI container** (`services/container.tsx`) vends the filesystem, editor, shell, browser,
-  agent, graph, preview, and design services behind stable interfaces.
-- **Recursive split-pane workspace** — any pane splits horizontally/vertically and hosts any mode.
-- **In-browser TSX runtime** — [sucrase](https://github.com/alangpierce/sucrase) transpiles the
-  workspace's real TS/TSX and runs it against a vendored React in a sandboxed iframe, so the live
-  preview and design artboards show the actual app (CSP-safe, no CDN).
-- **Keybinding engine** (`keybindings/`) — command registry, physical-key matcher, `when`-clause
-  evaluator, and a user-override layer, modeled on VS Code.
-- **Shared project graph** (`lib/graph.ts`, `services/graph.ts`) — typed nodes and edges derived
-  from static analysis of the filesystem; the map, palette, and design canvas are all views over it.
+- **React 18 + TypeScript + Vite** for the workbench UI.
+- **Tauri 2** for the desktop shell and native local HTTP transport.
+- **Zustand** for existing editor and shell state.
+- A service container in `src/services/container.tsx` for filesystem, editor, terminal, browser,
+  agent, graph, preview, and design services.
+- The new product shell in `src/workbench/VelocityWorkbench.tsx`, with its workstream model in
+  `src/workbench/model.ts`.
+- Desktop configuration and capabilities in `src-tauri/`.
 
 ## Develop
 
 ```bash
 npm install
-npm run dev        # http://localhost:5199
-npm run build      # production build
-npm run typecheck  # tsc --noEmit
-npm run preview    # serve the production build
+npm run dev             # browser preview at http://localhost:5199
+npm run typecheck       # TypeScript validation
+npm run build           # production web assets
+npm run desktop:dev     # Tauri development app
+npm run desktop:build   # native desktop bundle
 ```
 
-`?theme=light` / `?theme=dark` forces a theme (handy for shareable links / previews).
-
-## Status
-
-The editor, terminal, browser, agent command bar, design canvas, studios, command palette, and
-keybinding system are all implemented and working against the real workspace. Local model support
-runs through Ollama (`OLLAMA_ORIGINS='*' ollama serve`). Real-time collaboration and
-deploy-to-provider are present as seams with clearly-marked stubs — the next milestones on the
-roadmap.
+Tauri development and builds require the Rust toolchain and the platform prerequisites documented
+by Tauri. `?theme=light` and `?theme=dark` can force a theme for browser previews.

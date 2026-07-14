@@ -76,8 +76,8 @@ export function ModelPicker() {
 					))}
 					{status === 'down' && (
 						<div className="mp-hint">
-							No Ollama server reached. Install from ollama.com, then run:<br />
-							<code>OLLAMA_ORIGINS='*' ollama serve</code>
+							No Ollama server reached. The desktop app connects directly. For this browser preview, run:<br />
+							<code>OLLAMA_ORIGINS='http://localhost:5199' ollama serve</code>
 						</div>
 					)}
 				</div>
