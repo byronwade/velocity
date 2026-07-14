@@ -636,29 +636,38 @@ interface ReviewProps {
 	workstream: Workstream;
 	onAccept: () => void;
 	onSendBack: () => void;
+	onVerify: () => void;
+	verifying: boolean;
 }
 
-function ReviewView({ workstream, onAccept, onSendBack }: ReviewProps) {
+function ReviewView({ workstream, onAccept, onSendBack, onVerify, verifying }: ReviewProps) {
 	const [criterionId, setCriterionId] = useState(workstream.criteria[0]?.id ?? '');
 	const [mode, setMode] = useState<'preview' | 'diff'>('preview');
 	const criterion = workstream.criteria.find((item) => item.id === criterionId) ?? workstream.criteria[0];
 	if (!criterion) return null;
+	const verified = workstream.criteria.filter((item) => item.state === 'verified').length;
+	const allVerified = verified === workstream.criteria.length;
 	return (
 		<div className="vw-review-layout">
 			<aside className="vw-criteria-panel">
-				<div className="vw-review-panel-head"><span>Definition of done</span><b>{workstream.criteria.filter((item) => item.state === 'verified').length}/{workstream.criteria.length}</b></div>
-				<div className="vw-criteria-list">
+				<div className="vw-review-panel-head"><span>Definition of done</span><b>{verified}/{workstream.criteria.length}</b></div>
+				<div className={`vw-criteria-list${verifying ? ' verifying' : ''}`}>
 					{workstream.criteria.map((item, index) => (
-						<button key={item.id} className={`${item.id === criterion.id ? 'active ' : ''}${item.state}`} onClick={() => setCriterionId(item.id)}>
+						<button key={item.id} className={`${item.id === criterion.id ? 'active ' : ''}${item.state}${verifying && item.state !== 'verified' ? ' checking' : ''}`} onClick={() => setCriterionId(item.id)}>
 							<span className="vw-criterion-number">{index + 1}</span>
-							<span className="vw-criterion-copy"><b>{item.title}</b><small>{CRITERION_LABEL[item.state]}</small></span>
-							{criterionIcon(item.state)}
+							<span className="vw-criterion-copy"><b>{item.title}</b><small>{verifying && item.state !== 'verified' ? 'Verifying…' : CRITERION_LABEL[item.state]}</small></span>
+							{verifying && item.state !== 'verified' ? <LoaderCircle className="vw-rotate" /> : criterionIcon(item.state)}
 						</button>
 					))}
 				</div>
-				<div className="vw-review-actions">
-					<button className="btn btn-outline" onClick={onSendBack}><RotateCcw />Send back</button>
-					<button className="btn btn-primary" onClick={onAccept}><Check />Accept work</button>
+				<div className="vw-review-foot">
+					<button className="btn btn-secondary vw-verify-btn" onClick={onVerify} disabled={verifying || allVerified}>
+						{verifying ? <><LoaderCircle className="vw-rotate" />Verifying…</> : allVerified ? <><CheckCircle2 />All verified</> : <><ShieldCheck />Re-verify all</>}
+					</button>
+					<div className="vw-review-actions">
+						<button className="btn btn-outline" onClick={onSendBack}><RotateCcw />Send back</button>
+						<button className="btn btn-primary" onClick={onAccept}><Check />Accept work</button>
+					</div>
 				</div>
 			</aside>
 			<section className="vw-review-main">
@@ -763,6 +772,7 @@ export function VelocityWorkbench() {
 	const [ollamaHealthy, setOllamaHealthy] = useState<boolean | null>(null);
 	const [toast, setToast] = useState<string | null>(null);
 	const [celebrating, setCelebrating] = useState(false);
+	const [verifying, setVerifying] = useState(false);
 	const active = workstreams.find((work) => work.id === activeId) ?? null;
 	const attentionCount = workstreams.filter((work) => work.status === 'needs-input' || work.status === 'review-ready' || work.status === 'blocked').length;
 
@@ -871,6 +881,35 @@ export function VelocityWorkbench() {
 		setToast('Review context carried back into the conversation.');
 	}
 
+	// The evidence loop — watch the agent verify each open criterion in turn.
+	// Green checks land one-by-one (staggered), the count climbs, and the work
+	// becomes review-ready. This is our differentiator made tangible: proof, not vibes.
+	function verifyWork() {
+		if (!active || verifying) return;
+		const pending = active.criteria.filter((criterion) => criterion.state !== 'verified');
+		if (!pending.length) return;
+		const id = active.id;
+		setVerifying(true);
+		setLayout('review');
+		pending.forEach((criterion, index) => {
+			window.setTimeout(() => {
+				setWorkstreams((items) => items.map((item) => item.id === id
+					? { ...item, criteria: item.criteria.map((entry) => entry.id === criterion.id ? { ...entry, state: 'verified' } : entry) }
+					: item));
+				if (index === pending.length - 1) {
+					setVerifying(false);
+					setWorkstreams((items) => items.map((item) => item.id === id ? { ...item, status: 'review-ready', phase: 'verify', updated: 'now', lastEvent: 'All criteria verified' } : item));
+					setToast('All criteria verified — ready to ship.');
+				}
+			}, 450 + index * 480);
+		});
+	}
+	useEffect(() => {
+		window.addEventListener('velocity:verify', verifyWork);
+		return () => window.removeEventListener('velocity:verify', verifyWork);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [active, verifying]);
+
 	// The ship climax — the one reserved celebration. Marks the work done, fires a
 	// burst, and hands back a shareable link (copied). Honest: only on a real ship.
 	function shipWork() {
@@ -915,7 +954,7 @@ export function VelocityWorkbench() {
 					{!active && <EmptyConversation onCreate={createWorkstream} />}
 					{active && layout === 'conversation' && <ConversationView workstream={active} onReview={() => setLayout('review')} onArtifact={() => setLayout('artifact')} />}
 					{active && layout === 'artifact' && <ArtifactView workstream={active} artifact={artifact} openStudios={openStudios} onSelect={openTool} onCloseStudio={closeStudio} />}
-					{active && layout === 'review' && <ReviewView workstream={active} onAccept={acceptWork} onSendBack={sendBack} />}
+					{active && layout === 'review' && <ReviewView workstream={active} onAccept={acceptWork} onSendBack={sendBack} onVerify={verifyWork} verifying={verifying} />}
 				</div>
 			</main>
 			{attentionOpen && <AttentionSheet workstreams={workstreams} onOpen={(id) => selectWorkstream(id, workstreams.find((work) => work.id === id)?.status === 'review-ready' ? 'review' : 'conversation')} onClose={() => setAttentionOpen(false)} />}

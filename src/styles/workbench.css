@@ -476,7 +476,12 @@
 .vw-criteria-list button.verified > svg { color: var(--good); }
 .vw-criteria-list button.partial > svg { color: var(--warn); }
 .vw-criteria-list button.failed > svg { color: var(--danger); }
-.vw-review-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; padding: 10px; border-top: 1px solid var(--line); }
+.vw-review-foot { display: flex; flex-direction: column; gap: 8px; flex: none; padding: 10px; border-top: 1px solid var(--line); }
+.vw-verify-btn { width: 100%; }
+.vw-criteria-list button.checking { background: color-mix(in srgb, var(--good) 9%, transparent); }
+.vw-criteria-list button.checking > svg { color: var(--good); }
+.vw-review-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.vw-review-foot .vw-review-actions { padding: 0; border-top: 0; }
 .vw-secondary-action, .vw-primary-action { display: flex; height: 34px; align-items: center; justify-content: center; gap: 6px; border-radius: 8px; font-size: 12px; font-weight: 600; }
 .vw-secondary-action { border: 1px solid var(--line-2); background: var(--panel); }
 .vw-primary-action { background: var(--fg); color: var(--panel); }
