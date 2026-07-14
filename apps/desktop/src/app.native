@@ -47,14 +47,17 @@
           </dropdown-menu>
         </if>
       </column>
-      <button size="icon" variant="ghost" icon="plus" foreground="success" label="New file" on-press="new_file"/>
-      <button size="icon" variant="ghost" icon="folder" foreground="warning" label="Explorer" on-press="sidebar_files"/>
-      <button size="icon" variant="ghost" icon="search" foreground="info" label="Command palette" on-press="open_palette"/>
-      <button size="icon" variant="ghost" icon="panel-right" foreground="destructive" label="Toggle agent" on-press="toggle_agent"/>
+      <button size="icon" variant="ghost" icon="plus" label="New file" on-press="new_file"/>
+      <button size="icon" variant="ghost" icon="folder" label="Explorer" on-press="sidebar_files"/>
+      <button size="icon" variant="ghost" icon="search" label="Command palette" on-press="open_palette"/>
+      <button size="icon" variant="ghost" icon="panel-right" label="Toggle agent" on-press="toggle_agent"/>
       <spacer grow="1"/>
       <text foreground="text">{title}</text>
-      <panel background="surface_pressed" radius="sm" padding="4">
-        <text size="sm" foreground="text_muted">main</text>
+      <panel background="surface_pressed" radius="sm" padding="6">
+        <row gap="4" cross="center">
+          <icon name="git-branch" foreground="info" width="14" height="14"/>
+          <text size="sm" foreground="info">main</text>
+        </row>
       </panel>
       <spacer grow="1"/>
       <button size="icon" variant="ghost" icon="settings" label="Settings" on-press="open_settings"/>
@@ -68,9 +71,17 @@
 
 <!-- A colored icon tile (fixed hue per use site; color attrs are literal). -->
 <template name="tile-info" args="glyph">
-  <panel width="28" height="28" radius="md" background="info">
+  <panel width="34" height="34" radius="md" background="info">
     <row grow="1" main="center" cross="center">
-      <icon name="{glyph}" foreground="info_text"/>
+      <icon name="{glyph}" foreground="info_text" width="18" height="18"/>
+    </row>
+  </panel>
+</template>
+
+<template name="tile-warn" args="glyph">
+  <panel width="34" height="34" radius="md" background="warning">
+    <row grow="1" main="center" cross="center">
+      <icon name="{glyph}" foreground="warning_text" width="18" height="18"/>
     </row>
   </panel>
 </template>
@@ -104,9 +115,14 @@
               <tree gap="4" label="Files">
                 <for each="files" key="id" as="f">
                   <list-item role="treeitem" selected="{f.id == activeFile}" on-press="open_file:{f.id}" label="{f.name}">
-                    <row grow="1" cross="center" gap="12">
+                    <row grow="1" cross="center" gap="10">
                       <use template="tile-info" glyph="file-text"/>
-                      <text grow="1" foreground="text">{f.name}</text>
+                      <if test="{f.id == activeFile}">
+                        <text grow="1" foreground="accent">{f.name}</text>
+                      </if>
+                      <else>
+                        <text grow="1" foreground="text">{f.name}</text>
+                      </else>
                       <icon name="chevron-right" foreground="text_muted"/>
                     </row>
                   </list-item>
@@ -188,21 +204,24 @@
               <button size="sm" variant="outline" on-press="toggle_agent">Hide</button>
             </row>
             <scroll grow="1">
-              <column gap="14">
+              <column gap="16">
                 <for each="messages" key="id" as="m">
                   <if test="{m.fromUser}">
-                    <panel background="surface_pressed" radius="lg" padding="12">
-                      <column gap="2">
-                        <text size="sm" foreground="accent">You</text>
+                    <row gap="10" cross="start">
+                      <avatar>BW</avatar>
+                      <panel background="surface_pressed" radius="lg" padding="12" grow="1">
                         <text foreground="text">{m.text}</text>
-                      </column>
-                    </panel>
+                      </panel>
+                    </row>
                   </if>
                   <else>
-                    <column gap="2" padding="2">
-                      <text size="sm" foreground="text">Velocity</text>
-                      <text foreground="text">{m.text}</text>
-                    </column>
+                    <row gap="10" cross="start">
+                      <use template="tile-info" glyph="send"/>
+                      <column grow="1" gap="3">
+                        <text size="sm" foreground="info">Velocity</text>
+                        <text foreground="text">{m.text}</text>
+                      </column>
+                    </row>
                   </else>
                 </for>
               </column>
@@ -219,8 +238,10 @@
         <input-group grow="1">
           <textarea label="Message the agent" text="{compose.text}" on-input="compose_edit" on-submit="send_message" placeholder="Tell the agent what to do…"/>
         </input-group>
-        <text size="sm" foreground="text_muted">Velocity · Local</text>
-        <button variant="primary" on-press="send_message">Send</button>
+        <panel background="surface_pressed" radius="sm" padding="6">
+          <text size="sm" foreground="text_muted">Velocity · Local</text>
+        </panel>
+        <button variant="primary" icon="send" on-press="send_message">Send</button>
       </row>
     </panel>
 
@@ -337,12 +358,12 @@
 <if test="{paletteOpen}">
   <dialog text="Command palette" on-dismiss="close_palette">
     <column gap="4" padding="8" width="440">
-      <button variant="ghost" on-press="new_file">New file</button>
-      <button variant="ghost" on-press="save_file">Save file</button>
-      <button variant="ghost" on-press="reload_file">Reload file from disk</button>
-      <button variant="ghost" on-press="close_file:{activeFile}">Close current file</button>
-      <button variant="ghost" on-press="toggle_agent">Toggle agent pane</button>
-      <button variant="ghost" on-press="open_settings">Open settings</button>
+      <button variant="ghost" icon="plus" on-press="new_file">New file</button>
+      <button variant="ghost" icon="save" on-press="save_file">Save file</button>
+      <button variant="ghost" icon="refresh-cw" on-press="reload_file">Reload file from disk</button>
+      <button variant="ghost" icon="x" on-press="close_file:{activeFile}">Close current file</button>
+      <button variant="ghost" icon="panel-right" on-press="toggle_agent">Toggle agent pane</button>
+      <button variant="ghost" icon="settings" on-press="open_settings">Open settings</button>
     </column>
   </dialog>
 </if>

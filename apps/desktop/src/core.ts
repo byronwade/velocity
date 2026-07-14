@@ -173,6 +173,11 @@ export function byteCount(model: Model): number {
   return model.doc.text.length;
 }
 
+// Does the agent conversation have any messages? (drives the empty-state.)
+export function hasMessages(model: Model): boolean {
+  return model.messages.length > 0;
+}
+
 // One rendered code line: its bytes and whether it's a `//` comment.
 export interface CodeLine {
   readonly n: number;
