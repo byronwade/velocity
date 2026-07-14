@@ -4,8 +4,9 @@
 **Status:** Feature-complete — all stages (0–8, including 5.1–5.4) shipped on branch
 `native-sdk-migration` (PR #3). Each stage is render/behaviour-verified via the automation
 harness (widget snapshots, click-driven flows, and a real Save→disk round-trip); web + site
-build clean, desktop passes `native check --strict`, CI `check` is green. Remaining polish
-(non-blocking): activity-rail icons, ⌘K palette, boot-load files from disk on startup.
+build clean, desktop passes `native check --strict`, CI `check` is green. Polish also landed:
+VS Code-style activity rail, ⌘K command palette (app.zon shortcut + `commandMsg`), and
+boot-loading the active file from disk on startup. The workbench is a full native IDE shell.
 **Owner:** Byron Wade
 
 ## Goal
