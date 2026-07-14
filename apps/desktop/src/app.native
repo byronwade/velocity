@@ -1,7 +1,8 @@
 <!-- Velocity workbench (Geist/v0 register via app.zon `theme = "geist"`).
-     Design: floating rounded panels (surface) on a darker shell (background),
-     separated by gaps — one shared <topbar> header on every screen. Zero-config
-     ts-core embeds only this file, so UI primitives live here as templates. -->
+     Design: floating <panel>s (only panel/card/stack paint a background fill —
+     column/row are flow-only) layered for depth — black shell → #1a1a1a panels
+     → #292929 cards → sunken #000 code well — with hairline borders. One shared
+     <topbar> header on every screen. -->
 
 <!-- ── UI primitives ──────────────────────────────────────────────────── -->
 
@@ -9,14 +10,17 @@
   <text size="heading">{title}</text>
 </template>
 
+<!-- A raised card (surface_pressed) sitting on a panel. -->
 <template name="card">
-  <column background="surface_subtle" radius="md" border-color="border" padding="16" gap="8">
-    <slot/>
-  </column>
+  <panel background="surface_pressed" radius="md" border-color="border" padding="16">
+    <column gap="8">
+      <slot/>
+    </column>
+  </panel>
 </template>
 
 <template name="field-row" args="label hint=">
-  <row gap="12" cross="center" padding="8">
+  <row gap="12" cross="center" padding="4">
     <column gap="2" grow="1">
       <text>{label}</text>
       <if test="{hint != ''}">
@@ -27,182 +31,184 @@
   </row>
 </template>
 
-<!-- The one header, a floating panel shared across every screen — full parity
-     with the reference: a brand nav dropdown, an icon toolbar, a centered
-     title + badge, and a right cluster of icons, avatar, and primary action. -->
+<!-- The one header, a floating panel shared across every screen — brand nav
+     dropdown, icon toolbar, centered title + badge, right cluster. -->
 <template name="topbar" args="title">
-  <row background="surface" radius="lg" border-color="border" padding="8" gap="6" cross="center">
-    <!-- brand + navigation dropdown -->
-    <column>
-      <button size="sm" variant="ghost" icon="chevron-down" on-press="toggle_nav_menu">Velocity</button>
-      <if test="{navMenuOpen}">
-        <dropdown-menu anchor="below" anchor-alignment="start" on-dismiss="close_nav_menu">
-          <menu-item icon="file-text" on-press="open_editor">Editor</menu-item>
-          <menu-item icon="settings" on-press="open_settings">Settings</menu-item>
-          <menu-item icon="search" on-press="open_palette">Command palette</menu-item>
-          <menu-item icon="panel-right" on-press="toggle_agent">Toggle agent</menu-item>
-          <menu-item icon="plus" on-press="new_file">New file</menu-item>
-        </dropdown-menu>
-      </if>
-    </column>
-    <!-- icon toolbar -->
-    <button size="icon" variant="ghost" icon="plus" label="New file" on-press="new_file"/>
-    <button size="icon" variant="ghost" icon="folder" label="Explorer" on-press="sidebar_files"/>
-    <button size="icon" variant="ghost" icon="search" label="Command palette" on-press="open_palette"/>
-    <button size="icon" variant="ghost" icon="panel-right" label="Toggle agent" on-press="toggle_agent"/>
-
-    <spacer grow="1"/>
-    <!-- center: context title + badge -->
-    <text foreground="text_muted">{title}</text>
-    <row background="surface_subtle" radius="sm" border-color="border" padding="4">
-      <text size="sm" foreground="text_muted">main</text>
+  <panel background="surface_subtle" radius="lg" border-color="border" padding="8">
+    <row gap="6" cross="center">
+      <column>
+        <button size="sm" variant="ghost" icon="chevron-down" on-press="toggle_nav_menu">Velocity</button>
+        <if test="{navMenuOpen}">
+          <dropdown-menu anchor="below" anchor-alignment="start" on-dismiss="close_nav_menu">
+            <menu-item icon="file-text" on-press="open_editor">Editor</menu-item>
+            <menu-item icon="settings" on-press="open_settings">Settings</menu-item>
+            <menu-item icon="search" on-press="open_palette">Command palette</menu-item>
+            <menu-item icon="panel-right" on-press="toggle_agent">Toggle agent</menu-item>
+            <menu-item icon="plus" on-press="new_file">New file</menu-item>
+          </dropdown-menu>
+        </if>
+      </column>
+      <button size="icon" variant="ghost" icon="plus" label="New file" on-press="new_file"/>
+      <button size="icon" variant="ghost" icon="folder" label="Explorer" on-press="sidebar_files"/>
+      <button size="icon" variant="ghost" icon="search" label="Command palette" on-press="open_palette"/>
+      <button size="icon" variant="ghost" icon="panel-right" label="Toggle agent" on-press="toggle_agent"/>
+      <spacer grow="1"/>
+      <text foreground="text_muted">{title}</text>
+      <panel background="surface_pressed" radius="sm" padding="4">
+        <text size="sm" foreground="text_muted">main</text>
+      </panel>
+      <spacer grow="1"/>
+      <button size="icon" variant="ghost" icon="settings" label="Settings" on-press="open_settings"/>
+      <button size="icon" variant="ghost" icon="refresh-cw" label="Reload" on-press="reload_file"/>
+      <button size="icon" variant="ghost" icon="play" label="Run" on-press="save_file"/>
+      <avatar>BW</avatar>
+      <button size="sm" variant="primary" on-press="save_file">Save</button>
     </row>
-    <spacer grow="1"/>
-
-    <!-- right cluster -->
-    <button size="icon" variant="ghost" icon="settings" label="Settings" on-press="open_settings"/>
-    <button size="icon" variant="ghost" icon="refresh-cw" label="Reload" on-press="reload_file"/>
-    <button size="icon" variant="ghost" icon="play" label="Run" on-press="save_file"/>
-    <avatar>BW</avatar>
-    <button size="sm" variant="primary" on-press="save_file">Save</button>
-  </row>
+  </panel>
 </template>
 
 <!-- ── Workbench ──────────────────────────────────────────────────────── -->
 
-<column grow="1" background="background">
+<column grow="1">
 <if test="{screen == 'editor'}">
 
   <column grow="1" padding="12" gap="12">
 
     <use template="topbar" title="{activeName}"/>
 
-    <!-- Body: three floating panels -->
     <row grow="1" gap="12">
 
       <!-- Sidebar panel -->
-      <column width="248" background="surface" radius="lg" border-color="border" padding="10" gap="10">
-        <tabs>
-          <button selected="{sidebar == 'files'}" on-press="sidebar_files">Files</button>
-          <button selected="{sidebar == 'map'}" on-press="sidebar_map">Map</button>
-          <button selected="{sidebar == 'review'}" on-press="sidebar_review">Review</button>
-        </tabs>
-        <if test="{sidebar == 'files'}">
-          <column grow="1" gap="6">
-            <row gap="8" cross="center">
-              <text size="sm" foreground="text_muted">EXPLORER</text>
-              <spacer grow="1"/>
-              <button size="icon" variant="ghost" icon="plus" label="New file" on-press="new_file"/>
-            </row>
-            <tree gap="2" label="Files">
-              <for each="files" key="id" as="f">
-                <list-item role="treeitem" selected="{f.id == activeFile}" on-press="open_file:{f.id}">{f.name}</list-item>
-              </for>
-            </tree>
-          </column>
-        </if>
-        <else>
-          <column padding="12" grow="1">
-            <text size="sm" foreground="text_muted">Coming soon</text>
-          </column>
-        </else>
-      </column>
-
-      <!-- Editor panel -->
-      <column grow="1" background="surface" radius="lg" border-color="border" padding="10" gap="8">
-        <row gap="8" cross="center">
-          <text size="lg">Live Editor</text>
-          <spacer grow="1"/>
-          <text size="sm" foreground="text_muted">{statusLabel}</text>
-          <if test="{preview}">
-            <button size="sm" variant="ghost" on-press="toggle_preview">Edit</button>
+      <panel width="248" background="surface_subtle" radius="lg" border-color="border" padding="10">
+        <column grow="1" gap="10">
+          <tabs>
+            <button selected="{sidebar == 'files'}" on-press="sidebar_files">Files</button>
+            <button selected="{sidebar == 'map'}" on-press="sidebar_map">Map</button>
+            <button selected="{sidebar == 'review'}" on-press="sidebar_review">Review</button>
+          </tabs>
+          <if test="{sidebar == 'files'}">
+            <column grow="1" gap="6">
+              <row gap="8" cross="center">
+                <text size="sm" foreground="text_muted">EXPLORER</text>
+                <spacer grow="1"/>
+                <button size="icon" variant="ghost" icon="plus" label="New file" on-press="new_file"/>
+              </row>
+              <tree gap="2" label="Files">
+                <for each="files" key="id" as="f">
+                  <list-item role="treeitem" selected="{f.id == activeFile}" on-press="open_file:{f.id}">{f.name}</list-item>
+                </for>
+              </tree>
+            </column>
           </if>
           <else>
-            <button size="sm" variant="ghost" on-press="toggle_preview">Preview</button>
+            <column padding="12" grow="1">
+              <text size="sm" foreground="text_muted">Coming soon</text>
+            </column>
           </else>
-          <button size="sm" variant="ghost" on-press="reload_file">Reload</button>
-        </row>
-        <row gap="6" cross="center">
-          <tabs grow="1">
-            <for each="files" key="id" as="f">
-              <button selected="{f.id == activeFile}" on-press="open_file:{f.id}">{f.name}</button>
-            </for>
-          </tabs>
-          <button size="sm" variant="ghost" on-press="new_file" label="New file">+</button>
-        </row>
-        <row gap="6" cross="center">
-          <if test="{dirty}">
-            <text size="sm" foreground="warning">●</text>
-          </if>
-          <text size="sm" foreground="text_muted">velocity / {activeName}</text>
-        </row>
-        <!-- Code surface, inset on the darker shell -->
-        <column grow="1" background="background" radius="md" border-color="border" padding="12">
-          <if test="{preview}">
+        </column>
+      </panel>
+
+      <!-- Editor panel -->
+      <panel grow="1" background="surface_subtle" radius="lg" border-color="border" padding="10">
+        <column grow="1" gap="8">
+          <row gap="8" cross="center">
+            <text size="lg">Live Editor</text>
+            <spacer grow="1"/>
+            <text size="sm" foreground="text_muted">{statusLabel}</text>
+            <if test="{preview}">
+              <button size="sm" variant="ghost" on-press="toggle_preview">Edit</button>
+            </if>
+            <else>
+              <button size="sm" variant="ghost" on-press="toggle_preview">Preview</button>
+            </else>
+            <button size="sm" variant="ghost" on-press="reload_file">Reload</button>
+          </row>
+          <row gap="6" cross="center">
+            <tabs grow="1">
+              <for each="files" key="id" as="f">
+                <button selected="{f.id == activeFile}" on-press="open_file:{f.id}">{f.name}</button>
+              </for>
+            </tabs>
+            <button size="sm" variant="ghost" on-press="new_file" label="New file">+</button>
+          </row>
+          <row gap="6" cross="center">
+            <if test="{dirty}">
+              <text size="sm" foreground="warning">●</text>
+            </if>
+            <text size="sm" foreground="text_muted">velocity / {activeName}</text>
+          </row>
+          <!-- Sunken code well -->
+          <panel grow="1" background="background" radius="md" border-color="border" padding="12">
+            <if test="{preview}">
+              <scroll grow="1">
+                <column gap="0">
+                  <for each="codeLines" key="n" as="ln">
+                    <row gap="16" cross="start">
+                      <text size="sm" foreground="text_muted">{ln.n}</text>
+                      <if test="{ln.comment}">
+                        <text grow="1"><span mono="true" foreground="text_muted">{ln.text}</span></text>
+                      </if>
+                      <else>
+                        <text grow="1"><span mono="true">{ln.text}</span></text>
+                      </else>
+                    </row>
+                  </for>
+                </column>
+              </scroll>
+            </if>
+            <else>
+              <textarea grow="1" label="Code editor" text="{doc.text}" on-input="edit" placeholder="Start typing…"/>
+            </else>
+          </panel>
+          <text size="sm" foreground="text_muted">{activeName}  ·  Ln 1, Col 1  ·  Spaces 2  ·  UTF-8  ·  LF  ·  TypeScript</text>
+        </column>
+      </panel>
+
+      <!-- Agent panel -->
+      <if test="{agentOpen}">
+        <panel width="336" background="surface_subtle" radius="lg" border-color="border" padding="10">
+          <column grow="1" gap="8">
+            <row gap="8" cross="center">
+              <text size="lg">Agent</text>
+              <spacer grow="1"/>
+              <button size="sm" variant="ghost" on-press="toggle_agent">Hide</button>
+            </row>
             <scroll grow="1">
-              <column gap="0">
-                <for each="codeLines" key="n" as="ln">
-                  <row gap="16" cross="start">
-                    <text size="sm" foreground="text_muted">{ln.n}</text>
-                    <if test="{ln.comment}">
-                      <text grow="1"><span mono="true" foreground="text_muted">{ln.text}</span></text>
-                    </if>
-                    <else>
-                      <text grow="1"><span mono="true">{ln.text}</span></text>
-                    </else>
-                  </row>
+              <column gap="14">
+                <for each="messages" key="id" as="m">
+                  <if test="{m.fromUser}">
+                    <panel background="surface_pressed" radius="md" padding="10">
+                      <column gap="2">
+                        <text size="sm" foreground="accent">You</text>
+                        <text>{m.text}</text>
+                      </column>
+                    </panel>
+                  </if>
+                  <else>
+                    <column gap="2" padding="2">
+                      <text size="sm" foreground="text_muted">Velocity</text>
+                      <text>{m.text}</text>
+                    </column>
+                  </else>
                 </for>
               </column>
             </scroll>
-          </if>
-          <else>
-            <textarea grow="1" label="Code editor" text="{doc.text}" on-input="edit" placeholder="Start typing…"/>
-          </else>
-        </column>
-        <row gap="4" cross="center">
-          <text size="sm" foreground="text_muted">{activeName}  ·  Ln 1, Col 1  ·  Spaces 2  ·  UTF-8  ·  LF  ·  TypeScript</text>
-        </row>
-      </column>
-
-      <!-- Agent panel (toggle via the header Agent button) -->
-      <if test="{agentOpen}">
-        <column width="336" background="surface" radius="lg" border-color="border" padding="10" gap="8">
-          <row gap="8" cross="center">
-            <text size="lg">Agent</text>
-            <spacer grow="1"/>
-            <button size="sm" variant="ghost" on-press="toggle_agent">Hide</button>
-          </row>
-          <scroll grow="1">
-            <column gap="14">
-              <for each="messages" key="id" as="m">
-                <if test="{m.fromUser}">
-                  <column background="surface_subtle" radius="md" padding="10" gap="2">
-                    <text size="sm" foreground="accent">You</text>
-                    <text>{m.text}</text>
-                  </column>
-                </if>
-                <else>
-                  <column gap="2" padding="2">
-                    <text size="sm" foreground="text_muted">Velocity</text>
-                    <text>{m.text}</text>
-                  </column>
-                </else>
-              </for>
-            </column>
-          </scroll>
-        </column>
+          </column>
+        </panel>
       </if>
 
     </row>
 
-    <!-- Bottom agent bar, a floating panel -->
-    <row background="surface" radius="lg" border-color="border" padding="10" gap="10" cross="center">
-      <input-group grow="1">
-        <textarea label="Message the agent" text="{compose.text}" on-input="compose_edit" on-submit="send_message" placeholder="Tell the agent what to do…"/>
-      </input-group>
-      <text size="sm" foreground="text_muted">Velocity · Local</text>
-      <button variant="primary" on-press="send_message">Send</button>
-    </row>
+    <!-- Bottom agent bar -->
+    <panel background="surface_subtle" radius="lg" border-color="border" padding="10">
+      <row gap="10" cross="center">
+        <input-group grow="1">
+          <textarea label="Message the agent" text="{compose.text}" on-input="compose_edit" on-submit="send_message" placeholder="Tell the agent what to do…"/>
+        </input-group>
+        <text size="sm" foreground="text_muted">Velocity · Local</text>
+        <button variant="primary" on-press="send_message">Send</button>
+      </row>
+    </panel>
 
   </column>
 
@@ -216,25 +222,29 @@
     <row grow="1" gap="12">
 
       <!-- Category panel -->
-      <column width="248" background="surface" radius="lg" border-color="border" padding="10" gap="8">
-        <text size="sm" foreground="text_muted">SETTINGS</text>
-        <column gap="2">
-          <for each="categories" key="id" as="c">
-            <button variant="ghost" selected="{c.id == category}" on-press="select_category:{c.id}">{c.label}</button>
-          </for>
-        </column>
-        <spacer grow="1"/>
-        <row background="surface_subtle" radius="md" padding="8" gap="8" cross="center">
-          <avatar>BW</avatar>
-          <column grow="1" gap="2">
-            <text size="sm">Byron Wade</text>
-            <text size="sm" foreground="text_muted">bcw1995@gmail.com</text>
+      <panel width="248" background="surface_subtle" radius="lg" border-color="border" padding="10">
+        <column grow="1" gap="8">
+          <text size="sm" foreground="text_muted">SETTINGS</text>
+          <column gap="2">
+            <for each="categories" key="id" as="c">
+              <button variant="ghost" selected="{c.id == category}" on-press="select_category:{c.id}">{c.label}</button>
+            </for>
           </column>
-        </row>
-      </column>
+          <spacer grow="1"/>
+          <panel background="surface_pressed" radius="md" padding="8">
+            <row gap="8" cross="center">
+              <avatar>BW</avatar>
+              <column grow="1" gap="2">
+                <text size="sm">Byron Wade</text>
+                <text size="sm" foreground="text_muted">bcw1995@gmail.com</text>
+              </column>
+            </row>
+          </panel>
+        </column>
+      </panel>
 
       <!-- Content panel -->
-      <column grow="1" background="surface" radius="lg" border-color="border">
+      <panel grow="1" background="surface_subtle" radius="lg" border-color="border">
         <scroll grow="1">
           <column padding="28" gap="18" grow="1">
 
@@ -301,7 +311,7 @@
 
           </column>
         </scroll>
-      </column>
+      </panel>
 
     </row>
 
