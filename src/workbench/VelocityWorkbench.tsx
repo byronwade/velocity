@@ -24,11 +24,9 @@ import {
 	Layers3,
 	ListChecks,
 	LoaderCircle,
-	Menu,
 	MessageSquare,
 	Moon,
 	MoreHorizontal,
-	PanelLeftClose,
 	PanelRightClose,
 	PanelRightOpen,
 	Paperclip,
@@ -148,57 +146,49 @@ function WorkstreamRow({ workstream, active, onSelect }: WorkstreamRowProps) {
 	);
 }
 
-interface SidebarProps {
-	open: boolean;
+interface SwitcherProps {
 	search: string;
 	onSearch: (value: string) => void;
 	workstreams: Workstream[];
 	activeId: string | null;
 	onSelect: (id: string) => void;
 	onNew: () => void;
-	onClose: () => void;
 	onSettings: () => void;
 	provider: string;
 	ollamaHealthy: boolean | null;
 }
 
-function WorkstreamSidebar({ open, search, onSearch, workstreams, activeId, onSelect, onNew, onClose, onSettings, provider, ollamaHealthy }: SidebarProps) {
+/** The workstream switcher — the sidebar's job, folded into a header popover so
+ *  the whole space below the top bar is working canvas (Framer-style). */
+function WorkstreamSwitcher({ search, onSearch, workstreams, activeId, onSelect, onNew, onSettings, provider, ollamaHealthy }: SwitcherProps) {
 	const filtered = useMemo(() => {
 		const q = search.trim().toLowerCase();
 		if (!q) return workstreams;
 		return workstreams.filter((work) => `${work.title} ${work.objective} ${work.repo}`.toLowerCase().includes(q));
 	}, [search, workstreams]);
 	const attention = filtered.filter((work) => work.status === 'needs-input' || work.status === 'review-ready' || work.status === 'blocked');
-	const active = filtered.filter((work) => work.status === 'running' || work.status === 'draft');
+	const running = filtered.filter((work) => work.status === 'running' || work.status === 'draft');
 	const recent = filtered.filter((work) => work.status === 'done');
 
 	return (
-		<aside className={`vw-sidebar${open ? ' open' : ''}`} aria-hidden={!open}>
-			<div className="vw-sidebar-top" data-tauri-drag-region>
-				<div className="vw-brand">
-					<span className="vw-brand-mark"><Sparkles /></span>
-					<span>Velocity</span>
-				</div>
-				<button className="vw-icon-btn" onClick={onClose} title="Close sidebar" aria-label="Close sidebar"><PanelLeftClose /></button>
-			</div>
+		<div className="vw-switcher-popover" role="dialog" aria-label="Switch workstream">
 			<button className="vw-new-work" onClick={onNew}><Plus />New work</button>
 			<label className="vw-search">
 				<Search />
-				<input value={search} onChange={(event) => onSearch(event.target.value)} placeholder="Search work" />
-				<span>⌘K</span>
+				<input autoFocus value={search} onChange={(event) => onSearch(event.target.value)} placeholder="Search work" />
 			</label>
 
-			<div className="vw-sidebar-scroll">
+			<div className="vw-switcher-scroll">
 				{attention.length > 0 && (
 					<section className="vw-work-group">
 						<div className="vw-group-label"><span>Needs your attention</span><b>{attention.length}</b></div>
 						{attention.map((work) => <WorkstreamRow key={work.id} workstream={work} active={work.id === activeId} onSelect={() => onSelect(work.id)} />)}
 					</section>
 				)}
-				{active.length > 0 && (
+				{running.length > 0 && (
 					<section className="vw-work-group">
 						<div className="vw-group-label"><span>In progress</span></div>
-						{active.map((work) => <WorkstreamRow key={work.id} workstream={work} active={work.id === activeId} onSelect={() => onSelect(work.id)} />)}
+						{running.map((work) => <WorkstreamRow key={work.id} workstream={work} active={work.id === activeId} onSelect={() => onSelect(work.id)} />)}
 					</section>
 				)}
 				{recent.length > 0 && (
@@ -210,7 +200,7 @@ function WorkstreamSidebar({ open, search, onSearch, workstreams, activeId, onSe
 				{filtered.length === 0 && <div className="vw-sidebar-empty">No matching workstreams</div>}
 			</div>
 
-			<div className="vw-sidebar-footer">
+			<div className="vw-switcher-footer">
 				<button className="vw-provider-row" onClick={onSettings}>
 					<span className={`vw-provider-icon${ollamaHealthy ? ' connected' : ''}`}><Bot /></span>
 					<span><b>{provider}</b><small>{ollamaHealthy === true ? 'Local model connected' : ollamaHealthy === false ? 'Ollama is offline' : 'Model and runtime settings'}</small></span>
@@ -222,34 +212,69 @@ function WorkstreamSidebar({ open, search, onSearch, workstreams, activeId, onSe
 					<MoreHorizontal />
 				</button>
 			</div>
-		</aside>
+		</div>
 	);
 }
 
 interface HeaderProps {
 	active: Workstream | null;
+	activeId: string | null;
 	layout: WorkbenchLayout;
-	sidebarOpen: boolean;
-	onOpenSidebar: () => void;
+	workstreams: Workstream[];
+	search: string;
+	onSearch: (value: string) => void;
+	onSelectWork: (id: string) => void;
+	onNew: () => void;
 	onLayout: (layout: WorkbenchLayout) => void;
 	onAttention: () => void;
 	onActivity: () => void;
 	onSettings: () => void;
 	attentionCount: number;
+	provider: string;
+	ollamaHealthy: boolean | null;
 }
 
-function WorkstreamHeader({ active, layout, sidebarOpen, onOpenSidebar, onLayout, onAttention, onActivity, onSettings, attentionCount }: HeaderProps) {
+function WorkstreamHeader({ active, activeId, layout, workstreams, search, onSearch, onSelectWork, onNew, onLayout, onAttention, onActivity, onSettings, attentionCount, provider, ollamaHealthy }: HeaderProps) {
+	const [switcherOpen, setSwitcherOpen] = useState(false);
 	const verified = active?.criteria.filter((criterion) => criterion.state === 'verified').length ?? 0;
+	useEffect(() => {
+		if (!switcherOpen) return;
+		function onDown(event: MouseEvent) {
+			if (!(event.target as Element).closest('.vw-switcher')) setSwitcherOpen(false);
+		}
+		function onKey(event: KeyboardEvent) {
+			if (event.key === 'Escape') setSwitcherOpen(false);
+		}
+		window.addEventListener('mousedown', onDown);
+		window.addEventListener('keydown', onKey);
+		return () => {
+			window.removeEventListener('mousedown', onDown);
+			window.removeEventListener('keydown', onKey);
+		};
+	}, [switcherOpen]);
 	return (
 		<header className="vw-header" data-tauri-drag-region>
 			<div className="vw-header-left">
-				{!sidebarOpen && <button className="vw-icon-btn" onClick={onOpenSidebar} title="Open sidebar" aria-label="Open sidebar"><Menu /></button>}
-				<div className="vw-title-block">
-					<span className="vw-breadcrumb">{active ? active.repo : 'Velocity'}</span>
-					<div className="vw-title-line">
-						<h1>{active?.title ?? 'New work'}</h1>
+				<span className="vw-brand-mark" aria-hidden><Sparkles /></span>
+				<div className="vw-switcher">
+					<button className={`vw-switcher-trigger${switcherOpen ? ' open' : ''}`} onClick={() => setSwitcherOpen((value) => !value)} aria-haspopup="dialog" aria-expanded={switcherOpen}>
+						<span className="vw-switcher-title">{active?.title ?? 'New work'}</span>
 						{active && <span className={`vw-status-pill ${statusTone(active.status)}`}>{active.status === 'running' && <LoaderCircle className="vw-rotate" />}{STATUS_LABEL[active.status]}</span>}
-					</div>
+						<ChevronDown />
+					</button>
+					{switcherOpen && (
+						<WorkstreamSwitcher
+							search={search}
+							onSearch={onSearch}
+							workstreams={workstreams}
+							activeId={activeId}
+							onSelect={(id) => { onSelectWork(id); setSwitcherOpen(false); }}
+							onNew={() => { onNew(); setSwitcherOpen(false); }}
+							onSettings={() => { onSettings(); setSwitcherOpen(false); }}
+							provider={provider}
+							ollamaHealthy={ollamaHealthy}
+						/>
+					)}
 				</div>
 			</div>
 
@@ -661,7 +686,6 @@ export function VelocityWorkbench() {
 	const [layout, setLayout] = useState<WorkbenchLayout>('conversation');
 	const [artifact, setArtifact] = useState<ToolKind>('editor');
 	const [openStudios, setOpenStudios] = useState<StudioKind[]>([]);
-	const [sidebarOpen, setSidebarOpen] = useState(true);
 	const [search, setSearch] = useState('');
 	const [attentionOpen, setAttentionOpen] = useState(false);
 	const [settingsOpen, setSettingsOpen] = useState(false);
@@ -716,7 +740,6 @@ export function VelocityWorkbench() {
 		function onNewWork() {
 			setActiveId(null);
 			setLayout('conversation');
-			if (window.innerWidth < 920) setSidebarOpen(false);
 		}
 		window.addEventListener('velocity:set-view', onSetView);
 		window.addEventListener('velocity:new-work', onNewWork);
@@ -731,7 +754,6 @@ export function VelocityWorkbench() {
 		setLayout(preferredLayout ?? 'conversation');
 		setWorkstreams((items) => items.map((item) => item.id === id ? { ...item, unread: false } : item));
 		setAttentionOpen(false);
-		if (window.innerWidth < 920) setSidebarOpen(false);
 	}
 
 	function createWorkstream(prompt: string) {
@@ -762,7 +784,6 @@ export function VelocityWorkbench() {
 		setWorkstreams((items) => [next, ...items]);
 		setActiveId(id);
 		setLayout('conversation');
-		setSidebarOpen(window.innerWidth >= 920);
 		void services.agent.send(`work:${id}`, prompt);
 	}
 
@@ -780,32 +801,24 @@ export function VelocityWorkbench() {
 	}
 
 	return (
-		<div className={`velocity-workbench${sidebarOpen ? ' sidebar-visible' : ''}`}>
-			<WorkstreamSidebar
-				open={sidebarOpen}
-				search={search}
-				onSearch={setSearch}
-				workstreams={[...workstreams].sort((a, b) => STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status))}
-				activeId={activeId}
-				onSelect={selectWorkstream}
-				onNew={() => { setActiveId(null); setLayout('conversation'); if (window.innerWidth < 920) setSidebarOpen(false); }}
-				onClose={() => setSidebarOpen(false)}
-				onSettings={() => setSettingsOpen(true)}
-				provider={providerLabel(settings)}
-				ollamaHealthy={ollamaHealthy}
-			/>
-			{sidebarOpen && <button className="vw-sidebar-backdrop" aria-label="Close sidebar" onClick={() => setSidebarOpen(false)} />}
+		<div className="velocity-workbench">
 			<main className="vw-main">
 				<WorkstreamHeader
 					active={active}
+					activeId={activeId}
 					layout={layout}
-					sidebarOpen={sidebarOpen}
-					onOpenSidebar={() => setSidebarOpen(true)}
+					workstreams={[...workstreams].sort((a, b) => STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status))}
+					search={search}
+					onSearch={setSearch}
+					onSelectWork={selectWorkstream}
+					onNew={() => { setActiveId(null); setLayout('conversation'); }}
 					onLayout={setLayout}
 					onAttention={() => setAttentionOpen(true)}
 					onActivity={() => setActivityOpen(true)}
 					onSettings={() => setSettingsOpen(true)}
 					attentionCount={attentionCount}
+					provider={providerLabel(settings)}
+					ollamaHealthy={ollamaHealthy}
 				/>
 				<div className="vw-body">
 					{!active && <EmptyConversation onCreate={createWorkstream} />}

@@ -4,9 +4,10 @@ Velocity is an open-source, local-first developer workstream environment. It kee
 conversation, implementation surfaces, acceptance criteria, evidence, and meaningful activity in
 one place.
 
-The interface is intentionally closer to ChatGPT and Cursor than a traditional multi-rail IDE:
-one collapsible workstream sidebar and one active piece of work. The sidebar closes completely;
-there is no residual icon rail.
+The interface is intentionally closer to Framer, ChatGPT, and Cursor than a traditional multi-rail
+IDE: a single top header and one active piece of work. There is no sidebar and no icon rail —
+switching workstreams happens from a dropdown in the header, so the entire space below the bar is
+working canvas.
 
 ![Velocity — the Work view: the conversation beside the code editor and its file tree](docs/screenshots/velocity-work.png)
 
@@ -35,8 +36,9 @@ persistence behind it.
 
 Implemented now:
 
-- Responsive ChatGPT-style workstream sidebar, search, new-work flow, and attention inbox.
-- Conversation, Work, and Review layouts with a shared active workstream.
+- A single top header: a workstream switcher (search, grouped list, new-work, account) in a
+  dropdown, the Conversation/Work/Review tabs, and an attention inbox — no sidebar or icon rail.
+- Conversation, Work, and Review layouts with a shared active workstream, filling the full canvas.
 - The full original toolset embedded in the new shell: editor, terminal, browser preview, design
   canvas, and nine specialized studios — with the file tree, command palette, quick-open, and the
   VS Code-style keyboard shortcut system all intact.
