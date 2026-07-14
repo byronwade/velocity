@@ -33,20 +33,42 @@
 <column grow="1">
 <if test="{screen == 'editor'}">
 
-  <column grow="1">
-    <!-- Tab / title bar -->
-    <row background="surface_subtle" padding="8" gap="8" cross="center">
-      <text>{docName}</text>
-      <if test="{dirty}">
-        <text foreground="warning">●</text>
-      </if>
-      <spacer grow="1"/>
-      <button size="sm" variant="ghost" on-press="open_settings">Settings</button>
-    </row>
-    <!-- The editing surface: a real native text buffer -->
-    <textarea grow="1" label="Code editor" text="{doc.text}" on-input="edit" placeholder="Start typing…"/>
-    <status-bar>{docName} · {byteCount} bytes</status-bar>
-  </column>
+  <row grow="1">
+
+    <!-- File explorer -->
+    <column width="220" background="surface_subtle">
+      <row padding="10" cross="center">
+        <text size="sm" foreground="text_muted">EXPLORER</text>
+      </row>
+      <tree gap="1" label="Files">
+        <for each="files" key="id" as="f">
+          <list-item role="treeitem" selected="{f.id == activeFile}" on-press="open_file:{f.id}">{f.name}</list-item>
+        </for>
+      </tree>
+    </column>
+
+    <separator/>
+
+    <!-- Editor column: tab strip, breadcrumb, buffer, status -->
+    <column grow="1">
+      <tabs>
+        <for each="files" key="id" as="f">
+          <button selected="{f.id == activeFile}" on-press="open_file:{f.id}">{f.name}</button>
+        </for>
+      </tabs>
+      <row background="surface_subtle" padding="8" gap="8" cross="center">
+        <text>{activeName}</text>
+        <if test="{dirty}">
+          <text foreground="warning">●</text>
+        </if>
+        <spacer grow="1"/>
+        <button size="sm" variant="ghost" on-press="open_settings">Settings</button>
+      </row>
+      <textarea grow="1" label="Code editor" text="{doc.text}" on-input="edit" placeholder="Start typing…"/>
+      <status-bar>{activeName} · {byteCount} bytes</status-bar>
+    </column>
+
+  </row>
 
 </if>
 <else>

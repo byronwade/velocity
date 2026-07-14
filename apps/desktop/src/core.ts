@@ -13,9 +13,37 @@ export type Screen = "editor" | "settings";
 // inserts past this; we drop them rather than partially apply.
 const DOC_CAPACITY = 1_000_000;
 
-const WELCOME_DOC = asciiBytes(
-  "// Welcome to Velocity - a native code editor.\n// This buffer is real: every keystroke runs through the SDK's\n// applyTextInputEvent byte-splice engine in src/core.ts.\n\nexport function hello(name) {\n  return greet(name);\n}\n",
-);
+// One file open in the workbench: a stable id, a name, and its bytes.
+export interface FileEntry {
+  readonly id: number;
+  readonly name: Uint8Array;
+  readonly content: Uint8Array;
+}
+
+// The seed workspace (a rodata table). FS-backed files arrive in Stage 5.4.
+const FILES: readonly FileEntry[] = [
+  {
+    id: 0,
+    name: asciiBytes("welcome.ts"),
+    content: asciiBytes(
+      "// Welcome to Velocity - a native code editor.\n// This buffer is real: every keystroke runs through the SDK's\n// applyTextInputEvent byte-splice engine in src/core.ts.\n\nexport function hello(name) {\n  return greet(name);\n}\n",
+    ),
+  },
+  {
+    id: 1,
+    name: asciiBytes("editor.ts"),
+    content: asciiBytes(
+      "// The editor buffer is a TextEditState { text, selection, composition }.\n// Switching files saves the active buffer back into the workspace table.\n\nexport const tabWidth = 2;\n",
+    ),
+  },
+  {
+    id: 2,
+    name: asciiBytes("README.md"),
+    content: asciiBytes(
+      "# Velocity\n\nA fast, tiny, native AI code editor built on the Native SDK.\n\n- Native-rendered UI (no DOM, no browser)\n- Single small binary\n",
+    ),
+  },
+];
 
 export type CategoryId = "general" | "editor" | "ai" | "appearance" | "about";
 export type StartupMode = "restore" | "welcome" | "empty";
@@ -38,8 +66,9 @@ const CATEGORIES: readonly Category[] = [
 export interface Model {
   // Workbench
   readonly screen: Screen;
-  // Editor buffer
-  readonly docName: Uint8Array;
+  // Editor: the open files and which one is active + its live edit buffer
+  readonly files: readonly FileEntry[];
+  readonly activeFile: number;
   readonly doc: TextEditState;
   readonly dirty: boolean;
   // Settings
@@ -55,10 +84,11 @@ export interface Model {
 export function initialModel(): Model {
   return {
     screen: "editor",
-    docName: asciiBytes("welcome.ts"),
+    files: FILES,
+    activeFile: 0,
     doc: {
-      text: WELCOME_DOC,
-      selection: { anchor: WELCOME_DOC.length, focus: WELCOME_DOC.length },
+      text: FILES[0].content,
+      selection: { anchor: 0, focus: 0 },
       composition: null,
     },
     dirty: false,
@@ -82,9 +112,32 @@ export function byteCount(model: Model): number {
   return model.doc.text.length;
 }
 
+// The active file's name, for the tab title and status bar.
+export function activeName(model: Model): Uint8Array {
+  return model.files[model.activeFile].name;
+}
+
+// A copy of the files table with one entry's content replaced (owned array).
+function withFileContent(
+  files: readonly FileEntry[],
+  index: number,
+  content: Uint8Array,
+): readonly FileEntry[] {
+  const out: FileEntry[] = [];
+  for (let i = 0; i < files.length; i++) {
+    if (i === index) {
+      out.push({ id: files[i].id, name: files[i].name, content: content });
+    } else {
+      out.push(files[i]);
+    }
+  }
+  return out;
+}
+
 export type Msg =
   | { readonly kind: "open_settings" }
   | { readonly kind: "open_editor" }
+  | { readonly kind: "open_file"; readonly index: number }
   | { readonly kind: "edit"; readonly edit: TextInputEvent }
   | { readonly kind: "select_category"; readonly category: CategoryId }
   | { readonly kind: "toggle_tips" }
@@ -104,6 +157,21 @@ export function update(model: Model, msg: Msg): Model {
       return { ...model, screen: "settings" };
     case "open_editor":
       return { ...model, screen: "editor" };
+    case "open_file": {
+      if (msg.index < 0 || msg.index >= model.files.length) return model;
+      if (msg.index === model.activeFile) return { ...model, screen: "editor" };
+      // Save the active buffer back, then load the selected file.
+      const saved = withFileContent(model.files, model.activeFile, model.doc.text);
+      const content = saved[msg.index].content;
+      return {
+        ...model,
+        screen: "editor",
+        files: saved,
+        activeFile: msg.index,
+        doc: { text: content, selection: { anchor: 0, focus: 0 }, composition: null },
+        dirty: false,
+      };
+    }
     case "edit": {
       const next = applyTextInputEvent(model.doc, msg.edit, DOC_CAPACITY);
       if (next === null) return model;
