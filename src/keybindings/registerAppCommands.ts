@@ -9,6 +9,7 @@ import { openSearchPanel, gotoLine, selectNextOccurrence, selectSelectionMatches
 import { foldCode, unfoldCode, foldAll, unfoldAll } from '@codemirror/language';
 import { registerCommands, type Command } from './commands';
 import { getActiveEditor } from '../editor/activeView';
+import { getServices } from '../services/container';
 import { useShell, activeTab } from '../lib/store';
 import { closeTabWithCleanup } from '../lib/closeTab';
 import { formatSource } from '../services/format';
@@ -117,6 +118,10 @@ export function registerAppCommands(): void {
 			{ id: 'velocity.view.work', title: 'View: Work', category: 'Go', run: () => setView('artifact') },
 			{ id: 'velocity.view.review', title: 'View: Review', category: 'Go', run: () => setView('review') },
 			{ id: 'velocity.newWork', title: 'New Work', category: 'Workbench', run: () => fire('velocity:new-work') },
+			{
+				id: 'velocity.project.open', title: 'Open Project Folder…', category: 'File',
+				run: () => { void getServices().projects.open().then((p) => { if (p) openTool('editor'); }); },
+			},
 			{ id: 'velocity.work.verify', title: 'Verify Work', category: 'Workbench', run: () => fire('velocity:verify') },
 			{ id: 'velocity.work.ship', title: 'Ship Work', category: 'Workbench', run: () => fire('velocity:ship') },
 			{ id: 'workbench.action.showCommands', title: 'Show All Commands', category: 'Workbench', run: () => fire('velocity:command-palette') },

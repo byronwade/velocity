@@ -294,6 +294,16 @@
 
 .vw-switcher-popover { position: absolute; top: calc(100% + 8px); left: 0; z-index: 50; display: flex; width: min(344px, calc(100vw - 24px)); max-height: min(560px, 72vh); flex-direction: column; padding: 8px; border-radius: 12px; background: var(--panel); box-shadow: var(--elev-2), 0 0 0 1px var(--line); animation: vw-pop 140ms var(--ease); }
 @keyframes vw-pop { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: none; } }
+.vw-project-row { display: flex; width: 100%; align-items: center; gap: 9px; margin: 2px 2px 6px; padding: 8px; border-radius: 8px; text-align: left; transition: background var(--dur); }
+.vw-project-row:not(:disabled):hover { background: color-mix(in srgb, var(--fg) 5%, transparent); }
+.vw-project-row:disabled { cursor: default; }
+.vw-project-icon { display: grid; width: 30px; height: 30px; place-items: center; flex: none; border-radius: 7px; background: color-mix(in srgb, var(--fg) 7%, transparent); color: var(--muted); }
+.vw-project-icon svg { width: 15px; height: 15px; }
+.vw-project-copy { display: flex; min-width: 0; flex: 1; flex-direction: column; }
+.vw-project-copy b { overflow: hidden; font-size: 13px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.vw-project-copy small { overflow: hidden; color: var(--faint); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.vw-project-row > svg { width: 14px; height: 14px; flex: none; color: var(--faint); }
+
 .vw-switcher-popover .vw-new-work { width: auto; margin: 2px 2px 8px; }
 .vw-switcher-popover .vw-search { width: auto; margin: 0 2px 8px; }
 .vw-switcher-scroll { min-height: 0; flex: 1; overflow: auto; padding: 0 2px 2px; scrollbar-width: thin; }

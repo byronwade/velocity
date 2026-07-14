@@ -161,6 +161,9 @@ interface SwitcherProps {
 /** The workstream switcher — the sidebar's job, folded into a header popover so
  *  the whole space below the top bar is working canvas (Framer-style). */
 function WorkstreamSwitcher({ search, onSearch, workstreams, activeId, onSelect, onNew, onSettings, provider, ollamaHealthy }: SwitcherProps) {
+	const { projects } = useServices();
+	const [project, setProject] = useState(projects.current());
+	useEffect(() => projects.subscribe(() => setProject(projects.current())), [projects]);
 	const filtered = useMemo(() => {
 		const q = search.trim().toLowerCase();
 		if (!q) return workstreams;
@@ -172,6 +175,19 @@ function WorkstreamSwitcher({ search, onSearch, workstreams, activeId, onSelect,
 
 	return (
 		<div className="vw-switcher-popover" role="dialog" aria-label="Switch workstream">
+			<button
+				className="vw-project-row"
+				onClick={() => { if (projects.desktop()) void projects.open(); }}
+				disabled={!projects.desktop()}
+				title={projects.desktop() ? 'Open a project folder' : 'Real folders open in the desktop app'}
+			>
+				<span className="vw-project-icon"><FolderGit2 /></span>
+				<span className="vw-project-copy">
+					<b>{project ? project.name : 'Velocity demo'}</b>
+					<small>{project ? project.root : projects.desktop() ? 'Open a folder…' : 'Desktop app opens real folders'}</small>
+				</span>
+				{projects.desktop() && <ChevronRight />}
+			</button>
 			<button className="vw-new-work" onClick={onNew}><Plus />New work</button>
 			<label className="vw-search">
 				<Search />

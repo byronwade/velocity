@@ -9,6 +9,7 @@
 
 import { createContext, useContext, type ReactNode } from 'react';
 import { InMemoryFileSystem, type IFileSystem } from './filesystem';
+import { SwitchableFileSystem, ProjectService } from './projectFs';
 import { localStorageStore } from './persistence';
 import { SEED_FILES } from './seed';
 import { EditorService } from './editorService';
@@ -51,6 +52,8 @@ export interface Services {
 	deploy: DeployService;
 	/** The swarm orchestrator — objective → task graph → real operations. */
 	mission: MissionService;
+	/** Open real folders from disk (desktop) as the active workspace. */
+	projects: ProjectService;
 	/** The collaboration seam. Swap for a CRDT factory to enable network sync. */
 	collab: CollabExtensionFactory;
 }
@@ -58,7 +61,10 @@ export interface Services {
 export function createServices(): Services {
 	// Durable workspace: edits and created files survive a reload. Falls back to
 	// pure in-memory when localStorage is unavailable (tests, private mode).
-	const fs = new InMemoryFileSystem(SEED_FILES, localStorageStore());
+	// The switchable wrapper lets the backend swap to a real folder on desktop
+	// while every service keeps its stable `fs` reference.
+	const memoryFs = new InMemoryFileSystem(SEED_FILES, localStorageStore());
+	const fs = new SwitchableFileSystem(memoryFs);
 	const editor = new EditorService(fs);
 	const shell = new ShellService(fs, editor);
 	// Local rule-based backend by default; resolveBackend swaps in an Ollama
@@ -77,7 +83,8 @@ export function createServices(): Services {
 	// The orchestrator drives the other services via a lazy getter (no self-ref).
 	let services: Services;
 	const mission = new MissionService(() => services);
-	services = { fs, editor, shell, browser: new BrowserService(), agent, graph, review, db, api, preview, observability, design, deploy, mission, collab: noCollab };
+	const projects = new ProjectService(fs, memoryFs);
+	services = { fs, editor, shell, browser: new BrowserService(), agent, graph, review, db, api, preview, observability, design, deploy, mission, projects, collab: noCollab };
 	return services;
 }
 
