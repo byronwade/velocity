@@ -1,4 +1,8 @@
 node_modules
 dist
+.turbo
+zig-out
+.next
+.zig-cache
 *.local
 .DS_Store
