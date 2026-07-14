@@ -6,6 +6,7 @@
     .version = "0.1.0",
     .icons = .{"assets/icon.png"},
     .theme = "geist",
+    .theme_accent = "#006bff",
     .platforms = .{ "macos", "linux", "windows" },
     .permissions = .{ "view", "command" },
     .capabilities = .{ "native_views", "gpu_surfaces" },
