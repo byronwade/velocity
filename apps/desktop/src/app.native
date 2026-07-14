@@ -66,6 +66,7 @@
         <for each="files" key="id" as="f">
           <button selected="{f.id == activeFile}" on-press="open_file:{f.id}">{f.name}</button>
         </for>
+        <button variant="ghost" on-press="new_file" label="New file">+</button>
       </tabs>
       <row background="surface_subtle" padding="8" gap="8" cross="center">
         <text>{activeName}</text>
@@ -219,8 +220,10 @@
 <if test="{paletteOpen}">
   <dialog text="Command palette" on-dismiss="close_palette">
     <column gap="4" padding="8" width="440">
+      <button variant="ghost" on-press="new_file">New file</button>
       <button variant="ghost" on-press="save_file">Save file</button>
       <button variant="ghost" on-press="reload_file">Reload file from disk</button>
+      <button variant="ghost" on-press="close_file:{activeFile}">Close current file</button>
       <button variant="ghost" on-press="toggle_agent">Toggle agent pane</button>
       <button variant="ghost" on-press="open_settings">Open settings</button>
     </column>

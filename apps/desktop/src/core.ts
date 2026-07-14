@@ -68,6 +68,8 @@ export interface ChatMsg {
 }
 
 const EMPTY_TEXT = asciiBytes("");
+const NEW_NAME = asciiBytes("untitled.ts");
+const NEW_PATH = asciiBytes(".velocity-workspace/untitled.ts");
 
 const GREETING = asciiBytes(
   "Hi — I'm the Velocity agent (a native stub for now). Ask me anything; wiring me to a real model is a later stage.",
@@ -101,6 +103,7 @@ export interface Model {
   // Editor: the open files and which one is active + its live edit buffer
   readonly files: readonly FileEntry[];
   readonly activeFile: number;
+  readonly nextFileId: number;
   readonly doc: TextEditState;
   readonly dirty: boolean;
   readonly saveStatus: SaveStatus;
@@ -125,6 +128,7 @@ export function initialModel(): [Model, Cmd<Msg>] {
     screen: "editor",
     files: FILES,
     activeFile: 0,
+    nextFileId: 3,
     doc: {
       text: FILES[0].content,
       selection: { anchor: 0, focus: 0 },
@@ -202,6 +206,27 @@ function withFileContent(
   return out;
 }
 
+// A copy of the files table with one appended (owned array).
+function appendFile(files: readonly FileEntry[], one: FileEntry): readonly FileEntry[] {
+  const out: FileEntry[] = [];
+  for (let i = 0; i < files.length; i++) {
+    out.push(files[i]);
+  }
+  out.push(one);
+  return out;
+}
+
+// A copy of the files table without the entry at `index` (owned array).
+function removeFileAt(files: readonly FileEntry[], index: number): readonly FileEntry[] {
+  const out: FileEntry[] = [];
+  for (let i = 0; i < files.length; i++) {
+    if (i !== index) {
+      out.push(files[i]);
+    }
+  }
+  return out;
+}
+
 // A copy of the messages with one appended (owned array).
 function appended(messages: readonly ChatMsg[], one: ChatMsg): readonly ChatMsg[] {
   const out: ChatMsg[] = [];
@@ -216,6 +241,8 @@ export type Msg =
   | { readonly kind: "open_settings" }
   | { readonly kind: "open_editor" }
   | { readonly kind: "open_file"; readonly index: number }
+  | { readonly kind: "new_file" }
+  | { readonly kind: "close_file"; readonly index: number }
   | { readonly kind: "edit"; readonly edit: TextInputEvent }
   | { readonly kind: "save_file" }
   | { readonly kind: "reload_file" }
@@ -295,6 +322,49 @@ export function update(model: Model, msg: Msg): Model | [Model, Cmd<Msg>] {
           break;
       }
       return { ...model, doc: next, dirty: model.dirty || changed };
+    }
+    case "new_file": {
+      // Save the active buffer back, append a fresh untitled file, focus it.
+      const saved = withFileContent(model.files, model.activeFile, model.doc.text);
+      const entry: FileEntry = {
+        id: model.nextFileId,
+        name: NEW_NAME,
+        path: NEW_PATH,
+        content: EMPTY_TEXT,
+      };
+      const withNew = appendFile(saved, entry);
+      return {
+        ...model,
+        files: withNew,
+        activeFile: withNew.length - 1,
+        nextFileId: model.nextFileId + 1,
+        doc: { text: EMPTY_TEXT, selection: { anchor: 0, focus: 0 }, composition: null },
+        dirty: false,
+        saveStatus: "none",
+        paletteOpen: false,
+      };
+    }
+    case "close_file": {
+      if (model.files.length <= 1) return model;
+      if (msg.index < 0 || msg.index >= model.files.length) return model;
+      const rest = removeFileAt(model.files, msg.index);
+      if (msg.index === model.activeFile) {
+        // Closing the active tab: focus the previous neighbour.
+        let next = msg.index > 0 ? msg.index - 1 : 0;
+        if (next >= rest.length) next = rest.length - 1;
+        return {
+          ...model,
+          files: rest,
+          activeFile: next,
+          doc: { text: rest[next].content, selection: { anchor: 0, focus: 0 }, composition: null },
+          dirty: false,
+          saveStatus: "none",
+          paletteOpen: false,
+        };
+      }
+      // Closing another tab: keep the current buffer, just reindex.
+      const shifted = msg.index < model.activeFile ? model.activeFile - 1 : model.activeFile;
+      return { ...model, files: rest, activeFile: shifted, paletteOpen: false };
     }
     case "save_file":
       // Effects are data: the host writes the file, then dispatches an arm.
