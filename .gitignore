@@ -6,3 +6,6 @@ zig-out
 .zig-cache
 *.local
 .DS_Store
+
+# runtime workspace written by the desktop app (Cmd.writeFile)
+.velocity-workspace/

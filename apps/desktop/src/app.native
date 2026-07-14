@@ -61,7 +61,10 @@
         <if test="{dirty}">
           <text foreground="warning">●</text>
         </if>
+        <text size="sm" foreground="text_muted">{statusLabel}</text>
         <spacer grow="1"/>
+        <button size="sm" variant="primary" on-press="save_file">Save</button>
+        <button size="sm" variant="ghost" on-press="reload_file">Reload</button>
         <button size="sm" variant="ghost" on-press="toggle_agent">Agent</button>
         <button size="sm" variant="ghost" on-press="open_settings">Settings</button>
       </row>
