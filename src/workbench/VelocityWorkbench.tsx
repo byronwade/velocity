@@ -243,6 +243,45 @@ function WorkstreamRail({ work }: { work: Workstream }) {
 	);
 }
 
+// One honest celebration, reserved for the ship — a quick colorful burst from
+// the center. Colour is welcome *here* even though the app is otherwise monochrome.
+function Confetti() {
+	const pieces = useMemo(() => {
+		const colors = ['#8b7cf6', '#45a557', '#0072f5', '#ff990a', '#e5484d', '#ea3e83', '#14b8a6'];
+		return Array.from({ length: 46 }, (_, i) => {
+			const angle = Math.random() * Math.PI * 2;
+			const dist = 80 + Math.random() * 230;
+			return {
+				id: i,
+				x: Math.cos(angle) * dist,
+				y: Math.sin(angle) * dist - 90,
+				rot: Math.random() * 900 - 450,
+				color: colors[i % colors.length],
+				delay: Math.random() * 90,
+				size: 6 + Math.random() * 6,
+			};
+		});
+	}, []);
+	return (
+		<div className="vw-confetti" aria-hidden>
+			{pieces.map((piece) => (
+				<span
+					key={piece.id}
+					style={{
+						['--x' as string]: `${piece.x}px`,
+						['--y' as string]: `${piece.y}px`,
+						['--r' as string]: `${piece.rot}deg`,
+						['--d' as string]: `${piece.delay}ms`,
+						width: piece.size,
+						height: piece.size,
+						background: piece.color,
+					}}
+				/>
+			))}
+		</div>
+	);
+}
+
 interface HeaderProps {
 	active: Workstream | null;
 	activeId: string | null;
@@ -256,12 +295,13 @@ interface HeaderProps {
 	onAttention: () => void;
 	onActivity: () => void;
 	onSettings: () => void;
+	onShip: () => void;
 	attentionCount: number;
 	provider: string;
 	ollamaHealthy: boolean | null;
 }
 
-function WorkstreamHeader({ active, activeId, layout, workstreams, search, onSearch, onSelectWork, onNew, onLayout, onAttention, onActivity, onSettings, attentionCount, provider, ollamaHealthy }: HeaderProps) {
+function WorkstreamHeader({ active, activeId, layout, workstreams, search, onSearch, onSelectWork, onNew, onLayout, onAttention, onActivity, onSettings, onShip, attentionCount, provider, ollamaHealthy }: HeaderProps) {
 	const [switcherOpen, setSwitcherOpen] = useState(false);
 	const verified = active?.criteria.filter((criterion) => criterion.state === 'verified').length ?? 0;
 	useEffect(() => {
@@ -314,6 +354,9 @@ function WorkstreamHeader({ active, activeId, layout, workstreams, search, onSea
 			)}
 
 			<div className="vw-header-actions">
+				{active && (active.status === 'review-ready' || active.status === 'done') && (
+					<button className="btn btn-primary btn-sm vw-ship-btn" onClick={onShip} title="Ship (⌘⇧D)"><Rocket />Ship</button>
+				)}
 				{active && <button className="vw-context-chip" onClick={onActivity} title="Workstream details"><GitBranch />{active.branch}<ChevronDown /></button>}
 				<button className="vw-icon-btn vw-attention-btn" onClick={onAttention} title="Attention inbox" aria-label="Attention inbox"><Bell />{attentionCount > 0 && <span>{attentionCount}</span>}</button>
 				<button className="vw-icon-btn" onClick={onSettings} title="Settings" aria-label="Settings"><Settings2 /></button>
@@ -719,6 +762,7 @@ export function VelocityWorkbench() {
 	const [activityOpen, setActivityOpen] = useState(false);
 	const [ollamaHealthy, setOllamaHealthy] = useState<boolean | null>(null);
 	const [toast, setToast] = useState<string | null>(null);
+	const [celebrating, setCelebrating] = useState(false);
 	const active = workstreams.find((work) => work.id === activeId) ?? null;
 	const attentionCount = workstreams.filter((work) => work.status === 'needs-input' || work.status === 'review-ready' || work.status === 'blocked').length;
 
@@ -827,6 +871,24 @@ export function VelocityWorkbench() {
 		setToast('Review context carried back into the conversation.');
 	}
 
+	// The ship climax — the one reserved celebration. Marks the work done, fires a
+	// burst, and hands back a shareable link (copied). Honest: only on a real ship.
+	function shipWork() {
+		if (!active) return;
+		const link = `velocity.app/p/${active.id.slice(-6)}`;
+		setWorkstreams((items) => items.map((item) => item.id === active.id ? { ...item, status: 'done', updated: 'now', lastEvent: 'Shipped', unread: false } : item));
+		setCelebrating(true);
+		window.setTimeout(() => setCelebrating(false), 1500);
+		void navigator.clipboard?.writeText(`https://${link}`).catch(() => undefined);
+		setToast(`Shipped 🎉  ${link} · link copied`);
+	}
+	useEffect(() => {
+		window.addEventListener('velocity:ship', shipWork);
+		return () => window.removeEventListener('velocity:ship', shipWork);
+		// Rebinds when `active` changes so the handler always ships the current work.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [active]);
+
 	return (
 		<div className="velocity-workbench">
 			<main className="vw-main">
@@ -843,6 +905,7 @@ export function VelocityWorkbench() {
 					onAttention={() => setAttentionOpen(true)}
 					onActivity={() => setActivityOpen(true)}
 					onSettings={() => setSettingsOpen(true)}
+					onShip={shipWork}
 					attentionCount={attentionCount}
 					provider={providerLabel(settings)}
 					ollamaHealthy={ollamaHealthy}
@@ -859,6 +922,7 @@ export function VelocityWorkbench() {
 			{settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
 			{activityOpen && active && <ActivityDrawer workstream={active} onClose={() => setActivityOpen(false)} />}
 			{toast && <div className="vw-toast"><CheckCircle2 />{toast}</div>}
+			{celebrating && <Confetti />}
 		</div>
 	);
 }

@@ -117,6 +117,7 @@ export function registerAppCommands(): void {
 			{ id: 'velocity.view.work', title: 'View: Work', category: 'Go', run: () => setView('artifact') },
 			{ id: 'velocity.view.review', title: 'View: Review', category: 'Go', run: () => setView('review') },
 			{ id: 'velocity.newWork', title: 'New Work', category: 'Workbench', run: () => fire('velocity:new-work') },
+			{ id: 'velocity.work.ship', title: 'Ship Work', category: 'Workbench', run: () => fire('velocity:ship') },
 			{ id: 'workbench.action.showCommands', title: 'Show All Commands', category: 'Workbench', run: () => fire('velocity:command-palette') },
 		{ id: 'workbench.action.quickOpen', title: 'Go to File…', category: 'Workbench', run: () => window.dispatchEvent(new CustomEvent('velocity:quickopen', { detail: { mode: 'all' } })) },
 		{ id: 'workbench.action.openRecent', title: 'Open Recent', category: 'Workbench', run: () => window.dispatchEvent(new CustomEvent('velocity:quickopen', { detail: { mode: 'recent' } })) },

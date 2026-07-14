@@ -36,6 +36,7 @@ export const DEFAULT_KEYBINDINGS: DefaultBinding[] = [
 	{ key: 'mod+alt+2', command: 'velocity.view.work' },
 	{ key: 'mod+alt+3', command: 'velocity.view.review' },
 	{ key: 'mod+shift+n', command: 'velocity.newWork' },
+	{ key: 'mod+shift+d', command: 'velocity.work.ship' },
 
 	// --- File ---
 	{ key: 'mod+s', command: 'workbench.action.files.save', when: 'editorTextFocus' },
