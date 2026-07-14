@@ -7,7 +7,7 @@ import { TodoIndex } from './components/TodoIndex';
 import { installKeybindings } from './keybindings/service';
 import { registerAppCommands } from './keybindings/registerAppCommands';
 import { useShell } from './lib/store';
-import { VelocityWorkbench } from './workbench/VelocityWorkbench';
+import { VelocityApp } from './velocity/VelocityApp';
 
 export function App() {
 	const theme = useShell((state) => state.theme);
@@ -51,7 +51,7 @@ export function App() {
 
 	return (
 		<div className="app velocity-app">
-			<VelocityWorkbench />
+			<VelocityApp />
 			<CommandPalette />
 			<QuickOpen />
 			<TodoIndex />

@@ -1,15 +1,63 @@
 # Velocity
 
-Velocity is an open-source, local-first developer workstream environment. It keeps a feature's
-conversation, implementation surfaces, acceptance criteria, evidence, and meaningful activity in
-one place.
+Velocity is an open-source, local-first **autonomous software-development workspace**. Named AI
+coworkers continuously build a shared project while you direct, observe, and approve — it is not a
+chat app. The full product thesis lives in [`VELOCITY_PRODUCT_VISION.md`](VELOCITY_PRODUCT_VISION.md).
 
-The interface is intentionally closer to Framer, ChatGPT, and Cursor than a traditional multi-rail
-IDE: a single top header and one active piece of work. There is no sidebar and no icon rail —
-switching workstreams happens from a dropdown in the header, so the entire space below the bar is
-working canvas.
+![Velocity — the Aurora project on the Preview lens, with coworker presence markers and the floating dock](docs/screenshots/prototype/velocity-calm-light.png)
 
-![Velocity — the Work view: the conversation beside the code editor and its file tree](docs/screenshots/velocity-work.png)
+## The prototype (Phase 1)
+
+A polished, deterministic, design-first prototype of the workspace lives in
+[`src/velocity/`](src/velocity/). It renders as the default app. Nothing there talks to a provider
+or the network — a `CoworkerRuntime` produces every state transition deterministically, so the
+demo is fully repeatable.
+
+- **Quiet top bar** — project, the six **Lenses** (Preview · Code · System · Data · Verify · Ship),
+  compare, focus, theme, and a demo-scenario picker.
+- **One dominant stage** — the running app (or the real CodeMirror editor on the Code lens), with
+  **spatial presence markers** showing where each coworker is working. Click a marker to Follow.
+- **Floating dock** — new work, the coworker avatar stack, global pause, developer tools, ⌘K.
+- **Mission Sheet** — a structured outcome + acceptance-criteria intake (no chat composer).
+- **Coworkers** — add / rename / pause / dismiss / restore / follow; name and role read louder than
+  the model; a manager (Maya) with two reporting specialists.
+- **Checkpoints, Evidence, and Decision Sheets** — review work with diffs, tests, traces, blast
+  radius, and rollback; resolve conflicts and protected actions with a recommended option.
+- **Stable vs Candidate** compare, a resizable/closable tool drawer, light + dark themes, and a
+  command palette where every entry drives real state.
+
+Run it, then switch scenarios from the top-bar picker or the URL:
+
+```
+npm install
+npm run dev            # http://localhost:5199
+
+# seeded scenarios
+/?scenario=calm        # a healthy project mid-flight (default)
+/?scenario=checkpoint  # a checkpoint ready for review
+/?scenario=conflict    # two coworkers conflict → a Decision Sheet
+/?scenario=approval    # a protected migration needs sign-off
+/?scenario=compare     # Stable vs Candidate, side by side
+/?scenario=shipping    # ready to ship
+/?scenario=devtools    # the Code lens + terminal drawer
+/?scenario=empty        # a blank project → create a mission
+# also: parallel, verifyFail   ·   append &theme=dark for dark mode
+```
+
+Keyboard: `1`–`6` switch lenses, `c` compare, `f` focus, `.` pause all, `⌘K` commands,
+`⌘⇧N` new mission, `Esc` closes the topmost surface.
+
+<details>
+<summary>The earlier workstream environment</summary>
+
+Before the autonomous-workspace redesign, Velocity was a single-workstream environment (a feature's
+conversation beside its editor, terminal, browser, and design canvas). That shell still lives in
+`src/workbench/` and the services it uses remain the real substrate the prototype's Code lens and
+tool drawer render.
+
+![Velocity — the earlier Work view](docs/screenshots/velocity-work.png)
+
+</details>
 
 ## Product model
 

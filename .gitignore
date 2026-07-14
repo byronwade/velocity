@@ -11,3 +11,7 @@ src-tauri/gen/schemas
 # Committed screenshots live under docs/screenshots/, not the repo root.
 .playwright-mcp/
 /*.png
+
+# Prototype verification working files
+/velocity-*.png
+/.playwright-mcp/
