@@ -112,11 +112,15 @@ export class LocalAgent implements AgentBackend {
 			yield { type: 'tool-done', id: write };
 			const entry = `builds/${g.slug}/index.html`;
 			const open = uid('tool');
-			yield { type: 'tool', id: open, tool: 'open', label: `Open ${entry}` };
+			yield { type: 'tool', id: open, tool: 'open', label: `Preview ${g.slug}` };
 			openFileInActivePane(ctx.editor, entry);
+			// Watch it build: switch the Work canvas to Preview and point the browser
+			// at the running app automatically — no hunting for a hidden tab.
+			window.dispatchEvent(new CustomEvent('velocity:open-tool', { detail: { tool: 'browser' } }));
+			window.setTimeout(() => window.dispatchEvent(new CustomEvent('velocity:navigate', { detail: { url: 'localhost:3000' } })), 90);
 			yield { type: 'tool-done', id: open };
 			yield { type: 'changes', files: changes };
-			yield { type: 'text', text: `## Done\nGenerated a **${g.kind}** into \`builds/${g.slug}/\`. Open the Builder tab to preview it live, or edit the files right here.` };
+			yield { type: 'text', text: `## Done\nGenerated a **${g.kind}** — it's running live in **Preview** now. Edit the files in **Code** and the preview updates instantly.` };
 			return;
 		}
 
