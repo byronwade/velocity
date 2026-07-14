@@ -2,7 +2,7 @@
   "name": "velocity-monorepo",
   "private": true,
   "version": "0.1.0",
-  "description": "Velocity — a fast, tiny, native AI code editor. Monorepo: native desktop app (apps/desktop), the original web app (apps/web), marketing site (apps/site), and shared native UI (packages/ui-native).",
+  "description": "Velocity — a browser-native, agent-native workspace. Monorepo: the React app (apps/web, also the Tauri desktop frontend) and the marketing site (apps/site).",
   "packageManager": "pnpm@10.25.0",
   "scripts": {
     "build": "turbo run build",
