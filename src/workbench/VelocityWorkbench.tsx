@@ -216,6 +216,33 @@ function WorkstreamSwitcher({ search, onSearch, workstreams, activeId, onSelect,
 	);
 }
 
+// The momentum rail — an always-visible idea→ship spine. Once a workstream
+// exists it's never at 0% (endowed progress + goal-gradient): every phase
+// advances it, accelerating toward the ship. Kept quiet; accent only on the
+// done/active steps.
+const RAIL_STAGES = ['Brief', 'Plan', 'Build', 'Review', 'Ship'] as const;
+
+function railStage(work: Workstream): number {
+	if (work.status === 'done') return 4;
+	if (work.status === 'review-ready') return 3;
+	const byPhase: Record<Workstream['phase'], number> = { brief: 0, plan: 1, implement: 2, verify: 3 };
+	return byPhase[work.phase] ?? 0;
+}
+
+function WorkstreamRail({ work }: { work: Workstream }) {
+	const active = railStage(work);
+	return (
+		<div className="vw-rail" role="progressbar" aria-valuemin={1} aria-valuemax={RAIL_STAGES.length} aria-valuenow={active + 1} aria-label={`Stage ${active + 1} of ${RAIL_STAGES.length}: ${RAIL_STAGES[active]}`}>
+			{RAIL_STAGES.map((label, index) => (
+				<div key={label} className={`vw-rail-step${index < active ? ' done' : index === active ? ' active' : ''}`}>
+					<span className="vw-rail-track" />
+					<span className="vw-rail-label">{label}</span>
+				</div>
+			))}
+		</div>
+	);
+}
+
 interface HeaderProps {
 	active: Workstream | null;
 	activeId: string | null;
@@ -820,6 +847,7 @@ export function VelocityWorkbench() {
 					provider={providerLabel(settings)}
 					ollamaHealthy={ollamaHealthy}
 				/>
+				{active && <WorkstreamRail work={active} />}
 				<div className="vw-body">
 					{!active && <EmptyConversation onCreate={createWorkstream} />}
 					{active && layout === 'conversation' && <ConversationView workstream={active} onReview={() => setLayout('review')} onArtifact={() => setLayout('artifact')} />}
