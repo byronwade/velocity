@@ -1,8 +1,11 @@
 # CLAUDE.md
 
-Guidance for working in this repository. Velocity is a **browser-native, agent-native workspace** —
-a React SPA where the editor, terminal, browser, agent, design canvas, and studios are all views
-over one in-memory workspace. Everything runs client-side; there is no backend or language server.
+Guidance for working in this repository. Velocity is a **workstream-first developer environment** —
+a React SPA, shipped as a **Tauri 2** desktop app, where a piece of work (not a file) is the primary
+object. Each workstream has three views (Conversation / Work / Review), and the editor, terminal,
+browser, agent, design canvas, and studios are all surfaces over one in-memory workspace. Everything
+runs client-side; there is no backend or language server (persistence and real worktrees are still
+mocked — see the merge spec under `docs/superpowers/specs/`).
 
 ## Commands
 
@@ -18,9 +21,19 @@ by driving the built app in a headless browser (Playwright) over asserting on co
 
 ## Architecture
 
+- **Product shell** — `src/workbench/VelocityWorkbench.tsx` is the top-level UI: the workstream
+  sidebar plus the Conversation / Work / Review views. The Work view keeps four core surfaces
+  (Code, Terminal, Preview, Design) as fixed tabs and surfaces the nine studios **on demand** as
+  dismissible tabs. Every surface is the matching `src/modes/*` component, mounted per-workstream via
+  the `SURFACES` registry; a tool is opened by dispatching `velocity:open-tool` (from a ⌘K "Go to
+  Tool" command in `registerAppCommands.ts`, and later from the agent). Workstream data lives in
+  `src/workbench/model.ts` (in-memory fixtures); the Code-surface file tree is
+  `src/workbench/WorkFiles.tsx` and binds files with `editor.bindPane`.
 - **State** — zustand in `src/lib/store.ts` (tabs, recursive split-pane trees, chrome). Persisted
-  to `localStorage`. Selective subscriptions keep re-renders cheap; `useSyncExternalStore` snapshots
-  must be **stable references** (returning a fresh `[]` causes an infinite render loop).
+  to `localStorage`. The split-pane tree still backs the low-level pane/editor plumbing, but the
+  product shell above is the workbench, not the old pane rail. Selective subscriptions keep
+  re-renders cheap; `useSyncExternalStore` snapshots must be **stable references** (returning a fresh
+  `[]` causes an infinite render loop).
 - **Services** — a DI container (`src/services/container.tsx`) vends `fs`, `editor`, `shell`,
   `browser`, `agent`, `graph`, `preview`, `design`, and more behind interfaces. Non-React callers
   use `getServices()`.
@@ -38,7 +51,9 @@ by driving the built app in a headless browser (Playwright) over asserting on co
 - **Project graph** — `src/lib/graph.ts` + `src/services/graph.ts` derive typed nodes/edges from
   static analysis of the FS; the map, command palette, and design canvas are views over it.
 - **Modes** — `src/modes/registry.tsx` maps each mode (editor, terminal, browser, builder, design,
-  data, api, …) to a content component. Any pane can host any mode.
+  database, api, observe, test, ship, home, mission, library) to a `{ paneId }` content component.
+  The workbench mounts these as the Work-view surfaces (four core + nine on-demand studios); each is
+  self-contained and reads from the services, so it renders standalone.
 
 ## Conventions
 
