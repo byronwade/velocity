@@ -63,6 +63,7 @@
         </if>
         <text size="sm" foreground="text_muted">{statusLabel}</text>
         <spacer grow="1"/>
+        <button size="sm" variant="ghost" on-press="open_palette">Commands</button>
         <button size="sm" variant="primary" on-press="save_file">Save</button>
         <button size="sm" variant="ghost" on-press="reload_file">Reload</button>
         <button size="sm" variant="ghost" on-press="toggle_agent">Agent</button>
@@ -202,4 +203,16 @@
   </row>
 
 </else>
+
+<!-- ⌘K command palette (opens via the shortcut or the ⌘K button) -->
+<if test="{paletteOpen}">
+  <dialog text="Command palette" on-dismiss="close_palette">
+    <column gap="4" padding="8" width="440">
+      <button variant="ghost" on-press="save_file">Save file</button>
+      <button variant="ghost" on-press="reload_file">Reload file from disk</button>
+      <button variant="ghost" on-press="toggle_agent">Toggle agent pane</button>
+      <button variant="ghost" on-press="open_settings">Open settings</button>
+    </column>
+  </dialog>
+</if>
 </column>

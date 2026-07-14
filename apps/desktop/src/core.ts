@@ -104,6 +104,7 @@ export interface Model {
   readonly doc: TextEditState;
   readonly dirty: boolean;
   readonly saveStatus: SaveStatus;
+  readonly paletteOpen: boolean;
   // Agent pane
   readonly agentOpen: boolean;
   readonly messages: readonly ChatMsg[];
@@ -119,8 +120,8 @@ export interface Model {
   readonly dataSharing: DataSharing;
 }
 
-export function initialModel(): Model {
-  return {
+export function initialModel(): [Model, Cmd<Msg>] {
+  const model: Model = {
     screen: "editor",
     files: FILES,
     activeFile: 0,
@@ -131,6 +132,7 @@ export function initialModel(): Model {
     },
     dirty: false,
     saveStatus: "none",
+    paletteOpen: false,
     agentOpen: true,
     messages: [{ id: 0, fromUser: false, text: GREETING }],
     compose: { text: EMPTY_TEXT, selection: { anchor: 0, focus: 0 }, composition: null },
@@ -143,6 +145,9 @@ export function initialModel(): Model {
     notifySounds: false,
     dataSharing: "errors",
   };
+  // Boot effect: load the first file from disk if a prior session saved it
+  // (not_found on a fresh machine just keeps the seed content).
+  return [model, Cmd.readFile(FILES[0].path, { ok: "boot_loaded", err: "boot_missing" })];
 }
 
 // The sidebar iterable: `for each="categories" as="c"` reads this.
@@ -218,6 +223,10 @@ export type Msg =
   | { readonly kind: "save_failed"; readonly error: Uint8Array }
   | { readonly kind: "loaded"; readonly content: Uint8Array }
   | { readonly kind: "load_failed"; readonly error: Uint8Array }
+  | { readonly kind: "boot_loaded"; readonly content: Uint8Array }
+  | { readonly kind: "boot_missing"; readonly error: Uint8Array }
+  | { readonly kind: "open_palette" }
+  | { readonly kind: "close_palette" }
   | { readonly kind: "toggle_agent" }
   | { readonly kind: "compose_edit"; readonly edit: TextInputEvent }
   | { readonly kind: "send_message" }
@@ -235,12 +244,25 @@ export type Msg =
 
 // Result arms dispatched by the host after a Cmd completes (never bound in
 // markup) — declared so `native check`'s unbound-state lint stays honest.
-export const viewUnbound = ["saved", "save_failed", "loaded", "load_failed"] as const;
+export const viewUnbound = [
+  "saved",
+  "save_failed",
+  "loaded",
+  "load_failed",
+  "boot_loaded",
+  "boot_missing",
+] as const;
+
+// Menu/shortcut command ids → Msgs. ⌘K (primary+K) opens the command palette.
+export function commandMsg(name: string): Msg | null {
+  if (name === "app.palette") return { kind: "open_palette" };
+  return null;
+}
 
 export function update(model: Model, msg: Msg): Model | [Model, Cmd<Msg>] {
   switch (msg.kind) {
     case "open_settings":
-      return { ...model, screen: "settings" };
+      return { ...model, screen: "settings", paletteOpen: false };
     case "open_editor":
       return { ...model, screen: "editor" };
     case "open_file": {
@@ -277,11 +299,14 @@ export function update(model: Model, msg: Msg): Model | [Model, Cmd<Msg>] {
     case "save_file":
       // Effects are data: the host writes the file, then dispatches an arm.
       return [
-        { ...model, saveStatus: "none" },
+        { ...model, saveStatus: "none", paletteOpen: false },
         Cmd.writeFile(activePath(model), model.doc.text, { ok: "saved", err: "save_failed" }),
       ];
     case "reload_file":
-      return [model, Cmd.readFile(activePath(model), { ok: "loaded", err: "load_failed" })];
+      return [
+        { ...model, paletteOpen: false },
+        Cmd.readFile(activePath(model), { ok: "loaded", err: "load_failed" }),
+      ];
     case "saved":
       return { ...model, dirty: false, saveStatus: "saved" };
     case "save_failed":
@@ -295,8 +320,20 @@ export function update(model: Model, msg: Msg): Model | [Model, Cmd<Msg>] {
       };
     case "load_failed":
       return { ...model, saveStatus: "reload_failed" };
+    case "boot_loaded":
+      // Adopt the on-disk content for the active buffer at startup.
+      return {
+        ...model,
+        doc: { text: msg.content, selection: { anchor: 0, focus: 0 }, composition: null },
+      };
+    case "boot_missing":
+      return model;
+    case "open_palette":
+      return { ...model, paletteOpen: true };
+    case "close_palette":
+      return { ...model, paletteOpen: false };
     case "toggle_agent":
-      return { ...model, agentOpen: !model.agentOpen };
+      return { ...model, agentOpen: !model.agentOpen, paletteOpen: false };
     case "compose_edit": {
       const next = applyTextInputEvent(model.compose, msg.edit, DOC_CAPACITY);
       if (next === null) return model;

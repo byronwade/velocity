@@ -8,6 +8,9 @@
     .platforms = .{ "macos", "linux", "windows" },
     .permissions = .{ "view", "command" },
     .capabilities = .{ "native_views", "gpu_surfaces" },
+    .shortcuts = .{
+        .{ .id = "app.palette", .key = "k", .modifiers = .{"primary"} },
+    },
     .shell = .{
         .windows = .{
             .{
