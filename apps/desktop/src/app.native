@@ -62,11 +62,43 @@
           <text foreground="warning">●</text>
         </if>
         <spacer grow="1"/>
+        <button size="sm" variant="ghost" on-press="toggle_agent">Agent</button>
         <button size="sm" variant="ghost" on-press="open_settings">Settings</button>
       </row>
       <textarea grow="1" label="Code editor" text="{doc.text}" on-input="edit" placeholder="Start typing…"/>
       <status-bar>{activeName} · {byteCount} bytes</status-bar>
     </column>
+
+    <!-- Agent / chat pane -->
+    <if test="{agentOpen}">
+      <separator/>
+      <column width="340" background="surface_subtle">
+        <row padding="10" gap="8" cross="center">
+          <text size="sm" foreground="text_muted">AGENT</text>
+          <spacer grow="1"/>
+          <button size="sm" variant="ghost" on-press="toggle_agent">Hide</button>
+        </row>
+        <scroll grow="1">
+          <column padding="12" gap="12">
+            <for each="messages" key="id" as="m">
+              <column gap="2">
+                <if test="{m.fromUser}">
+                  <text size="sm" foreground="accent">You</text>
+                </if>
+                <else>
+                  <text size="sm" foreground="text_muted">Velocity</text>
+                </else>
+                <text>{m.text}</text>
+              </column>
+            </for>
+          </column>
+        </scroll>
+        <row padding="8" gap="8" cross="center">
+          <textarea grow="1" label="Message the agent" text="{compose.text}" on-input="compose_edit" on-submit="send_message" placeholder="Ask Velocity…"/>
+          <button variant="primary" on-press="send_message">Send</button>
+        </row>
+      </column>
+    </if>
 
   </row>
 

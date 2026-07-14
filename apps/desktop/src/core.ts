@@ -45,6 +45,23 @@ const FILES: readonly FileEntry[] = [
   },
 ];
 
+// One line in the agent conversation.
+export interface ChatMsg {
+  readonly id: number;
+  readonly fromUser: boolean;
+  readonly text: Uint8Array;
+}
+
+const EMPTY_TEXT = asciiBytes("");
+
+const GREETING = asciiBytes(
+  "Hi — I'm the Velocity agent (a native stub for now). Ask me anything; wiring me to a real model is a later stage.",
+);
+
+const AGENT_REPLY = asciiBytes(
+  "Got it. I'm a native stub reply — the real agent lands when FS + effects are wired (Stage 5.4+).",
+);
+
 export type CategoryId = "general" | "editor" | "ai" | "appearance" | "about";
 export type StartupMode = "restore" | "welcome" | "empty";
 export type DataSharing = "none" | "errors" | "usage";
@@ -71,6 +88,11 @@ export interface Model {
   readonly activeFile: number;
   readonly doc: TextEditState;
   readonly dirty: boolean;
+  // Agent pane
+  readonly agentOpen: boolean;
+  readonly messages: readonly ChatMsg[];
+  readonly compose: TextEditState;
+  readonly nextMsgId: number;
   // Settings
   readonly category: CategoryId;
   readonly loggedIn: boolean;
@@ -92,6 +114,10 @@ export function initialModel(): Model {
       composition: null,
     },
     dirty: false,
+    agentOpen: true,
+    messages: [{ id: 0, fromUser: false, text: GREETING }],
+    compose: { text: EMPTY_TEXT, selection: { anchor: 0, focus: 0 }, composition: null },
+    nextMsgId: 1,
     category: "general",
     loggedIn: true,
     showTips: true,
@@ -134,11 +160,24 @@ function withFileContent(
   return out;
 }
 
+// A copy of the messages with one appended (owned array).
+function appended(messages: readonly ChatMsg[], one: ChatMsg): readonly ChatMsg[] {
+  const out: ChatMsg[] = [];
+  for (let i = 0; i < messages.length; i++) {
+    out.push(messages[i]);
+  }
+  out.push(one);
+  return out;
+}
+
 export type Msg =
   | { readonly kind: "open_settings" }
   | { readonly kind: "open_editor" }
   | { readonly kind: "open_file"; readonly index: number }
   | { readonly kind: "edit"; readonly edit: TextInputEvent }
+  | { readonly kind: "toggle_agent" }
+  | { readonly kind: "compose_edit"; readonly edit: TextInputEvent }
+  | { readonly kind: "send_message" }
   | { readonly kind: "select_category"; readonly category: CategoryId }
   | { readonly kind: "toggle_tips" }
   | { readonly kind: "set_startup_restore" }
@@ -186,6 +225,26 @@ export function update(model: Model, msg: Msg): Model {
           break;
       }
       return { ...model, doc: next, dirty: model.dirty || changed };
+    }
+    case "toggle_agent":
+      return { ...model, agentOpen: !model.agentOpen };
+    case "compose_edit": {
+      const next = applyTextInputEvent(model.compose, msg.edit, DOC_CAPACITY);
+      if (next === null) return model;
+      return { ...model, compose: next };
+    }
+    case "send_message": {
+      if (model.compose.text.length === 0) return model;
+      const userMsg: ChatMsg = { id: model.nextMsgId, fromUser: true, text: model.compose.text };
+      const replyMsg: ChatMsg = { id: model.nextMsgId + 1, fromUser: false, text: AGENT_REPLY };
+      const withUser = appended(model.messages, userMsg);
+      const withReply = appended(withUser, replyMsg);
+      return {
+        ...model,
+        messages: withReply,
+        nextMsgId: model.nextMsgId + 2,
+        compose: { text: EMPTY_TEXT, selection: { anchor: 0, focus: 0 }, composition: null },
+      };
     }
     case "select_category":
       return { ...model, category: msg.category };
