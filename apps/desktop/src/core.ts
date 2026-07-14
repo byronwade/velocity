@@ -9,6 +9,9 @@ import { type TextInputEvent, type TextEditState, applyTextInputEvent } from "@n
 // Which top-level screen the workbench shows.
 export type Screen = "editor" | "settings";
 
+// The left sidebar's active tab (Files / Map / Review, like the web app).
+export type SidebarTab = "files" | "map" | "review";
+
 // The last filesystem-effect outcome, shown in the status bar.
 export type SaveStatus = "none" | "saved" | "save_failed" | "reloaded" | "reload_failed";
 
@@ -100,6 +103,7 @@ const CATEGORIES: readonly Category[] = [
 export interface Model {
   // Workbench
   readonly screen: Screen;
+  readonly sidebar: SidebarTab;
   // Editor: the open files and which one is active + its live edit buffer
   readonly files: readonly FileEntry[];
   readonly activeFile: number;
@@ -126,6 +130,7 @@ export interface Model {
 export function initialModel(): [Model, Cmd<Msg>] {
   const model: Model = {
     screen: "editor",
+    sidebar: "files",
     files: FILES,
     activeFile: 0,
     nextFileId: 3,
@@ -254,6 +259,9 @@ export type Msg =
   | { readonly kind: "boot_missing"; readonly error: Uint8Array }
   | { readonly kind: "open_palette" }
   | { readonly kind: "close_palette" }
+  | { readonly kind: "sidebar_files" }
+  | { readonly kind: "sidebar_map" }
+  | { readonly kind: "sidebar_review" }
   | { readonly kind: "toggle_agent" }
   | { readonly kind: "compose_edit"; readonly edit: TextInputEvent }
   | { readonly kind: "send_message" }
@@ -402,6 +410,12 @@ export function update(model: Model, msg: Msg): Model | [Model, Cmd<Msg>] {
       return { ...model, paletteOpen: true };
     case "close_palette":
       return { ...model, paletteOpen: false };
+    case "sidebar_files":
+      return { ...model, sidebar: "files" };
+    case "sidebar_map":
+      return { ...model, sidebar: "map" };
+    case "sidebar_review":
+      return { ...model, sidebar: "review" };
     case "toggle_agent":
       return { ...model, agentOpen: !model.agentOpen, paletteOpen: false };
     case "compose_edit": {

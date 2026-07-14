@@ -1,8 +1,8 @@
-<!-- Velocity workbench — a native code editor + a Cursor-style Settings
-     screen, switched by {screen}. Zero-config ts-core embeds only this file,
-     so the UI primitives live here as in-file <template>s. Fields bind by the
-     names src/core.ts wrote; the editor buffer is a real TextEditState reduced
-     by applyTextInputEvent in update(). -->
+<!-- Velocity workbench — laid out to echo the original web app (Geist/v0
+     design register, set via app.zon `theme = "geist"`): a top bar, a
+     Files/Map/Review sidebar, a "Live Editor" panel with breadcrumb + rich
+     status bar, and a bottom "Tell the agent what to do…" bar. Zero-config
+     ts-core embeds only this file, so UI primitives live here as templates. -->
 
 <!-- ── UI primitives ──────────────────────────────────────────────────── -->
 
@@ -28,104 +28,133 @@
   </row>
 </template>
 
-<!-- ── Workbench: editor | settings ───────────────────────────────────── -->
+<!-- ── Workbench ──────────────────────────────────────────────────────── -->
 
 <column grow="1">
 <if test="{screen == 'editor'}">
 
-  <row grow="1">
+  <column grow="1">
 
-    <!-- Activity rail -->
-    <column width="48" background="surface" padding="8" gap="8" cross="center">
-      <button size="icon" variant="ghost" icon="folder" label="Explorer" on-press="open_editor"/>
-      <button size="icon" variant="ghost" icon="search" label="Command palette" on-press="open_palette"/>
-      <button size="icon" variant="ghost" icon="panel-right" label="Toggle agent" on-press="toggle_agent"/>
+    <!-- Top bar: workspace · branch … actions -->
+    <row background="surface" padding="8" gap="10" cross="center">
+      <text>Velocity</text>
+      <text size="sm" foreground="text_muted">main</text>
       <spacer grow="1"/>
-      <button size="icon" variant="ghost" icon="settings" label="Settings" on-press="open_settings"/>
-    </column>
+      <button size="sm" variant="ghost" on-press="open_palette">Commands</button>
+      <button size="sm" variant="ghost" on-press="toggle_agent">Agent</button>
+      <button size="sm" variant="ghost" on-press="open_settings">Settings</button>
+      <button size="sm" variant="primary" on-press="save_file">Save</button>
+    </row>
 
     <separator/>
 
-    <!-- File explorer -->
-    <column width="220" background="surface_subtle">
-      <row padding="10" cross="center">
-        <text size="sm" foreground="text_muted">EXPLORER</text>
-      </row>
-      <tree gap="1" label="Files">
-        <for each="files" key="id" as="f">
-          <list-item role="treeitem" selected="{f.id == activeFile}" on-press="open_file:{f.id}">{f.name}</list-item>
-        </for>
-      </tree>
-    </column>
+    <!-- Body: sidebar | editor | agent -->
+    <row grow="1">
 
-    <separator/>
-
-    <!-- Editor column: tab strip, breadcrumb, buffer, status -->
-    <column grow="1">
-      <tabs>
-        <for each="files" key="id" as="f">
-          <button selected="{f.id == activeFile}" on-press="open_file:{f.id}">{f.name}</button>
-        </for>
-        <button variant="ghost" on-press="new_file" label="New file">+</button>
-      </tabs>
-      <row background="surface_subtle" padding="8" gap="8" cross="center">
-        <text>{activeName}</text>
-        <if test="{dirty}">
-          <text foreground="warning">●</text>
-        </if>
-        <text size="sm" foreground="text_muted">{statusLabel}</text>
-        <spacer grow="1"/>
-        <button size="sm" variant="ghost" on-press="open_palette">Commands</button>
-        <button size="sm" variant="primary" on-press="save_file">Save</button>
-        <button size="sm" variant="ghost" on-press="reload_file">Reload</button>
-        <button size="sm" variant="ghost" on-press="toggle_agent">Agent</button>
-        <button size="sm" variant="ghost" on-press="open_settings">Settings</button>
-      </row>
-      <textarea grow="1" label="Code editor" text="{doc.text}" on-input="edit" placeholder="Start typing…"/>
-      <status-bar>{activeName} · {byteCount} bytes</status-bar>
-    </column>
-
-    <!-- Agent / chat pane -->
-    <if test="{agentOpen}">
-      <separator/>
-      <column width="340" background="surface_subtle">
-        <row padding="10" gap="8" cross="center">
-          <text size="sm" foreground="text_muted">AGENT</text>
-          <spacer grow="1"/>
-          <button size="sm" variant="ghost" on-press="toggle_agent">Hide</button>
-        </row>
-        <scroll grow="1">
-          <column padding="12" gap="12">
-            <for each="messages" key="id" as="m">
-              <column gap="2">
-                <if test="{m.fromUser}">
-                  <text size="sm" foreground="accent">You</text>
-                </if>
-                <else>
-                  <text size="sm" foreground="text_muted">Velocity</text>
-                </else>
-                <text>{m.text}</text>
-              </column>
-            </for>
+      <!-- Sidebar -->
+      <column width="240" background="surface_subtle">
+        <tabs>
+          <button selected="{sidebar == 'files'}" on-press="sidebar_files">Files</button>
+          <button selected="{sidebar == 'map'}" on-press="sidebar_map">Map</button>
+          <button selected="{sidebar == 'review'}" on-press="sidebar_review">Review</button>
+        </tabs>
+        <if test="{sidebar == 'files'}">
+          <column grow="1">
+            <row padding="8" gap="8" cross="center">
+              <text size="sm" foreground="text_muted">EXPLORER</text>
+              <spacer grow="1"/>
+              <button size="icon" variant="ghost" icon="plus" label="New file" on-press="new_file"/>
+            </row>
+            <tree gap="1" label="Files">
+              <for each="files" key="id" as="f">
+                <list-item role="treeitem" selected="{f.id == activeFile}" on-press="open_file:{f.id}">{f.name}</list-item>
+              </for>
+            </tree>
           </column>
-        </scroll>
-        <row padding="8" gap="8" cross="center">
-          <textarea grow="1" label="Message the agent" text="{compose.text}" on-input="compose_edit" on-submit="send_message" placeholder="Ask Velocity…"/>
-          <button variant="primary" on-press="send_message">Send</button>
-        </row>
+        </if>
+        <else>
+          <column padding="16" grow="1">
+            <text size="sm" foreground="text_muted">Coming soon</text>
+          </column>
+        </else>
       </column>
-    </if>
 
-  </row>
+      <separator/>
+
+      <!-- Editor panel -->
+      <column grow="1">
+        <row background="surface" padding="8" gap="8" cross="center">
+          <text>Live Editor</text>
+          <spacer grow="1"/>
+          <text size="sm" foreground="text_muted">{statusLabel}</text>
+          <button size="sm" variant="ghost" on-press="reload_file">Reload</button>
+          <button size="sm" variant="primary" on-press="save_file">Save</button>
+        </row>
+        <tabs>
+          <for each="files" key="id" as="f">
+            <button selected="{f.id == activeFile}" on-press="open_file:{f.id}">{f.name}</button>
+          </for>
+          <button variant="ghost" on-press="new_file" label="New file">+</button>
+        </tabs>
+        <row padding="8" cross="center">
+          <if test="{dirty}">
+            <text size="sm" foreground="warning">●</text>
+          </if>
+          <text size="sm" foreground="text_muted">velocity / {activeName}</text>
+        </row>
+        <textarea grow="1" label="Code editor" text="{doc.text}" on-input="edit" placeholder="Start typing…"/>
+        <status-bar>{activeName}  ·  Ln 1, Col 1  ·  Spaces 2  ·  UTF-8  ·  LF  ·  TypeScript</status-bar>
+      </column>
+
+      <!-- Agent thread (toggle via the top-bar Agent button) -->
+      <if test="{agentOpen}">
+        <separator/>
+        <column width="320" background="surface_subtle">
+          <row padding="10" gap="8" cross="center">
+            <text size="sm" foreground="text_muted">AGENT</text>
+            <spacer grow="1"/>
+            <button size="sm" variant="ghost" on-press="toggle_agent">Hide</button>
+          </row>
+          <scroll grow="1">
+            <column padding="12" gap="12">
+              <for each="messages" key="id" as="m">
+                <column gap="2">
+                  <if test="{m.fromUser}">
+                    <text size="sm" foreground="accent">You</text>
+                  </if>
+                  <else>
+                    <text size="sm" foreground="text_muted">Velocity</text>
+                  </else>
+                  <text>{m.text}</text>
+                </column>
+              </for>
+            </column>
+          </scroll>
+        </column>
+      </if>
+
+    </row>
+
+    <separator/>
+
+    <!-- Bottom agent bar -->
+    <row background="surface" padding="8" gap="8" cross="center">
+      <input-group grow="1">
+        <textarea label="Message the agent" text="{compose.text}" on-input="compose_edit" on-submit="send_message" placeholder="Tell the agent what to do…"/>
+      </input-group>
+      <text size="sm" foreground="text_muted">Velocity · Local</text>
+      <button variant="primary" on-press="send_message">Send</button>
+    </row>
+
+  </column>
 
 </if>
 <else>
 
   <row grow="1">
 
-    <!-- Left rail -->
     <column width="240" background="surface_subtle" padding="12" gap="8">
-      <button size="sm" variant="ghost" on-press="open_editor">‹ Back to editor</button>
+      <button size="sm" variant="ghost" on-press="open_editor">Back to editor</button>
       <text size="heading">Settings</text>
       <column gap="2">
         <for each="categories" key="id" as="c">
@@ -144,7 +173,6 @@
 
     <separator/>
 
-    <!-- Right pane -->
     <scroll grow="1">
       <column padding="24" gap="16" grow="1">
 
@@ -216,7 +244,7 @@
 
 </else>
 
-<!-- ⌘K command palette (opens via the shortcut or the ⌘K button) -->
+<!-- Command palette (opens via the shortcut or the Commands button) -->
 <if test="{paletteOpen}">
   <dialog text="Command palette" on-dismiss="close_palette">
     <column gap="4" padding="8" width="440">

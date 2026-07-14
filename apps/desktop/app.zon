@@ -5,6 +5,7 @@
     .description = "A fast, tiny, native AI code editor.",
     .version = "0.1.0",
     .icons = .{"assets/icon.png"},
+    .theme = "geist",
     .platforms = .{ "macos", "linux", "windows" },
     .permissions = .{ "view", "command" },
     .capabilities = .{ "native_views", "gpu_surfaces" },
