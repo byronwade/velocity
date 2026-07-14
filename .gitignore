@@ -7,8 +7,7 @@ dist
 target
 src-tauri/gen/schemas
 
-# Local tooling scratch (Playwright captures, ad-hoc screenshots)
+# Local tooling scratch (Playwright captures, ad-hoc screenshots).
+# Committed screenshots live under docs/screenshots/, not the repo root.
 .playwright-mcp/
-/before-*.png
-/check-*.png
-/after-*.png
+/*.png
