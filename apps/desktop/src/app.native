@@ -1,8 +1,7 @@
-<!-- Velocity workbench — laid out to echo the original web app (Geist/v0
-     design register, set via app.zon `theme = "geist"`): a top bar, a
-     Files/Map/Review sidebar, a "Live Editor" panel with breadcrumb + rich
-     status bar, and a bottom "Tell the agent what to do…" bar. Zero-config
-     ts-core embeds only this file, so UI primitives live here as templates. -->
+<!-- Velocity workbench (Geist/v0 register via app.zon `theme = "geist"`).
+     One shared <topbar> header renders identically on every screen; below it
+     each screen lays out its own body. Zero-config ts-core embeds only this
+     file, so UI primitives live here as templates. -->
 
 <!-- ── UI primitives ──────────────────────────────────────────────────── -->
 
@@ -28,6 +27,29 @@
   </row>
 </template>
 
+<!-- The one header, shared across every screen. `title` names the current
+     context (the active file, or "Settings"). -->
+<template name="topbar" args="title">
+  <column>
+    <row background="surface" padding="10" gap="10" cross="center">
+      <text>Velocity</text>
+      <row background="surface_subtle" radius="sm" padding="4">
+        <text size="sm" foreground="text_muted">main</text>
+      </row>
+      <spacer grow="1"/>
+      <text foreground="text_muted">{title}</text>
+      <spacer grow="1"/>
+      <button size="sm" variant="ghost" selected="{screen == 'editor'}" on-press="open_editor">Editor</button>
+      <button size="sm" variant="ghost" selected="{screen == 'settings'}" on-press="open_settings">Settings</button>
+      <button size="sm" variant="ghost" on-press="open_palette">Commands</button>
+      <button size="sm" variant="ghost" on-press="toggle_agent">Agent</button>
+      <button size="sm" variant="primary" on-press="save_file">Save</button>
+      <avatar>BW</avatar>
+    </row>
+    <separator/>
+  </column>
+</template>
+
 <!-- ── Workbench ──────────────────────────────────────────────────────── -->
 
 <column grow="1">
@@ -35,18 +57,7 @@
 
   <column grow="1">
 
-    <!-- Top bar: workspace · branch … actions -->
-    <row background="surface" padding="8" gap="10" cross="center">
-      <text>Velocity</text>
-      <text size="sm" foreground="text_muted">main</text>
-      <spacer grow="1"/>
-      <button size="sm" variant="ghost" on-press="open_palette">Commands</button>
-      <button size="sm" variant="ghost" on-press="toggle_agent">Agent</button>
-      <button size="sm" variant="ghost" on-press="open_settings">Settings</button>
-      <button size="sm" variant="primary" on-press="save_file">Save</button>
-    </row>
-
-    <separator/>
+    <use template="topbar" title="{activeName}"/>
 
     <!-- Body: sidebar | editor | agent -->
     <row grow="1">
@@ -94,7 +105,6 @@
             <button size="sm" variant="ghost" on-press="toggle_preview">Preview</button>
           </else>
           <button size="sm" variant="ghost" on-press="reload_file">Reload</button>
-          <button size="sm" variant="primary" on-press="save_file">Save</button>
         </row>
         <tabs>
           <for each="files" key="id" as="f">
@@ -131,7 +141,7 @@
         <status-bar>{activeName}  ·  Ln 1, Col 1  ·  Spaces 2  ·  UTF-8  ·  LF  ·  TypeScript</status-bar>
       </column>
 
-      <!-- Agent thread (toggle via the top-bar Agent button) -->
+      <!-- Agent thread (toggle via the header Agent button) -->
       <if test="{agentOpen}">
         <separator/>
         <column width="320" background="surface_subtle">
@@ -176,96 +186,102 @@
 </if>
 <else>
 
-  <row grow="1">
+  <column grow="1">
 
-    <column width="240" background="surface_subtle" padding="12" gap="8">
-      <button size="sm" variant="ghost" on-press="open_editor">Back to editor</button>
-      <text size="heading">Settings</text>
-      <column gap="2">
-        <for each="categories" key="id" as="c">
-          <button variant="ghost" selected="{c.id == category}" on-press="select_category:{c.id}">{c.label}</button>
-        </for>
-      </column>
-      <spacer grow="1"/>
-      <row background="surface" radius="md" padding="8" gap="8" cross="center">
-        <avatar>BW</avatar>
-        <column grow="1" gap="2">
-          <text size="sm">Byron Wade</text>
-          <text size="sm" foreground="text_muted">bcw1995@gmail.com</text>
+    <use template="topbar" title="Settings"/>
+
+    <row grow="1">
+
+      <!-- Category rail -->
+      <column width="240" background="surface_subtle" padding="12" gap="8">
+        <text size="sm" foreground="text_muted">SETTINGS</text>
+        <column gap="2">
+          <for each="categories" key="id" as="c">
+            <button variant="ghost" selected="{c.id == category}" on-press="select_category:{c.id}">{c.label}</button>
+          </for>
         </column>
-      </row>
-    </column>
-
-    <separator/>
-
-    <scroll grow="1">
-      <column padding="24" gap="16" grow="1">
-
-        <if test="{category == 'general'}">
-          <column gap="16">
-            <use template="section-header" title="General"/>
-
-            <use template="card">
-              <use template="field-row" label="Account" hint="Signed in to Velocity">
-                <row cross="center">
-                  <if test="{loggedIn}">
-                    <button size="sm" variant="ghost" on-press="log_out">Log out</button>
-                  </if>
-                  <else>
-                    <text size="sm" foreground="text_muted">Signed out</text>
-                  </else>
-                </row>
-              </use>
-            </use>
-
-            <use template="card">
-              <use template="field-row" label="Show tips" hint="Show tips when Velocity starts">
-                <switch checked="{showTips}" on-toggle="toggle_tips" label="Show tips"/>
-              </use>
-              <use template="field-row" label="On launch" hint="What to open when Velocity starts">
-                <row gap="4">
-                  <button size="sm" selected="{startupMode == 'restore'}" on-press="set_startup_restore">Restore</button>
-                  <button size="sm" selected="{startupMode == 'welcome'}" on-press="set_startup_welcome">Welcome</button>
-                  <button size="sm" selected="{startupMode == 'empty'}" on-press="set_startup_empty">Empty</button>
-                </row>
-              </use>
-            </use>
-
-            <use template="section-header" title="Notifications"/>
-            <use template="card">
-              <use template="field-row" label="Product updates" hint="Notify about new releases">
-                <switch checked="{notifyUpdates}" on-toggle="toggle_notify_updates" label="Product updates"/>
-              </use>
-              <use template="field-row" label="Sounds" hint="Play a sound for notifications">
-                <switch checked="{notifySounds}" on-toggle="toggle_notify_sounds" label="Notification sounds"/>
-              </use>
-            </use>
-
-            <use template="section-header" title="Privacy"/>
-            <use template="card">
-              <use template="field-row" label="Data sharing" hint="What diagnostics Velocity may send">
-                <row gap="4">
-                  <button size="sm" selected="{dataSharing == 'none'}" on-press="set_sharing_none">None</button>
-                  <button size="sm" selected="{dataSharing == 'errors'}" on-press="set_sharing_errors">Errors</button>
-                  <button size="sm" selected="{dataSharing == 'usage'}" on-press="set_sharing_usage">Usage</button>
-                </row>
-              </use>
-            </use>
+        <spacer grow="1"/>
+        <row background="surface" radius="md" padding="8" gap="8" cross="center">
+          <avatar>BW</avatar>
+          <column grow="1" gap="2">
+            <text size="sm">Byron Wade</text>
+            <text size="sm" foreground="text_muted">bcw1995@gmail.com</text>
           </column>
-        </if>
-        <else>
-          <column gap="16">
-            <use template="section-header" title="Coming soon"/>
-            <use template="card">
-              <text foreground="text_muted">This section isn't built yet.</text>
-            </use>
-          </column>
-        </else>
-
+        </row>
       </column>
-    </scroll>
 
-  </row>
+      <separator/>
+
+      <scroll grow="1">
+        <column padding="24" gap="16" grow="1">
+
+          <if test="{category == 'general'}">
+            <column gap="16">
+              <use template="section-header" title="General"/>
+
+              <use template="card">
+                <use template="field-row" label="Account" hint="Signed in to Velocity">
+                  <row cross="center">
+                    <if test="{loggedIn}">
+                      <button size="sm" variant="ghost" on-press="log_out">Log out</button>
+                    </if>
+                    <else>
+                      <text size="sm" foreground="text_muted">Signed out</text>
+                    </else>
+                  </row>
+                </use>
+              </use>
+
+              <use template="card">
+                <use template="field-row" label="Show tips" hint="Show tips when Velocity starts">
+                  <switch checked="{showTips}" on-toggle="toggle_tips" label="Show tips"/>
+                </use>
+                <use template="field-row" label="On launch" hint="What to open when Velocity starts">
+                  <row gap="4">
+                    <button size="sm" selected="{startupMode == 'restore'}" on-press="set_startup_restore">Restore</button>
+                    <button size="sm" selected="{startupMode == 'welcome'}" on-press="set_startup_welcome">Welcome</button>
+                    <button size="sm" selected="{startupMode == 'empty'}" on-press="set_startup_empty">Empty</button>
+                  </row>
+                </use>
+              </use>
+
+              <use template="section-header" title="Notifications"/>
+              <use template="card">
+                <use template="field-row" label="Product updates" hint="Notify about new releases">
+                  <switch checked="{notifyUpdates}" on-toggle="toggle_notify_updates" label="Product updates"/>
+                </use>
+                <use template="field-row" label="Sounds" hint="Play a sound for notifications">
+                  <switch checked="{notifySounds}" on-toggle="toggle_notify_sounds" label="Notification sounds"/>
+                </use>
+              </use>
+
+              <use template="section-header" title="Privacy"/>
+              <use template="card">
+                <use template="field-row" label="Data sharing" hint="What diagnostics Velocity may send">
+                  <row gap="4">
+                    <button size="sm" selected="{dataSharing == 'none'}" on-press="set_sharing_none">None</button>
+                    <button size="sm" selected="{dataSharing == 'errors'}" on-press="set_sharing_errors">Errors</button>
+                    <button size="sm" selected="{dataSharing == 'usage'}" on-press="set_sharing_usage">Usage</button>
+                  </row>
+                </use>
+              </use>
+            </column>
+          </if>
+          <else>
+            <column gap="16">
+              <use template="section-header" title="Coming soon"/>
+              <use template="card">
+                <text foreground="text_muted">This section isn't built yet.</text>
+              </use>
+            </column>
+          </else>
+
+        </column>
+      </scroll>
+
+    </row>
+
+  </column>
 
 </else>
 
