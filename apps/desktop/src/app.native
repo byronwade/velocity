@@ -1,0 +1,17 @@
+<!-- Velocity shell view: markup over the core's model, embedded at build
+     time and hot-reloaded while `native dev` runs. Fields bind by the
+     names core.ts wrote ({welcomed}). Validate with: native check.
+     Stage 2 placeholder; Stage 4 replaces this with the Settings screen. -->
+<column gap="16" padding="24" main="center" cross="center" grow="1">
+  <text>Velocity</text>
+  <text>A fast, tiny, native AI code editor.</text>
+  <if test="{welcomed}">
+    <column gap="8" cross="center">
+      <status-bar>workspace coming online…</status-bar>
+      <button size="sm" variant="ghost" on-press="show_welcome">Back</button>
+    </column>
+  </if>
+  <else>
+    <button variant="primary" on-press="dismiss_welcome">Get started</button>
+  </else>
+</column>

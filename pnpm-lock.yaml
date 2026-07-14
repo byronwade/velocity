@@ -12,6 +12,12 @@ importers:
         specifier: ^2.3.0
         version: 2.10.5
 
+  apps/desktop:
+    dependencies:
+      '@native-sdk/core':
+        specifier: 0.5.1
+        version: 0.5.1
+
   apps/web:
     dependencies:
       '@codemirror/autocomplete':
@@ -395,6 +401,9 @@ packages:
 
   '@marijn/find-cluster-break@1.0.3':
     resolution: {integrity: sha512-FY+MKLBoTsLNJF/eLWaOsXGdz6uh3Iu1axjPf6TUq92IYumcTcXWHoS747JARLkcdlJ/Waiaxc5wQfFO8jC6NA==}
+
+  '@native-sdk/core@0.5.1':
+    resolution: {integrity: sha512-F/7oqGhU90nZ2e1OVlFxBToQHwUAfZjmptoe9MMgaeTBnRuhBV1FZxPsaa32GzjyJPBJTkAhZr/EXfpqIhGYDQ==}
 
   '@rolldown/pluginutils@1.0.0-beta.27':
     resolution: {integrity: sha512-+d0F4MKMCbeVUJwG96uQ4SgAznZNSq93I3V+9NHA4OpvqG8mRCpGdKmK8l/dl02h2CCDHwW2FqilnTyDcAnqjA==}
@@ -1192,6 +1201,8 @@ snapshots:
       '@lezer/highlight': 1.2.3
 
   '@marijn/find-cluster-break@1.0.3': {}
+
+  '@native-sdk/core@0.5.1': {}
 
   '@rolldown/pluginutils@1.0.0-beta.27': {}
 
