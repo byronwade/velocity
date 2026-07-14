@@ -33,7 +33,7 @@
 	/* Flat brand mark — one solid violet, no gradient, shared by the logo and
 	   avatars. Kept theme-agnostic (a colored chip with a white glyph). */
 	--brand-mark: #6d5bd0;
-	--accent: #0072f5;
+	--accent: #006bff;
 	--good: #45a557;
 	--warn: #ff990a;
 	--danger: #e5484d;
@@ -46,8 +46,8 @@
 	--sunk: #f2f2f2;
 	--rail: #fafafa;
 	--fg: #171717;      /* v0-gray-1000 (foreground) */
-	--muted: #666666;   /* v0-gray-900 (muted-foreground) */
-	--faint: #8f8f8f;   /* v0-gray-700 */
+	--muted: #4d4d4d;   /* Geist gray-900 (muted-foreground) */
+	--faint: #8f8f8f;   /* Geist gray-700 */
 	--fg-rgb: 23, 23, 23;
 	--line: rgba(0, 0, 0, 0.08);   /* ≈ v0-gray-300 / alpha-400 border */
 	--line-2: rgba(0, 0, 0, 0.13);
@@ -57,13 +57,21 @@
 
 	--k: #8250df; --s: #0a7d3e; --n: #b3611d; --c: #6b7280; --ty: #1a7f8e; --f: #0a56c2;
 
-	/* Geist elevation — a hairline plus a soft, tight drop. */
-	--elev-1: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 1px rgba(0, 0, 0, 0.03);
-	--elev-2: 0 1px 1px rgba(0, 0, 0, 0.03), 0 4px 8px -4px rgba(0, 0, 0, 0.05), 0 16px 24px -8px rgba(0, 0, 0, 0.06);
+	/* Geist elevation — a subtle raised card, then a layered popover/menu shadow. */
+	--elev-1: 0 2px 2px rgba(0, 0, 0, 0.04);
+	--elev-2: 0 1px 1px rgba(0, 0, 0, 0.02), 0 4px 8px -4px rgba(0, 0, 0, 0.04), 0 16px 24px -8px rgba(0, 0, 0, 0.06);
+	/* Geist focus ring — a background gap, then the accent ring. */
+	--focus: 0 0 0 2px var(--panel), 0 0 0 4px var(--accent);
 
-	/* v0 radius: --radius 0.5rem. lg = base+4 (cards), md = base, sm = base-2. */
-	--r-lg: 12px; --r-md: 8px; --r-sm: 6px;
-	--h-tab: 38px; --h-header: 46px; --h-status: 24px;
+	/* Geist radii — controls 6, mid 8, cards 12, large 16. */
+	--r-sm: 6px; --r-md: 8px; --r-lg: 12px; --r-xl: 16px;
+	--h-header: 52px; --h-control: 32px;
+	/* Geist weights — the only three the system uses. */
+	--fw-normal: 400; --fw-medium: 500; --fw-semibold: 600;
+	/* Geist type scale (px). Body is 14; labels 12–13; headings 16–32 @ 600. */
+	--text-11: 11px; --text-12: 12px; --text-13: 13px; --text-14: 14px; --text-16: 16px; --text-20: 20px; --text-24: 24px; --text-32: 32px;
+	/* 4px spacing grid. */
+	--sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-6: 24px; --sp-8: 32px;
 
 	/* Geist first — matches v0's rendering wherever the family is present. */
 	--sans: "Geist", ui-sans-serif, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -109,7 +117,7 @@
 
 :root[data-theme="light"] {
 	color-scheme: light;
-	--accent: #0072f5;
+	--accent: #006bff;
 	--good: #45a557;
 	--warn: #ff990a;
 	--danger: #e5484d;
