@@ -236,17 +236,16 @@ interface HeaderProps {
 	onActivity: () => void;
 	onSettings: () => void;
 	attentionCount: number;
-	provider: string;
 }
 
-function WorkstreamHeader({ active, layout, sidebarOpen, onOpenSidebar, onLayout, onAttention, onActivity, onSettings, attentionCount, provider }: HeaderProps) {
+function WorkstreamHeader({ active, layout, sidebarOpen, onOpenSidebar, onLayout, onAttention, onActivity, onSettings, attentionCount }: HeaderProps) {
 	const verified = active?.criteria.filter((criterion) => criterion.state === 'verified').length ?? 0;
 	return (
 		<header className="vw-header" data-tauri-drag-region>
 			<div className="vw-header-left">
 				{!sidebarOpen && <button className="vw-icon-btn" onClick={onOpenSidebar} title="Open sidebar" aria-label="Open sidebar"><Menu /></button>}
 				<div className="vw-title-block">
-					<span className="vw-breadcrumb">{active ? `${active.project} / ${active.repo.split('/').at(-1)}` : 'Velocity'}</span>
+					<span className="vw-breadcrumb">{active ? active.repo : 'Velocity'}</span>
 					<div className="vw-title-line">
 						<h1>{active?.title ?? 'New work'}</h1>
 						{active && <span className={`vw-status-pill ${statusTone(active.status)}`}>{active.status === 'running' && <LoaderCircle className="vw-rotate" />}{STATUS_LABEL[active.status]}</span>}
@@ -263,8 +262,7 @@ function WorkstreamHeader({ active, layout, sidebarOpen, onOpenSidebar, onLayout
 			)}
 
 			<div className="vw-header-actions">
-				{active && <button className="vw-context-chip" onClick={onActivity}><GitBranch />{active.branch}<ChevronDown /></button>}
-				<button className="vw-context-chip vw-model-chip" onClick={onSettings}><Bot />{provider}</button>
+				{active && <button className="vw-context-chip" onClick={onActivity} title="Workstream details"><GitBranch />{active.branch}<ChevronDown /></button>}
 				<button className="vw-icon-btn vw-attention-btn" onClick={onAttention} title="Attention inbox" aria-label="Attention inbox"><Bell />{attentionCount > 0 && <span>{attentionCount}</span>}</button>
 				<button className="vw-icon-btn" onClick={onSettings} title="Settings" aria-label="Settings"><Settings2 /></button>
 			</div>
@@ -390,7 +388,6 @@ function WorkstreamComposer({ brainKey, workstream, onOpenArtifact }: ComposerPr
 			<div className="vw-composer-scope">
 				<span><FolderGit2 />{workstream.repo}</span>
 				<span><GitBranch />{workstream.branch}</span>
-				<span><ShieldCheck />Workspace only</span>
 			</div>
 			<div className="vw-composer" onClick={() => textRef.current?.focus()}>
 				<textarea
@@ -411,7 +408,7 @@ function WorkstreamComposer({ brainKey, workstream, onOpenArtifact }: ComposerPr
 					</button>
 				</div>
 			</div>
-			<div className="vw-composer-foot"><span>{providerLabel(settings)}</span><span>·</span><span>{workstream.worktree}</span><span className="vw-spacer" /><span>{formatMoney(workstream.spent)} / {formatMoney(workstream.budget)}</span></div>
+			<div className="vw-composer-foot"><span>{providerLabel(settings)}</span><span className="vw-spacer" /><span>{formatMoney(workstream.spent)} / {formatMoney(workstream.budget)}</span></div>
 		</div>
 	);
 }
@@ -809,7 +806,6 @@ export function VelocityWorkbench() {
 					onActivity={() => setActivityOpen(true)}
 					onSettings={() => setSettingsOpen(true)}
 					attentionCount={attentionCount}
-					provider={providerLabel(settings)}
 				/>
 				<div className="vw-body">
 					{!active && <EmptyConversation onCreate={createWorkstream} />}

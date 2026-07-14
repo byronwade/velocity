@@ -297,6 +297,15 @@
 .vw-thread-column .msg.res .role .av { border-radius: 7px; background: var(--brand-mark); color: #fff; }
 .vw-thread-column .toolcard { border-color: var(--line); background: color-mix(in srgb, var(--panel-2) 75%, transparent); box-shadow: none; }
 
+/* Per-message actions (rate / copy) stay out of the way until you hover or
+   focus the message — quieter thread, same capability. */
+.vw-thread-column .msg-actions,
+.vw-artifact-thread .msg-actions { opacity: 0; transition: opacity var(--dur) var(--ease); }
+.vw-thread-column .msg:hover .msg-actions,
+.vw-thread-column .msg:focus-within .msg-actions,
+.vw-artifact-thread .msg:hover .msg-actions,
+.vw-artifact-thread .msg:focus-within .msg-actions { opacity: 1; }
+
 .vw-resume-card { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; padding: 16px; border-radius: 12px; background: color-mix(in srgb, var(--brand-mark) 7%, var(--panel)); }
 .vw-resume-icon { display: grid; width: 31px; height: 31px; place-items: center; flex: none; border-radius: 9px; background: color-mix(in srgb, #8b7cf6 12%, transparent); color: #8b7cf6; }
 .vw-resume-icon svg { width: 15px; height: 15px; }
