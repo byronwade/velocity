@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
-import { Sun, Moon, Maximize2, Minimize2, GitCompare, Flag, ShieldQuestion, EyeOff } from 'lucide-react';
-import { useShell } from '../lib/store';
+import { Maximize2, Minimize2, GitCompare, Flag, ShieldQuestion, EyeOff } from 'lucide-react';
 import { useWorkspace, runtime } from './useWorkspace';
 import { LENS_META } from './model';
 import type { Lens } from './model';
 import { SCENARIOS as SCENARIO_LIST } from './scenarios';
+import { TabBar } from './TabBar';
 import { Stage } from './Stage';
 import { Dock } from './Dock';
 import { MissionSheet, RightRail, ToolDrawer, CommandBar } from './surfaces';
@@ -14,8 +14,6 @@ const LENS_ORDER: Lens[] = ['preview', 'code', 'system', 'data', 'verify', 'ship
 
 function TopBar() {
 	const state = useWorkspace();
-	const theme = useShell((s) => s.theme);
-	const setTheme = useShell((s) => s.setTheme);
 	const { lens, compare, focusMode } = state.layout;
 	const pendingCheckpoint = state.checkpoints.some((k) => k.state === 'ready');
 	const openDecision = state.decisions.some((d) => d.state === 'open');
@@ -56,7 +54,6 @@ function TopBar() {
 				<select className="vs-scenario" value={state.scenario} onChange={(e) => runtime.load(e.target.value)} title="Demo scenario" aria-label="Demo scenario">
 					{SCENARIO_LIST.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
 				</select>
-				<button className="vs-ghosticon" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} title="Toggle theme">{theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}</button>
 			</div>
 		</header>
 	);
@@ -119,19 +116,22 @@ export function VelocityApp() {
 
 	const focusMode = useWorkspace().layout.focusMode;
 	return (
-		<div className={`vs-root${focusMode ? ' focus' : ''}`}>
-			{!focusMode && <TopBar />}
-			{!focusMode && <FollowBanner />}
-			<div className="vs-main">
-				<Stage />
-				<RightRail />
+		<div className="vs-shell">
+			{!focusMode && <TabBar />}
+			<div className={`vs-root${focusMode ? ' focus' : ''}`}>
+				{!focusMode && <TopBar />}
+				{!focusMode && <FollowBanner />}
+				<div className="vs-main">
+					<Stage />
+					<RightRail />
+				</div>
+				<ToolDrawer />
+				<Dock />
+				<MissionSheet />
+				<CommandBar />
+				<Toast />
+				<Confetti />
 			</div>
-			<ToolDrawer />
-			<Dock />
-			<MissionSheet />
-			<CommandBar />
-			<Toast />
-			<Confetti />
 		</div>
 	);
 }

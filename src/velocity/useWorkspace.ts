@@ -1,13 +1,18 @@
 import { useSyncExternalStore } from 'react';
-import { runtime } from './runtime';
+import { manager, runtime } from './workspace';
+import type { ManagerSnapshot } from './workspace';
 import type { WorkspaceState } from './model';
 
-const subscribe = (cb: () => void) => runtime.subscribe(cb);
-const snapshot = () => runtime.getState();
+const activeSnapshot = () => manager.getActiveState();
 
-/** Subscribe the component tree to the deterministic prototype runtime. */
+/** Subscribe a component to the ACTIVE project's deterministic runtime. */
 export function useWorkspace(): WorkspaceState {
-	return useSyncExternalStore(subscribe, snapshot, snapshot);
+	return useSyncExternalStore(manager.subscribe, activeSnapshot, activeSnapshot);
 }
 
-export { runtime };
+/** Subscribe a component to the multi-project tab bar + account state. */
+export function useProjects(): ManagerSnapshot {
+	return useSyncExternalStore(manager.subscribe, manager.getSnapshot, manager.getSnapshot);
+}
+
+export { runtime, manager };

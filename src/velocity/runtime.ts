@@ -97,6 +97,11 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 	}
 	reset(): void { this.load(this.state.scenario); }
 
+	/** Give this project a distinct name (used by the multi-project tab bar). */
+	setProjectName(name: string): void {
+		this.set({ project: { ...this.state.project, name } });
+	}
+
 	// --- layout / lens ---
 	setLens(lens: Lens): void { this.patchLayout({ lens, compare: false }); }
 	openTool(tool: ToolId | null): void { this.patchLayout({ openTool: tool }); }
@@ -245,7 +250,5 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 	}
 }
 
-/** The single prototype runtime instance (swap for a provider-backed one later). */
-export const runtime: CoworkerRuntime = new PrototypeCoworkerRuntime(
-	(typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('scenario')) || 'calm',
-);
+// The active runtime is now vended per-project by the WorkspaceManager
+// (see workspace.ts). One PrototypeCoworkerRuntime instance backs each tab.

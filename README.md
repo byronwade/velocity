@@ -13,8 +13,11 @@ A polished, deterministic, design-first prototype of the workspace lives in
 or the network — a `CoworkerRuntime` produces every state transition deterministically, so the
 demo is fully repeatable.
 
-- **Quiet top bar** — project, the six **Lenses** (Preview · Code · System · Data · Verify · Ship),
-  compare, focus, theme, and a demo-scenario picker.
+- **Project tabs** — the top row is a tab per project; each tab is a fully isolated workspace
+  (its own coworkers, missions, lens, open terminals/tools, and rails). Above the tabs sits the
+  account bar — credits/usage meter, the light/dark toggle, and the user profile.
+- **Quiet top bar** — project + mission progress, the six **Lenses** (Preview · Code · System ·
+  Data · Verify · Ship), compare, focus, and a demo-scenario picker.
 - **One dominant stage** — the running app (or the real CodeMirror editor on the Code lens), with
   **spatial presence markers** showing where each coworker is working. Click a marker to Follow.
 - **Floating dock** — new work, the coworker avatar stack, global pause, developer tools, ⌘K.

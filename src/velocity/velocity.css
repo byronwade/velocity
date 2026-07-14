@@ -3,17 +3,91 @@
    Light-first, quiet chrome, one dominant stage. Built on styles/tokens.css.
    ========================================================================== */
 
-.vs-root {
+.vs-shell {
 	position: fixed;
 	inset: 0;
 	display: flex;
 	flex-direction: column;
-	background: var(--shell);
+	background: var(--sunk);
 	color: var(--fg);
 	font-family: var(--sans);
 	font-size: var(--text-13);
 	overflow: hidden;
 }
+
+.vs-root {
+	position: relative;
+	flex: 1 1 auto;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	background: var(--shell);
+	color: var(--fg);
+	overflow: hidden;
+}
+
+/* ---- Project tab bar (account-level, above everything) ---------------- */
+.vs-tabbar {
+	height: 44px;
+	flex: 0 0 44px;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 0 12px 0 14px;
+	background: var(--sunk);
+	border-bottom: 1px solid var(--line);
+	z-index: 35;
+}
+.vs-tabbar-logo { width: 20px; height: 20px; border-radius: 6px; background: var(--brand-mark); flex: 0 0 auto; }
+.vs-tabs { display: flex; align-items: center; gap: 4px; flex: 1 1 auto; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.vs-tabs::-webkit-scrollbar { display: none; }
+.vs-tab {
+	display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 8px 0 10px; border-radius: 9px;
+	background: transparent; border: 1px solid transparent; cursor: pointer; max-width: 220px; flex: 0 0 auto;
+	color: var(--muted); transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.vs-tab:hover { background: color-mix(in srgb, var(--panel) 60%, transparent); color: var(--fg); }
+.vs-tab.active { background: var(--panel); border-color: var(--line); color: var(--fg); box-shadow: var(--elev-1); }
+.vs-tab-status { display: grid; place-items: center; width: 14px; height: 14px; flex: 0 0 auto; color: var(--faint); }
+.vs-tab-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--good); }
+.vs-tab-status.review { color: var(--warn); }
+.vs-tab-status.decision { color: var(--accent); }
+.vs-tab-status.paused { color: var(--faint); }
+.vs-tab-name { font-size: var(--text-12); font-weight: var(--fw-medium); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vs-tab-rename { width: 96px; height: 22px; border: 1px solid var(--accent); border-radius: 5px; background: var(--panel); color: var(--fg); font: inherit; font-size: var(--text-12); padding: 0 5px; }
+.vs-tab-meta { font-size: 10px; color: var(--faint); background: var(--panel-2); border-radius: 10px; padding: 1px 6px; font-variant-numeric: tabular-nums; }
+.vs-tab.active .vs-tab-meta { background: var(--panel-2); }
+.vs-tab-close { width: 18px; height: 18px; display: grid; place-items: center; border: 0; background: transparent; color: var(--faint); border-radius: 5px; cursor: pointer; opacity: 0; }
+.vs-tab:hover .vs-tab-close, .vs-tab.active .vs-tab-close { opacity: 1; }
+.vs-tab-close:hover { background: var(--line-2); color: var(--fg); }
+.vs-tab-new { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 8px; border: 0; background: transparent; color: var(--muted); cursor: pointer; flex: 0 0 auto; }
+.vs-tab-new:hover { background: var(--panel); color: var(--fg); }
+
+.vs-tabbar-right { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
+.vs-credits { display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); }
+.vs-credits-bar { width: 54px; height: 5px; border-radius: 3px; background: var(--panel-2); overflow: hidden; }
+.vs-credits-bar span { display: block; height: 100%; border-radius: 3px; background: var(--brand-mark); }
+.vs-credits-n { font-size: var(--text-11); color: var(--fg); font-variant-numeric: tabular-nums; }
+.vs-credits-n em { color: var(--faint); font-style: normal; }
+.vs-tabbar-icon { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; border: 1px solid transparent; background: transparent; color: var(--muted); cursor: pointer; }
+.vs-tabbar-icon:hover { background: var(--panel); color: var(--fg); }
+
+.vs-profile-wrap { position: relative; }
+.vs-profile { width: 30px; height: 30px; border-radius: 50%; border: 0; background: transparent; padding: 0; cursor: pointer; display: grid; place-items: center; }
+.vs-profile-badge { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 11px; font-weight: var(--fw-semibold); }
+.vs-profile-badge.lg { width: 40px; height: 40px; font-size: var(--text-14); }
+.vs-profile-scrim { position: fixed; inset: 0; z-index: 48; }
+.vs-profile-menu { position: absolute; top: 38px; right: 0; z-index: 49; width: 280px; background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-lg); box-shadow: var(--elev-2); padding: 14px; animation: vs-rise var(--dur) var(--ease); }
+.vs-profile-head { display: flex; align-items: center; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.vs-profile-head > div { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.vs-profile-head b { font-size: var(--text-14); font-weight: var(--fw-semibold); }
+.vs-profile-head span { font-size: var(--text-12); color: var(--muted); }
+.vs-plan { font-size: 10px; font-weight: var(--fw-semibold); text-transform: uppercase; letter-spacing: 0.05em; padding: 3px 8px; border-radius: 6px; background: color-mix(in srgb, var(--brand-mark) 16%, var(--panel)); color: var(--brand-mark); }
+.vs-profile-credits { padding-top: 12px; }
+.vs-pc-top { display: flex; justify-content: space-between; font-size: var(--text-12); color: var(--muted); margin-bottom: 6px; font-variant-numeric: tabular-nums; }
+.vs-pc-bar { height: 6px; border-radius: 3px; background: var(--panel-2); overflow: hidden; }
+.vs-pc-bar span { display: block; height: 100%; border-radius: 3px; background: var(--brand-mark); }
+.vs-pc-usage { margin-top: 8px; font-size: var(--text-11); color: var(--faint); }
 
 /* --- Top bar (quiet) ---------------------------------------------------- */
 .vs-top {
