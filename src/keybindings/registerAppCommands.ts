@@ -61,6 +61,11 @@ function openTool(tool: string): void {
 	window.dispatchEvent(new CustomEvent('velocity:open-tool', { detail: { tool } }));
 }
 
+/** Switch the active workstream's view (Conversation / Work / Review). */
+function setView(view: string): void {
+	window.dispatchEvent(new CustomEvent('velocity:set-view', { detail: { view } }));
+}
+
 const EDITOR_WHEN = 'editorTextFocus';
 
 export function registerAppCommands(): void {
@@ -108,7 +113,11 @@ export function registerAppCommands(): void {
 		},
 
 		// --- Workbench: navigation / overlays ---
-		{ id: 'workbench.action.showCommands', title: 'Show All Commands', category: 'Workbench', run: () => fire('velocity:command-palette') },
+		{ id: 'velocity.view.conversation', title: 'View: Conversation', category: 'Go', run: () => setView('conversation') },
+			{ id: 'velocity.view.work', title: 'View: Work', category: 'Go', run: () => setView('artifact') },
+			{ id: 'velocity.view.review', title: 'View: Review', category: 'Go', run: () => setView('review') },
+			{ id: 'velocity.newWork', title: 'New Work', category: 'Workbench', run: () => fire('velocity:new-work') },
+			{ id: 'workbench.action.showCommands', title: 'Show All Commands', category: 'Workbench', run: () => fire('velocity:command-palette') },
 		{ id: 'workbench.action.quickOpen', title: 'Go to File…', category: 'Workbench', run: () => window.dispatchEvent(new CustomEvent('velocity:quickopen', { detail: { mode: 'all' } })) },
 		{ id: 'workbench.action.openRecent', title: 'Open Recent', category: 'Workbench', run: () => window.dispatchEvent(new CustomEvent('velocity:quickopen', { detail: { mode: 'recent' } })) },
 		{ id: 'workbench.actions.view.problems', title: 'Problems: TODO / FIXME Index', category: 'Workbench', run: () => fire('velocity:todos') },

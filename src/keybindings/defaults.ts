@@ -31,6 +31,11 @@ export const DEFAULT_KEYBINDINGS: DefaultBinding[] = [
 	{ key: 'mod+2', command: 'velocity.paneMode.browser' },
 	{ key: 'mod+3', command: 'velocity.paneMode.terminal' },
 	{ key: 'mod+4', command: 'velocity.paneMode.builder' },
+	// Workstream views + new work (keyboard-first navigation).
+	{ key: 'mod+alt+1', command: 'velocity.view.conversation' },
+	{ key: 'mod+alt+2', command: 'velocity.view.work' },
+	{ key: 'mod+alt+3', command: 'velocity.view.review' },
+	{ key: 'mod+shift+n', command: 'velocity.newWork' },
 
 	// --- File ---
 	{ key: 'mod+s', command: 'workbench.action.files.save', when: 'editorTextFocus' },

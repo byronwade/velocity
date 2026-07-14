@@ -478,8 +478,8 @@ function ArtifactView({ workstream, artifact, openStudios, onSelect, onCloseStud
 					)}
 					<span className="vw-spacer" />
 					<span className="vw-saved"><Check />Saved</span>
-					<button className="vw-icon-btn" title="Run"><Play /></button>
-					<button className="vw-icon-btn" title="More"><MoreHorizontal /></button>
+					<button className="vw-icon-btn" title="Run in Preview" aria-label="Run in Preview" onClick={() => onSelect('browser')}><Play /></button>
+					<button className="vw-icon-btn" title="More actions" aria-label="More actions" onClick={() => window.dispatchEvent(new Event('velocity:command-palette'))}><MoreHorizontal /></button>
 				</div>
 				<div className="vw-artifact-canvas">
 					{isEditor ? (
@@ -707,6 +707,26 @@ export function VelocityWorkbench() {
 		return () => window.removeEventListener('velocity:open-tool', onOpenTool);
 		// openTool only calls stable state setters, so binding once is correct.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
+
+	// Keyboard-first navigation: switch the active workstream's view, or start
+	// new work, from commands (⌘K) and their keybindings.
+	useEffect(() => {
+		function onSetView(event: Event) {
+			const view = (event as CustomEvent<{ view?: WorkbenchLayout }>).detail?.view;
+			if (view === 'conversation' || view === 'artifact' || view === 'review') setLayout(view);
+		}
+		function onNewWork() {
+			setActiveId(null);
+			setLayout('conversation');
+			if (window.innerWidth < 920) setSidebarOpen(false);
+		}
+		window.addEventListener('velocity:set-view', onSetView);
+		window.addEventListener('velocity:new-work', onNewWork);
+		return () => {
+			window.removeEventListener('velocity:set-view', onSetView);
+			window.removeEventListener('velocity:new-work', onNewWork);
+		};
 	}, []);
 
 	function selectWorkstream(id: string, preferredLayout?: WorkbenchLayout) {
