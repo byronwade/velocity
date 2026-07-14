@@ -587,8 +587,8 @@ function ReviewView({ workstream, onAccept, onSendBack }: ReviewProps) {
 					))}
 				</div>
 				<div className="vw-review-actions">
-					<button className="vw-secondary-action" onClick={onSendBack}><RotateCcw />Send back</button>
-					<button className="vw-primary-action" onClick={onAccept}><Check />Accept work</button>
+					<button className="btn btn-outline" onClick={onSendBack}><RotateCcw />Send back</button>
+					<button className="btn btn-primary" onClick={onAccept}><Check />Accept work</button>
 				</div>
 			</aside>
 			<section className="vw-review-main">
