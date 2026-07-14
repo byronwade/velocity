@@ -2,7 +2,23 @@ export type WorkstreamStatus = 'draft' | 'running' | 'needs-input' | 'review-rea
 export type WorkstreamPhase = 'brief' | 'plan' | 'implement' | 'verify';
 export type CriterionState = 'verified' | 'partial' | 'failed' | 'not-proven';
 export type WorkbenchLayout = 'conversation' | 'artifact' | 'review';
+
+/** The four surfaces always present in the Work view. */
 export type ArtifactKind = 'editor' | 'terminal' | 'browser' | 'design';
+
+/** Specialized studios that appear on demand — summoned from ⌘K or by the agent
+ *  when its work touches that tool — rather than living as permanent tabs. */
+export type StudioKind = 'builder' | 'database' | 'api' | 'observe' | 'test' | 'ship' | 'home' | 'mission' | 'library';
+
+/** Anything that can occupy the Work canvas. */
+export type ToolKind = ArtifactKind | StudioKind;
+
+export const CORE_ARTIFACTS: ArtifactKind[] = ['editor', 'terminal', 'browser', 'design'];
+export const STUDIO_KINDS: StudioKind[] = ['builder', 'database', 'api', 'observe', 'test', 'ship', 'home', 'mission', 'library'];
+
+export function isStudio(kind: ToolKind): kind is StudioKind {
+	return (STUDIO_KINDS as string[]).includes(kind);
+}
 
 export interface Criterion {
 	id: string;

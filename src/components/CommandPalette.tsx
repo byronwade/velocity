@@ -12,9 +12,7 @@ import { useServices } from '../services/container';
 import { useGraph } from '../services/graph';
 import { groupByKind, KIND_LABEL, type GraphKind, type GraphNode } from '../lib/graph';
 import { openFileInActivePane } from '../lib/openFile';
-import { COCKPIT_MODES } from '../lib/types';
 import { getEditorPrefs, setEditorPrefs } from '../services/editorPrefs';
-import { MODE_META, applyCockpitMode } from './ModeRail';
 import { Icon, type IconName } from '../lib/icons';
 import { allCommands } from '../keybindings/commands';
 import { bindingsForCommand } from '../keybindings/service';
@@ -91,19 +89,9 @@ export function CommandPalette() {
 			});
 		}
 
-		// 2) Jump to any cockpit mode / studio.
-		for (const m of COCKPIT_MODES) {
-			const meta = MODE_META[m];
-			out.push({
-				id: `mode-${m}`,
-				title: `Go to ${meta.name}`,
-				subtitle: 'Mode',
-				keywords: meta.name,
-				icon: meta.icon,
-				group: 'Go to',
-				run: () => applyCockpitMode(m),
-			});
-		}
+		// 2) Surfaces (Code, Terminal, Database, …) are registered as real
+		// commands (velocity.open.*) and flow in through the command list below,
+		// so the workstream shell — not the retired cockpit rail — drives them.
 
 		// 3) Open any object from the project graph.
 		for (const g of groupByKind(graph)) {

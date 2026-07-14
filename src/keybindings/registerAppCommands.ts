@@ -55,6 +55,12 @@ function fire(name: string): void {
 	window.dispatchEvent(new Event(name));
 }
 
+/** Summon a surface onto the Work canvas. The 4 core surfaces are always present;
+ *  studios (database, api, test, …) appear on demand. The workbench listens. */
+function openTool(tool: string): void {
+	window.dispatchEvent(new CustomEvent('velocity:open-tool', { detail: { tool } }));
+}
+
 const EDITOR_WHEN = 'editorTextFocus';
 
 export function registerAppCommands(): void {
@@ -119,11 +125,23 @@ export function registerAppCommands(): void {
 		{ id: 'workbench.action.toggleMaximizeEditor', title: 'Toggle Maximize Pane', category: 'View', run: () => useShell.getState().toggleMaximizePane(activePaneId()) },
 		{ id: 'workbench.action.selectTheme', title: 'Toggle Color Theme', category: 'Preferences', run: () => { const s = useShell.getState(); s.setTheme(s.theme === 'dark' ? 'light' : 'dark'); } },
 
-		// --- Pane modes ---
-		{ id: 'velocity.paneMode.editor', title: 'Switch Pane: Editor', category: 'View', run: () => useShell.getState().setPaneMode(activePaneId(), 'editor') },
-		{ id: 'velocity.paneMode.browser', title: 'Switch Pane: Browser', category: 'View', run: () => useShell.getState().setPaneMode(activePaneId(), 'browser') },
-		{ id: 'velocity.paneMode.terminal', title: 'Switch Pane: Terminal', category: 'View', run: () => useShell.getState().setPaneMode(activePaneId(), 'terminal') },
-		{ id: 'velocity.paneMode.builder', title: 'Switch Pane: Builder', category: 'View', run: () => useShell.getState().setPaneMode(activePaneId(), 'builder') },
+		// --- Work surfaces (⌘K) ---
+			// The 4 core surfaces stay on the Work canvas; the 9 studios appear on
+			// demand. ⌘1–4 keep the familiar surface switches; every tool is also
+			// summonable by name here (and, later, by the agent when it needs one).
+		{ id: 'velocity.paneMode.editor', title: 'Open Code Editor', category: 'Go to Tool', run: () => openTool('editor') },
+			{ id: 'velocity.open.design', title: 'Open Design Canvas', category: 'Go to Tool', run: () => openTool('design') },
+			{ id: 'velocity.open.database', title: 'Open Database Studio', category: 'Go to Tool', run: () => openTool('database') },
+			{ id: 'velocity.open.api', title: 'Open API Runner', category: 'Go to Tool', run: () => openTool('api') },
+			{ id: 'velocity.open.observe', title: 'Open Observability', category: 'Go to Tool', run: () => openTool('observe') },
+			{ id: 'velocity.open.test', title: 'Open Tests', category: 'Go to Tool', run: () => openTool('test') },
+			{ id: 'velocity.open.ship', title: 'Open Deployments', category: 'Go to Tool', run: () => openTool('ship') },
+			{ id: 'velocity.open.home', title: 'Open Project Home', category: 'Go to Tool', run: () => openTool('home') },
+			{ id: 'velocity.open.mission', title: 'Open Mission Control', category: 'Go to Tool', run: () => openTool('mission') },
+			{ id: 'velocity.open.library', title: 'Open Component Library', category: 'Go to Tool', run: () => openTool('library') },
+		{ id: 'velocity.paneMode.browser', title: 'Open Preview', category: 'Go to Tool', run: () => openTool('browser') },
+		{ id: 'velocity.paneMode.terminal', title: 'Open Terminal', category: 'Go to Tool', run: () => openTool('terminal') },
+		{ id: 'velocity.paneMode.builder', title: 'Open App Builder', category: 'Go to Tool', run: () => openTool('builder') },
 	];
 	registerCommands(cmds);
 }

@@ -369,6 +369,30 @@
 .vw-artifact-canvas { min-height: 0; flex: 1; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); box-shadow: var(--elev-1); }
 .vw-artifact-canvas > * { width: 100%; height: 100%; min-height: 0; }
 
+/* On-demand studio tabs — appended after the four core surfaces, dismissible. */
+.vw-tab-divider { width: 1px; height: 15px; margin: 0 5px; background: var(--line); }
+.vw-artifact-tabs .vw-studio-tab { padding-right: 5px; }
+.vw-tab-close { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; margin-left: 1px; border-radius: 5px; color: var(--faint); opacity: 0; transition: opacity var(--dur) var(--ease), background var(--dur) var(--ease), color var(--dur) var(--ease); }
+.vw-studio-tab:hover .vw-tab-close, .vw-studio-tab.active .vw-tab-close { opacity: 1; }
+.vw-tab-close:hover { background: color-mix(in srgb, var(--fg) 12%, transparent); color: var(--fg); }
+.vw-tab-close svg { width: 10px; height: 10px; }
+
+/* Code surface = collapsible file tree + editor pane. */
+.vw-code-surface { display: flex; min-width: 0; min-height: 0; }
+.vw-code-editor { flex: 1; min-width: 0; min-height: 0; }
+.vw-files { display: flex; width: 212px; min-height: 0; flex: none; flex-direction: column; border-right: 1px solid var(--line); background: color-mix(in srgb, var(--fg) 2%, var(--panel)); }
+.vw-files-head { flex: none; padding: 11px 14px 7px; color: var(--faint); font-size: 9px; font-weight: 650; letter-spacing: 0.07em; text-transform: uppercase; }
+.vw-files-tree { min-height: 0; flex: 1; overflow: auto; padding: 2px 8px 10px; }
+.vw-file-row { display: flex; width: 100%; height: 25px; align-items: center; gap: 6px; padding-right: 8px; border-radius: 7px; color: var(--muted); font-size: 12px; text-align: left; }
+.vw-file-row:hover { background: color-mix(in srgb, var(--fg) 5%, transparent); color: var(--fg); }
+.vw-file-row.file.active { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--fg); }
+.vw-file-row svg { width: 13px; height: 13px; flex: none; color: var(--faint); }
+.vw-file-row.dir svg { color: var(--muted); }
+.vw-file-caret { display: inline-flex; width: 12px; flex: none; margin: 0 -1px 0 -3px; }
+.vw-file-caret svg { width: 12px; height: 12px; }
+.vw-file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vw-icon-btn.on { color: var(--fg); background: color-mix(in srgb, var(--fg) 8%, transparent); }
+
 .vw-review-layout { display: grid; height: 100%; min-width: 0; grid-template-columns: 265px minmax(420px, 1fr) 300px; background: var(--shell); }
 .vw-criteria-panel, .vw-evidence-panel { display: flex; min-width: 0; min-height: 0; flex-direction: column; background: var(--panel); }
 .vw-criteria-panel { border-right: 1px solid var(--line); }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from 'react';
 import {
 	AlertCircle,
 	ArrowUp,
@@ -43,12 +43,31 @@ import {
 	Sun,
 	Terminal,
 	X,
+	Activity,
+	Database,
+	LayoutDashboard,
+	Library,
+	PanelLeft,
+	Rocket,
+	Wand2,
+	Waypoints,
+	Webhook,
 } from 'lucide-react';
 import { AgentThread } from '../modes/AgentsMode';
 import { EditorMode } from '../modes/EditorMode';
 import { TerminalMode } from '../modes/TerminalMode';
 import { BrowserMode } from '../modes/BrowserMode';
 import { DesignStudio } from '../modes/DesignStudio';
+import { BuilderMode } from '../modes/BuilderMode';
+import { DatabaseStudio } from '../modes/DatabaseStudio';
+import { ApiStudio } from '../modes/ApiStudio';
+import { ObservabilityStudio } from '../modes/ObservabilityStudio';
+import { TestStudio } from '../modes/TestStudio';
+import { DeploymentStudio } from '../modes/DeploymentStudio';
+import { HomeDashboard } from '../modes/HomeDashboard';
+import { MissionControl } from '../modes/MissionControl';
+import { LibraryMode } from '../modes/LibraryMode';
+import { WorkFiles } from './WorkFiles';
 import { ModelPicker } from '../components/ModelPicker';
 import { useAgentThread } from '../services/agent';
 import { useServices } from '../services/container';
@@ -56,16 +75,37 @@ import { listOllamaModels, pingOllama } from '../services/ollama';
 import { providerLabel, setAgentSettings, useAgentSettings } from '../services/agentSettings';
 import { useShell } from '../lib/store';
 import {
+	CORE_ARTIFACTS,
 	CRITERION_LABEL,
 	INITIAL_WORKSTREAMS,
+	isStudio,
 	STATUS_LABEL,
-	type ArtifactKind,
 	type Criterion,
 	type CriterionState,
+	type StudioKind,
+	type ToolKind,
 	type WorkbenchLayout,
 	type Workstream,
 	type WorkstreamStatus,
 } from './model';
+
+/** Label + icon + real component for every surface the Work canvas can host.
+ *  Studios are the existing mode components, reused verbatim — mounted on demand. */
+const SURFACES: Record<ToolKind, { label: string; icon: ReactNode; Content: ComponentType<{ paneId: string }> }> = {
+	editor: { label: 'Code', icon: <Code2 />, Content: EditorMode },
+	terminal: { label: 'Terminal', icon: <Terminal />, Content: TerminalMode },
+	browser: { label: 'Preview', icon: <Globe2 />, Content: BrowserMode },
+	design: { label: 'Design', icon: <Layers3 />, Content: DesignStudio },
+	builder: { label: 'Builder', icon: <Wand2 />, Content: BuilderMode },
+	database: { label: 'Database', icon: <Database />, Content: DatabaseStudio },
+	api: { label: 'API', icon: <Webhook />, Content: ApiStudio },
+	observe: { label: 'Observe', icon: <Activity />, Content: ObservabilityStudio },
+	test: { label: 'Test', icon: <FlaskConical />, Content: TestStudio },
+	ship: { label: 'Ship', icon: <Rocket />, Content: DeploymentStudio },
+	home: { label: 'Home', icon: <LayoutDashboard />, Content: HomeDashboard },
+	mission: { label: 'Mission', icon: <Waypoints />, Content: MissionControl },
+	library: { label: 'Library', icon: <Library />, Content: LibraryMode },
+};
 
 const STATUS_ORDER: WorkstreamStatus[] = ['needs-input', 'review-ready', 'blocked', 'running', 'draft', 'done'];
 
@@ -394,24 +434,21 @@ function ConversationView({ workstream, onReview, onArtifact }: { workstream: Wo
 	);
 }
 
-const ARTIFACTS: { id: ArtifactKind; label: string; icon: ReactNode }[] = [
-	{ id: 'editor', label: 'Code', icon: <Code2 /> },
-	{ id: 'terminal', label: 'Terminal', icon: <Terminal /> },
-	{ id: 'browser', label: 'Preview', icon: <Globe2 /> },
-	{ id: 'design', label: 'Design', icon: <Layers3 /> },
-];
-
-function ArtifactRenderer({ kind, paneId }: { kind: ArtifactKind; paneId: string }) {
-	if (kind === 'terminal') return <TerminalMode paneId={`${paneId}:terminal`} />;
-	if (kind === 'browser') return <BrowserMode paneId={`${paneId}:browser`} />;
-	if (kind === 'design') return <DesignStudio paneId={`${paneId}:design`} />;
-	return <EditorMode paneId={`${paneId}:editor`} />;
+interface ArtifactViewProps {
+	workstream: Workstream;
+	artifact: ToolKind;
+	openStudios: StudioKind[];
+	onSelect: (kind: ToolKind) => void;
+	onCloseStudio: (kind: StudioKind) => void;
 }
 
-function ArtifactView({ workstream }: { workstream: Workstream }) {
-	const [artifact, setArtifact] = useState<ArtifactKind>('editor');
+function ArtifactView({ workstream, artifact, openStudios, onSelect, onCloseStudio }: ArtifactViewProps) {
 	const [threadOpen, setThreadOpen] = useState(true);
+	const [filesOpen, setFilesOpen] = useState(true);
 	const brainKey = `work:${workstream.id}`;
+	const editorPaneId = `work:${workstream.id}:editor`;
+	const isEditor = artifact === 'editor';
+	const Surface = SURFACES[artifact].Content;
 	return (
 		<div className={`vw-artifact-layout${threadOpen ? ' thread-open' : ''}`}>
 			{threadOpen && (
@@ -425,14 +462,35 @@ function ArtifactView({ workstream }: { workstream: Workstream }) {
 				<div className="vw-artifact-bar">
 					{!threadOpen && <button className="vw-icon-btn" onClick={() => setThreadOpen(true)} title="Open conversation"><PanelRightOpen /></button>}
 					<div className="vw-artifact-tabs">
-						{ARTIFACTS.map((item) => <button key={item.id} className={artifact === item.id ? 'active' : ''} onClick={() => setArtifact(item.id)}>{item.icon}{item.label}</button>)}
+						{CORE_ARTIFACTS.map((id) => (
+							<button key={id} className={artifact === id ? 'active' : ''} onClick={() => onSelect(id)}>{SURFACES[id].icon}{SURFACES[id].label}</button>
+						))}
+						{openStudios.length > 0 && <span className="vw-tab-divider" aria-hidden />}
+						{openStudios.map((id) => (
+							<button key={id} className={`vw-studio-tab${artifact === id ? ' active' : ''}`} onClick={() => onSelect(id)}>
+								{SURFACES[id].icon}{SURFACES[id].label}
+								<span className="vw-tab-close" role="button" tabIndex={0} aria-label={`Close ${SURFACES[id].label}`} onClick={(event) => { event.stopPropagation(); onCloseStudio(id); }}><X /></span>
+							</button>
+						))}
 					</div>
+					{isEditor && (
+						<button className={`vw-icon-btn${filesOpen ? ' on' : ''}`} title={filesOpen ? 'Hide files' : 'Show files'} aria-pressed={filesOpen} onClick={() => setFilesOpen((value) => !value)}><PanelLeft /></button>
+					)}
 					<span className="vw-spacer" />
 					<span className="vw-saved"><Check />Saved</span>
 					<button className="vw-icon-btn" title="Run"><Play /></button>
 					<button className="vw-icon-btn" title="More"><MoreHorizontal /></button>
 				</div>
-				<div className="vw-artifact-canvas"><ArtifactRenderer kind={artifact} paneId={`work:${workstream.id}`} /></div>
+				<div className="vw-artifact-canvas">
+					{isEditor ? (
+						<div className={`vw-code-surface${filesOpen ? ' files-open' : ''}`}>
+							{filesOpen && <WorkFiles paneId={editorPaneId} />}
+							<div className="vw-code-editor"><EditorMode paneId={editorPaneId} /></div>
+						</div>
+					) : (
+						<Surface paneId={`work:${workstream.id}:${artifact}`} />
+					)}
+				</div>
 			</section>
 		</div>
 	);
@@ -604,6 +662,8 @@ export function VelocityWorkbench() {
 	const [workstreams, setWorkstreams] = useState<Workstream[]>(INITIAL_WORKSTREAMS);
 	const [activeId, setActiveId] = useState<string | null>('auth-passkeys');
 	const [layout, setLayout] = useState<WorkbenchLayout>('conversation');
+	const [artifact, setArtifact] = useState<ToolKind>('editor');
+	const [openStudios, setOpenStudios] = useState<StudioKind[]>([]);
 	const [sidebarOpen, setSidebarOpen] = useState(true);
 	const [search, setSearch] = useState('');
 	const [attentionOpen, setAttentionOpen] = useState(false);
@@ -625,6 +685,29 @@ export function VelocityWorkbench() {
 		const timer = window.setTimeout(() => setToast(null), 2600);
 		return () => window.clearTimeout(timer);
 	}, [toast]);
+
+	// Surface any tool on the Work canvas. The 4 core surfaces are always present;
+	// a studio is appended as a dismissible tab the first time it's opened. Fired
+	// by ⌘K commands today and, later, by the agent when its work touches a tool.
+	function openTool(tool: ToolKind) {
+		setArtifact(tool);
+		if (isStudio(tool)) setOpenStudios((list) => (list.includes(tool) ? list : [...list, tool]));
+		setLayout('artifact');
+	}
+	function closeStudio(tool: StudioKind) {
+		setOpenStudios((list) => list.filter((item) => item !== tool));
+		setArtifact((current) => (current === tool ? 'editor' : current));
+	}
+	useEffect(() => {
+		function onOpenTool(event: Event) {
+			const tool = (event as CustomEvent<{ tool?: ToolKind }>).detail?.tool;
+			if (tool && tool in SURFACES) openTool(tool);
+		}
+		window.addEventListener('velocity:open-tool', onOpenTool);
+		return () => window.removeEventListener('velocity:open-tool', onOpenTool);
+		// openTool only calls stable state setters, so binding once is correct.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
 	function selectWorkstream(id: string, preferredLayout?: WorkbenchLayout) {
 		setActiveId(id);
@@ -711,7 +794,7 @@ export function VelocityWorkbench() {
 				<div className="vw-body">
 					{!active && <EmptyConversation onCreate={createWorkstream} />}
 					{active && layout === 'conversation' && <ConversationView workstream={active} onReview={() => setLayout('review')} onArtifact={() => setLayout('artifact')} />}
-					{active && layout === 'artifact' && <ArtifactView workstream={active} />}
+					{active && layout === 'artifact' && <ArtifactView workstream={active} artifact={artifact} openStudios={openStudios} onSelect={openTool} onCloseStudio={closeStudio} />}
 					{active && layout === 'review' && <ReviewView workstream={active} onAccept={acceptWork} onSendBack={sendBack} />}
 				</div>
 			</main>
