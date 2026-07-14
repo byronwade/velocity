@@ -1,10 +1,11 @@
 # Velocity → Native SDK Monorepo — Migration Design
 
 **Date:** 2026-07-13
-**Status:** In progress — Stages 0–4, 5.1–5.3, 6, 7, and 8 (docs) shipped on branch
-`native-sdk-migration` (PR #3). Remaining: 5.4 (filesystem-backed files via SDK Cmd/Sub
-effects). Each shipped stage is render-verified via the automation harness; web + site build
-clean, desktop passes `native check --strict`.
+**Status:** Feature-complete — all stages (0–8, including 5.1–5.4) shipped on branch
+`native-sdk-migration` (PR #3). Each stage is render/behaviour-verified via the automation
+harness (widget snapshots, click-driven flows, and a real Save→disk round-trip); web + site
+build clean, desktop passes `native check --strict`, CI `check` is green. Remaining polish
+(non-blocking): activity-rail icons, ⌘K palette, boot-load files from disk on startup.
 **Owner:** Byron Wade
 
 ## Goal
