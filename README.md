@@ -1,72 +1,74 @@
 # Velocity
 
 Velocity is an open-source, local-first **autonomous software-development workspace**. Named AI
-coworkers continuously improve a shared project while the human directs, observes, compares,
-approves, redirects, or takes control. The center of the product is the living artifact—not a chat
-transcript.
-
-The product contract lives in [`VELOCITY_PRODUCT_VISION.md`](VELOCITY_PRODUCT_VISION.md). What's
-shipped and what's next live in the [**Roadmap**](ROADMAP.md) and [**Changelog**](CHANGELOG.md). The
-production-platform decision and complete VS Code, Cursor, and Figma research live in the
-[**Platform Research & Integration Roadmap**](docs/research/platform-roadmap/README.md).
+coworkers continuously build a shared project while you direct, observe, and approve — it is not a
+chat app. The full product thesis lives in [`VELOCITY_PRODUCT_VISION.md`](VELOCITY_PRODUCT_VISION.md);
+what's shipped and what's next live in the [**Roadmap**](ROADMAP.md) and the
+[**Changelog**](CHANGELOG.md).
 
 ![Velocity — a project on the Browser lens beside the IDE, with coworker presence markers and the floating dock](docs/screenshots/prototype/velocity-calm-light.png)
 
-## Product model
+## The prototype (Phase 1)
 
-Velocity treats software development as a shared, observable operating system for a project:
+A polished, deterministic, design-first prototype of the workspace lives in
+[`src/velocity/`](src/velocity/). It renders as the default app. Nothing there talks to a provider
+or the network — a `CoworkerRuntime` produces every state transition deterministically, so the
+demo is fully repeatable.
 
-- **The artifact is primary.** The running app, code, terminal, tests, data, infrastructure, and
-  deployment are the main interface. Language is used to set outcomes and constraints, not to create
-  a permanent chat-first workflow.
-- **Humans direct semantic outcomes.** A person can pin work to a route, component, flow, service,
-  schema, test, design-token family, or whole-product scope. Agents resolve that scope to source and
-  make the cross-project edits.
-- **Coworkers are persistent identities; work orders are bounded execution.** A coworker has a name,
-  role, policies, model preferences, scope, budget, and history. Actual execution happens through
-  isolated work orders that can change provider, model, or location.
-- **Stable and Candidate are explicit.** Concurrent work is isolated. A checkpoint with required
-  evidence—not a successful tool call or generated explanation—is the unit that may advance Stable.
-- **Evidence replaces status prose.** Diffs, tests, diagnostics, screenshots, recordings, browser
-  traces, console/network findings, accessibility results, risk, provenance, and rollback are
-  inspectable and source-backed.
-- **Figma-style collaboration without manual layer authoring.** Presence, Follow Mode, comments,
-  branch review, history, design systems, variables, inspection, and Dev Mode are translated into an
-  agent-first workflow. Humans define intent and approve outcomes; agents edit the real source.
-
-## The prototype
-
-A polished, deterministic, design-first prototype lives in [`src/velocity/`](src/velocity/) and
-renders as the default app. Its `CoworkerRuntime` produces repeatable state transitions without a
-provider, making the product model testable before the production orchestration is complete.
-
-- **Project tabs** — each tab is an isolated workspace with its own coworkers, missions, layout,
-  terminals, tools, comments, evidence, and review state.
-- **Split-pane stage** — each pane can show Browser, IDE, System, Data, Tests, or Verify; panes split
-  right/down, resize, close, and compare Stable, Live, Preview, or Branch.
-- **In-app browser** — Chrome-style navigation, history, bookmarks, zoom, device preview, and docked
-  prototype DevTools with Elements, Console, Network, and console evaluation for the live preview.
-- **IDE** — a workspace file tree beside a live CodeMirror editor with quick-open, file search, and
-  full find/replace.
-- **Comments are the work** — New Work arms placement; clicking the artifact creates a pin, captures
-  intent, and auto-assigns the best-fit coworker. Assignment, model, and staffing stay compact and
-  mostly automatic.
-- **Coworkers** — add, rename, pause, dismiss, restore, follow, inspect tools/subagents, and edit the
-  versioned `.velocity/coworkers/*.md` definitions.
-- **Docked developer tools** — Explorer, Terminal, Logs, Problems, Source, and Checkpoints in a
-  bottom panel. The current terminal is a deterministic workspace-filesystem shell; a native PTY
-  terminal is part of the production roadmap.
-- **Checkpoints, Evidence, and Decisions** — inspect changes, tests, traces, blast radius, rollback,
-  conflicts, and protected actions before advancing Stable.
-- **Follow Mode** — follow a coworker's current artifact, files, tools, latest checkpoint, and
-  activity history while keeping the stage calm.
-- **Ship** — prototype deployment flows for Vercel, Netlify, and Cloudflare.
-- **Consistent design system** — Geist type, v0 gray ramp, one radius/control/dialog/popover system,
-  light and dark themes, and no content-shifting transient UI.
+- **Project tabs** — a tab per project; each is a fully isolated workspace (its own coworkers,
+  missions, lens, terminals, and rails) with live status rings and drag-to-reorder. Settings can
+  switch the top row into an **Arc-style collapsible vertical rail**.
+- **Split-pane workspace (Cursor-style)** — every pane has a **contextual** toolbar with a **view
+  dropdown** (Browser · IDE · Terminal · System · Data · Tests · Verify) and split/close controls;
+  **drag any panel by its toolbar** onto another and a blue outline previews where it lands.
+  Dividers have obvious grab bars with snap points. The Browser pane adds a **compare selector**;
+  the IDE pane adds tree-toggle / file-search / find-replace. **Spatial presence markers** show
+  where each coworker is working; click one to Follow.
+- **The workspace is alive** — a deterministic heartbeat advances every working coworker; they land
+  checkpoints, pick up their next task, and a chime + desktop notification fires when work is ready
+  to review.
+- **Real work on local models** — create a work item with the **Local** model and the assigned
+  coworker actually does it via Ollama: real tool calls against the workspace, live action updates,
+  and a checkpoint whose diff is computed from actual file changes. No API key required.
+- **Real in-app browser** — IDE-style **browser tabs** (each with its own history), a compact
+  v0-style toolbar, device preview (desktop / tablet / mobile), and built-in **DevTools** (⌥⌘I):
+  Elements (the real parsed DOM), Console (live output + eval), and Network.
+- **Real IDE** — a file tree bound to the filesystem beside a live CodeMirror editor;
+  open/close and search the tree, full **find & replace**, and **⌘P quick-open**.
+- **Comments are the work** — directing work happens on the app, not in a chat. **New work** (⌘⇧N)
+  arms placement; click the app, describe the change, and it **auto-assigns** the best-fit coworker.
+  One compact popover holds who / which model / how many — all presets. Pins show the assigned
+  coworker's face; click away to dismiss any thread.
+- **Collaborative chat + activity sidebar** — togglable left of the tabs: humans and coworkers in
+  one thread (agents answer and riff off each other, `@Name` directs), pinned work appears inline,
+  and progress/completion events flow through automatically.
+- **Agents as files** — every coworker is mirrored to `.velocity/coworkers/<id>.md`; edit the file
+  in the IDE and the coworker updates live.
+- **The workspace speaks MCP** — fs / shell / browser exposed as Model Context Protocol tools
+  in-process; Settings → Integrations lists the live toolbelt.
+- **Coworkers** — add / rename / pause / dismiss / restore / follow; name and role read louder than
+  the model; a manager (Maya) with two reporting specialists, shown with live tools and subagents.
+- **Docked developer tools** — a bottom panel (Explorer · Terminal · Logs · Problems · Source ·
+  Checkpoints) that pushes the workspace up, with a real shell over the filesystem and a shell
+  chooser (bash / zsh / pwsh / node). The desktop build upgrades to a **true PTY terminal**
+  (ConPTY/openpty via portable-pty + xterm.js).
+- **Native desktop** — projects persist across restarts, native notifications, a system-tray
+  attention badge, a global summon shortcut (Ctrl/⌘⇧V), and remembered window state.
+- **Checkpoints, Evidence, and Decision Sheets** — review work with diffs, tests, traces, blast
+  radius, and rollback; resolve conflicts and protected actions with a recommended option.
+- **Follow Mode** — following a coworker opens a panel showing what they're doing now, their latest
+  checkpoint, and their activity history. Presence flags collapse to avatars and expand on
+  hover/follow, so the stage stays calm with many coworkers.
+- **Ship** — deploy to **Vercel, Netlify, or Cloudflare** (deploying → live with a production URL).
+- **Account & settings** — a Cursor-style settings modal (plan & usage, appearance, notifications,
+  coworkers, integrations), a cross-project **inbox**, light + dark themes, and a command palette
+  where every entry drives state.
+- Everything is designed against **v0.app's system** — **Geist** type on the v0 gray ramp, one
+  radius / control-height / dialog / popover spec across the app.
 
 Run it, then switch scenarios from the top-bar picker or the URL:
 
-```bash
+```
 npm install
 npm run dev            # http://localhost:5199
 
@@ -77,67 +79,107 @@ npm run dev            # http://localhost:5199
 /?scenario=approval    # a protected migration needs sign-off
 /?scenario=compare     # Stable vs Candidate, side by side
 /?scenario=shipping    # ready to ship
-/?scenario=devtools    # IDE lens + docked tools panel
-/?scenario=empty       # a blank project → describe the first work
+/?scenario=devtools    # the IDE lens + docked tools panel
+/?scenario=empty        # a blank project → describe the first work
 # also: parallel, verifyFail   ·   append &theme=dark for dark mode
 ```
 
-Keyboard: `1`–`6` switch lenses, `c` compare, `f` focus, `.` pause all, `⌘K` commands,
-`⌘P` quick-open, `⌘⇧N` new work, `⌘\` split right, `⌘J` terminal, and `Esc` closes the topmost
-surface.
+Keyboard: `1`–`7` switch views, `c` compare, `f` focus, `.` pause all, `⌘K` commands, `⌘P` go to
+file, `⌘⇧N` new work, `⌘\` split right, `⌘J` terminal, `Esc` closes the topmost surface.
 
-## Production direction
+<details>
+<summary>The earlier workstream environment</summary>
 
-The accepted architecture is to make **`byronwade/Velocity-IDE` the production Code-OSS platform**
-and port Velocity's differentiated product primitives into native workbench services, commands,
-editor inputs, views, context keys, policies, and review workflows. This repository remains the
-product specification, interaction laboratory, deterministic demo harness, and source of reusable
-product-domain concepts while that convergence proceeds.
+Before the autonomous-workspace redesign, Velocity was a single-workstream environment (a feature's
+conversation beside its editor, terminal, browser, and design canvas). That shell still lives in
+`src/workbench/` and the services it uses remain the real substrate the prototype's Code lens and
+tool drawer render.
 
-That decision avoids rebuilding the mature VS Code editor, language, terminal, task, debug, test,
-SCM, extension, remote-development, accessibility, notebook, and integrated-browser ecosystems in a
-parallel React/Tauri shell. It is recorded in
-[`docs/architecture/0001-platform-convergence.md`](docs/architecture/0001-platform-convergence.md).
+![Velocity — the earlier Work view](docs/screenshots/velocity-work.png)
 
-The first production vertical slice is intentionally end-to-end: open a real repository → create a
-mission → isolate a worktree and environment → edit with native services → run terminal/tasks/tests →
-exercise the candidate in a real browser → collect typed evidence → propose a checkpoint → compare
-Stable/Candidate → accept or revise → merge, deploy, and verify rollback.
+</details>
 
-## Research and planning
+## Product model
 
-The planning artifacts have distinct responsibilities:
+Every workstream has three views over the same context:
 
-| Artifact | Responsibility |
-| --- | --- |
-| [`VELOCITY_PRODUCT_VISION.md`](VELOCITY_PRODUCT_VISION.md) | Product thesis, vocabulary, interaction principles, and non-negotiable user experience. |
-| [`docs/architecture/0001-platform-convergence.md`](docs/architecture/0001-platform-convergence.md) | Accepted production-platform decision and migration boundary between this prototype and `Velocity-IDE`. |
-| [`ROADMAP.md`](ROADMAP.md) | Curated public epics with shipped/planned status and stable feature slugs. |
-| [`docs/research/platform-roadmap/README.md`](docs/research/platform-roadmap/README.md) | Full research corpus, architecture, security model, service/data design, phases P0–P8, quality gates, metrics, risks, and sources. |
-| [`docs/research/platform-roadmap/feature-backlog.csv`](docs/research/platform-roadmap/feature-backlog.csv) | Exhaustive 457-record capability inventory for issue generation, estimation, sequencing, and traceability. |
-| [`docs/superpowers/specs/2026-07-15-integrations-research.md`](docs/superpowers/specs/2026-07-15-integrations-research.md) | Focused implementation memo for the real runtime stack: Vercel AI, Tauri native capabilities, agent SDKs, MCP/ACP, worktrees, and native execution. |
-| [`CHANGELOG.md`](CHANGELOG.md) | User-facing history of shipped and materially changed features. |
+- **Conversation** — the outcome, work brief, agent thread, project scope, and a persistent composer.
+- **Work** — the conversation beside the tool the work needs. Four surfaces are always present —
+  the CodeMirror editor (with a file tree), terminal, live browser, and design canvas. Specialized
+  studios (database, API runner, tests, deployments, builder, observability, …) appear **on demand**
+  as dismissible tabs, summoned from the command palette instead of cluttering the shell. Changing
+  tools does not create a new project context.
+- **Review** — definition-of-done criteria beside behavior or diff evidence, with explicit accept
+  and send-back decisions.
 
-The root roadmap is intentionally concise. Detailed implementation specs should cite the relevant
-feature-backlog IDs, accepted architecture decision, phase, dependencies, and measurable exit gates.
+An attention inbox contains only blockers, requested decisions, and review-ready work. Activity,
+branch, worktree, budget, model, and evidence are progressive details instead of permanent chrome.
 
-## Prototype architecture
+![The Conversation view: work brief, agent thread, and a persistent composer](docs/screenshots/velocity-conversation.png)
 
-- **React 18 + TypeScript + Vite** for the prototype UI.
-- **Tauri 2** for desktop packaging and scoped native access.
-- **Zustand** for existing shell/editor state.
-- A service container in `src/services/container.tsx` for filesystem, editor, shell, browser, agent,
-  graph, preview, design, deployment, review, and collaboration seams.
-- `src/velocity/` for the autonomous-workspace shell and deterministic coworker runtime.
-- `src/workbench/` and `src/modes/` for the earlier workstream shell and reusable editor, terminal,
-  browser, design, database, API, test, observability, builder, mission, library, and ship surfaces.
-- A VS Code-style command and keybinding engine in `src/keybindings/`.
-- A sandboxed live preview built from workspace files with vendored React and sucrase.
+## Current prototype
 
-The prototype deliberately keeps some seams local or simulated: provider-backed continuous agents,
-durable orchestration, production credentials, real Git worktrees, native PTYs, Chromium/CDP browser
-sessions, networked collaboration, typed evidence persistence, and transactional Stable advancement.
-Those are roadmap work, not claims about the current demo.
+This phase focuses on making the desktop product flow tangible before building orchestration and
+persistence behind it.
+
+Implemented now:
+
+- A single top header: a workstream switcher (search, grouped list, new-work, account) in a
+  dropdown, the Conversation/Work/Review tabs, and an attention inbox — no sidebar or icon rail.
+- Conversation, Work, and Review layouts with a shared active workstream, filling the full canvas.
+- The full original toolset embedded in the new shell: editor, terminal, browser preview, design
+  canvas, and nine specialized studios — with the file tree, command palette, quick-open, and the
+  VS Code-style keyboard shortcut system all intact.
+- On-demand tools: the four core surfaces are always present; the other studios surface only when
+  summoned from the palette (⌘K → "Open …"), keeping the Work view focused.
+- Interactive criteria selection, behavior/diff switching, activity details, accept/send-back
+  transitions, light/dark appearance, and model settings.
+- A real Ollama model picker and streaming agent transport.
+- A Tauri 2 desktop scaffold with local Ollama access restricted to port `11434`.
+
+Prototype seams that are intentionally still local or seeded:
+
+- Workstream metadata, criteria, evidence, and activity examples are in-memory design fixtures.
+- New workstreams live for the current app session; durable project/worktree orchestration comes
+  next.
+- The browser build's filesystem and shell remain the existing in-memory implementations.
+
+## Ollama
+
+Start Ollama normally:
+
+```bash
+ollama serve
+```
+
+Open **Settings → Ollama**, test `http://localhost:11434`, and choose an installed model. In the
+Tauri app, requests use the native HTTP plugin, so Ollama does not need a permissive browser CORS
+setting. The desktop capability allowlist accepts only:
+
+- `http://localhost:11434/*`
+- `http://127.0.0.1:11434/*`
+
+When using the Vite browser preview instead of Tauri, allow only that development origin:
+
+```bash
+OLLAMA_ORIGINS='http://localhost:5199' ollama serve
+```
+
+## Architecture
+
+- **React 18 + TypeScript + Vite** for the workbench UI.
+- **Tauri 2** for the desktop shell and native local HTTP transport.
+- **Zustand** for existing editor and shell state.
+- A service container in `src/services/container.tsx` for filesystem, editor, terminal, browser,
+  agent, graph, preview, and design services.
+- The product shell in `src/workbench/VelocityWorkbench.tsx`, with its workstream model in
+  `src/workbench/model.ts` and the Code-surface file tree in `src/workbench/WorkFiles.tsx`. Every
+  surface (the four core tabs and the nine studios) is the existing `src/modes/*` component, mounted
+  per-workstream through a `SURFACES` registry; a studio is surfaced by dispatching a
+  `velocity:open-tool` event — from a ⌘K command today, and from the agent later.
+- The reusable services and tools underneath (editor, terminal, browser, design, graph, keybindings,
+  live preview) are documented in [`CLAUDE.md`](CLAUDE.md).
+- Desktop configuration and capabilities in `src-tauri/`.
 
 ## Develop
 
@@ -150,5 +192,5 @@ npm run desktop:dev     # Tauri development app
 npm run desktop:build   # native desktop bundle
 ```
 
-Tauri development and builds require the Rust toolchain and the platform prerequisites documented by
-Tauri. `?theme=light` and `?theme=dark` can force a theme for browser previews.
+Tauri development and builds require the Rust toolchain and the platform prerequisites documented
+by Tauri. `?theme=light` and `?theme=dark` can force a theme for browser previews.
