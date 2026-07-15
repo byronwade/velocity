@@ -17,6 +17,90 @@ import { BROWSER_HOME, isLocalUrl, normalizeUrl, titleFor } from '../services/br
 import { usePreview } from '../services/preview';
 import { startPage } from './browserStart';
 import { Icon } from '../lib/icons';
+import { Code2, X as XIcon } from 'lucide-react';
+
+type LogEntry = { level: string; text: string };
+
+// A tiny probe injected into the LIVE preview so the Console tab shows the
+// page's REAL console output. The iframe is `allow-scripts` only (no
+// same-origin), so it talks back via postMessage — the one channel that works.
+const CONSOLE_PROBE = `<script>(function(){
+	var send=function(l,a){try{parent.postMessage({type:'velocity-console',level:l,text:Array.prototype.map.call(a,function(x){try{return typeof x==='object'?JSON.stringify(x):String(x)}catch(e){return String(x)}}).join(' ')},'*')}catch(e){}};
+	['log','info','warn','error','debug'].forEach(function(m){var o=console[m];console[m]=function(){send(m,arguments);try{o.apply(console,arguments)}catch(e){}}});
+	window.addEventListener('error',function(e){send('error',[e.message]);});
+})();<\/script>`;
+
+function withConsoleProbe(html: string): string {
+	if (/<head[^>]*>/i.test(html)) return html.replace(/<head[^>]*>/i, (m) => m + CONSOLE_PROBE);
+	return CONSOLE_PROBE + html;
+}
+
+/** One node in the Elements tree — collapsible, derived from the real DOM. */
+function ElNode({ el, depth }: { el: Element; depth: number }) {
+	const [open, setOpen] = useState(depth < 3);
+	const tag = el.tagName.toLowerCase();
+	const attrs = Array.from(el.attributes).map((a) => ` ${a.name}="${a.value.length > 32 ? a.value.slice(0, 32) + '…' : a.value}"`).join('');
+	const kids = Array.from(el.childNodes).filter((n) => n.nodeType === 1 || (n.nodeType === 3 && (n.textContent || '').trim()));
+	const hasEl = kids.some((n) => n.nodeType === 1);
+	const pad = { paddingLeft: 8 + depth * 14 };
+	if (!hasEl) {
+		const txt = (el.textContent || '').trim();
+		return (
+			<div className="cr-dt-el" style={pad}>
+				<span className="cr-dt-tag">&lt;{tag}<i className="cr-dt-attr">{attrs}</i>&gt;</span>
+				{txt && <span className="cr-dt-txt">{txt.slice(0, 60)}</span>}
+				<span className="cr-dt-tag">&lt;/{tag}&gt;</span>
+			</div>
+		);
+	}
+	return (
+		<>
+			<div className="cr-dt-el row" style={pad} onClick={() => setOpen((o) => !o)}>
+				<span className="cr-dt-caret">{open ? '▾' : '▸'}</span>
+				<span className="cr-dt-tag">&lt;{tag}<i className="cr-dt-attr">{attrs}</i>&gt;</span>
+			</div>
+			{open && kids.map((n, i) => n.nodeType === 1
+				? <ElNode key={i} el={n as Element} depth={depth + 1} />
+				: <div key={i} className="cr-dt-el txt" style={{ paddingLeft: 8 + (depth + 1) * 14 }}>{(n.textContent || '').trim().slice(0, 80)}</div>)}
+			{open && <div className="cr-dt-el" style={pad}><span className="cr-dt-tag">&lt;/{tag}&gt;</span></div>}
+		</>
+	);
+}
+
+/** DevTools docked at the bottom of the browser: Elements · Console · Network.
+ *  Elements + Network are parsed from the real served HTML; Console is live. */
+function DevToolsPanel({ html, url, logs, onClose }: { html: string; url: string; logs: LogEntry[]; onClose: () => void }) {
+	const [tab, setTab] = useState<'elements' | 'console' | 'network'>('console');
+	const body = useMemo(() => (html ? new DOMParser().parseFromString(html, 'text/html') : null), [html]);
+	const network = useMemo(() => {
+		const rows: { name: string; type: string }[] = [{ name: url || 'document', type: 'document' }];
+		if (body) {
+			body.querySelectorAll('script[src]').forEach((s) => rows.push({ name: s.getAttribute('src') || '', type: 'script' }));
+			body.querySelectorAll('link[href]').forEach((l) => rows.push({ name: l.getAttribute('href') || '', type: 'stylesheet' }));
+			body.querySelectorAll('img[src]').forEach((i) => rows.push({ name: i.getAttribute('src') || '', type: 'img' }));
+		}
+		return rows;
+	}, [body, url]);
+	return (
+		<div className="cr-devtools">
+			<div className="cr-dt-tabs">
+				{(['elements', 'console', 'network'] as const).map((t) => (
+					<button key={t} className={`cr-dt-tab${tab === t ? ' on' : ''}`} onClick={() => setTab(t)}>{t[0].toUpperCase() + t.slice(1)}{t === 'console' && logs.length > 0 ? ` (${logs.length})` : ''}</button>
+				))}
+				<span className="cr-dt-sp" />
+				<button className="cr-dt-close" onClick={onClose} aria-label="Close DevTools"><XIcon size={14} /></button>
+			</div>
+			<div className="cr-dt-body">
+				{tab === 'elements' && (body ? <ElNode el={body.body} depth={0} /> : <div className="cr-dt-empty">Nothing to inspect on this page.</div>)}
+				{tab === 'console' && (logs.length ? logs.map((l, i) => <div key={i} className={`cr-dt-log ${l.level}`}>{l.text}</div>) : <div className="cr-dt-empty">Console output from the live preview shows here.</div>)}
+				{tab === 'network' && (
+					<table className="cr-dt-net"><thead><tr><th>Name</th><th>Type</th><th>Status</th></tr></thead>
+						<tbody>{network.map((r, i) => <tr key={i}><td title={r.name}>{r.name}</td><td>{r.type}</td><td className="ok">200</td></tr>)}</tbody></table>
+				)}
+			</div>
+		</div>
+	);
+}
 
 export function BrowserMode({ paneId }: { paneId: string }) {
 	const { browser } = useServices();
@@ -39,6 +123,10 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 	// open the page in a real tab, or try embedding anyway.
 	const [tryFrame, setTryFrame] = useState(false);
 	useEffect(() => { setTryFrame(false); }, [current]);
+	// DevTools (Elements / Console / Network) docked at the bottom of the pane.
+	const [devtools, setDevtools] = useState(false);
+	const [logs, setLogs] = useState<LogEntry[]>([]);
+	useEffect(() => { setLogs([]); }, [current, loadKey]);
 
 	// Dismiss the browser menu on outside click.
 	useEffect(() => {
@@ -98,6 +186,9 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 			if (d && d.type === 'velocity-nav' && typeof d.url === 'string' && /^https?:\/\//i.test(d.url)) {
 				navigate(d.url);
 			}
+			if (d && d.type === 'velocity-console' && typeof d.text === 'string') {
+				setLogs((l) => [...l.slice(-199), { level: String(d.level || 'log'), text: d.text }]);
+			}
 		}
 		// The agent's navigate_browser tool drives the browser via this event.
 		function onNav(e: Event) {
@@ -126,7 +217,11 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 		else if (mod && (k === '=' || k === '+')) { e.preventDefault(); zoomBy(0.1); }
 		else if (mod && k === '-') { e.preventDefault(); zoomBy(-0.1); }
 		else if (mod && k === '0') { e.preventDefault(); setZoom(1); }
+		else if (mod && e.altKey && (k === 'i' || k === 'j')) { e.preventDefault(); setDevtools((d) => !d); }
 	}
+
+	// The HTML currently framed — Elements + Network inspect this real markup.
+	const frameHtml = isLocal ? previewHtml : isStart ? startPage(theme) : '';
 
 	return (
 		<div className="mode browser chrome" onKeyDown={onKeyDown}>
@@ -149,6 +244,7 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 						<button className="cr-zoom" title="Reset zoom (⌘0)" aria-label="Reset zoom" onClick={() => setZoom(1)}>{Math.round(zoom * 100)}%</button>
 					)}
 					<button className="cr-icb" title="Home" aria-label="Home" onClick={() => navigate(BROWSER_HOME)}><Icon.home /></button>
+					<button className={`cr-icb${devtools ? ' on' : ''}`} title="DevTools (⌥⌘I)" aria-label="DevTools" aria-pressed={devtools} onClick={() => setDevtools((d) => !d)}><Code2 size={18} /></button>
 					{isExternal && <a className="cr-icb" title="Open in a new tab" aria-label="Open externally" href={current} target="_blank" rel="noreferrer noopener"><Icon.share /></a>}
 					<span className="cr-avatar" title="Profile" aria-hidden>B</span>
 					<div className="cr-menu-wrap">
@@ -193,7 +289,7 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 					<iframe key={`start-${theme}-${loadKey}`} className="frame" title="New tab" srcDoc={startPage(theme)} sandbox="allow-scripts" onLoad={() => setLoading(false)} />
 				)}
 				{isLocal && (
-					<iframe key={`local-${loadKey}-${previewHtml.length}`} className="frame" title="Live preview" srcDoc={previewHtml} sandbox="allow-scripts allow-forms" onLoad={() => setLoading(false)} />
+					<iframe key={`local-${loadKey}-${previewHtml.length}`} className="frame" title="Live preview" srcDoc={withConsoleProbe(previewHtml)} sandbox="allow-scripts allow-forms" onLoad={() => setLoading(false)} />
 				)}
 				{isExternal && !tryFrame && (
 					<div className="cr-blocked">
@@ -218,6 +314,7 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 					/>
 				)}
 			</div>
+			{devtools && <DevToolsPanel html={frameHtml} url={isStart ? 'about:newtab' : current} logs={logs} onClose={() => setDevtools(false)} />}
 		</div>
 	);
 }

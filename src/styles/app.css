@@ -512,6 +512,35 @@ svg { display: block; }
 .browser-view { flex: 1; min-height: 0; background: #fff; position: relative; }
 .browser-view .frame { width: 100%; height: 100%; border: 0; display: block; }
 
+/* DevTools — docked at the bottom of the browser pane. */
+.cr-icb.on { background: var(--cr-hover); color: var(--cr-ring); }
+.cr-devtools { flex: 0 0 40%; min-height: 140px; max-height: 60%; display: flex; flex-direction: column; border-top: 1px solid var(--line); background: var(--panel); color: var(--fg); font-family: var(--mono); font-size: var(--text-12); }
+.cr-dt-tabs { display: flex; align-items: center; gap: 2px; height: 32px; flex: 0 0 32px; padding: 0 6px; border-bottom: 1px solid var(--line); font-family: var(--sans); }
+.cr-dt-tab { height: 24px; padding: 0 10px; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); border-radius: var(--r-sm); cursor: pointer; }
+.cr-dt-tab:hover { color: var(--fg); background: var(--panel-2); }
+.cr-dt-tab.on { color: var(--fg); background: var(--panel-2); }
+.cr-dt-sp { flex: 1; }
+.cr-dt-close { width: 24px; height: 24px; display: grid; place-items: center; border: 0; background: transparent; color: var(--muted); border-radius: var(--r-sm); cursor: pointer; }
+.cr-dt-close:hover { background: var(--panel-2); color: var(--fg); }
+.cr-dt-body { flex: 1; overflow: auto; padding: 6px 4px; }
+.cr-dt-empty { padding: 20px; color: var(--faint); font-family: var(--sans); font-size: var(--text-13); text-align: center; }
+.cr-dt-el { line-height: 1.6; white-space: nowrap; color: var(--muted); }
+.cr-dt-el.row { cursor: pointer; }
+.cr-dt-el.row:hover { background: var(--panel-2); }
+.cr-dt-caret { display: inline-block; width: 12px; color: var(--faint); }
+.cr-dt-tag { color: var(--f); }
+.cr-dt-attr { color: var(--n); font-style: normal; }
+.cr-dt-txt { color: var(--fg); margin: 0 4px; }
+.cr-dt-el.txt { color: var(--fg); padding-right: 8px; }
+.cr-dt-log { padding: 4px 8px; border-bottom: 1px solid var(--line); white-space: pre-wrap; word-break: break-word; color: var(--fg); }
+.cr-dt-log.warn { color: var(--warn); background: color-mix(in srgb, var(--warn) 8%, transparent); }
+.cr-dt-log.error { color: var(--danger); background: color-mix(in srgb, var(--danger) 8%, transparent); }
+.cr-dt-log.debug, .cr-dt-log.info { color: var(--muted); }
+.cr-dt-net { width: 100%; border-collapse: collapse; font-size: var(--text-12); }
+.cr-dt-net th { text-align: left; font-family: var(--sans); font-weight: var(--fw-medium); color: var(--faint); padding: 5px 10px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--panel); }
+.cr-dt-net td { padding: 5px 10px; border-bottom: 1px solid var(--line); color: var(--muted); max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cr-dt-net td.ok { color: var(--good); }
+
 .web { width: 100%; height: 100%; overflow: auto; background: var(--panel); }
 .web .hero { padding: 52px 40px; text-align: center; background: linear-gradient(180deg, color-mix(in srgb, var(--brand) 13%, transparent), transparent); }
 .web .hero h1 { font-size: 34px; letter-spacing: -0.03em; margin: 0 0 12px; font-weight: 600; }
