@@ -255,7 +255,7 @@ function FollowPanel() {
 				</div>
 				{cw.scope && <div className="vs-cw-scope"><GitBranch size={11} />{cw.scope}</div>}
 				<div className="vs-follow-sec">Doing now</div>
-				<div className="vs-follow-live"><span className="vs-follow-pulse" style={{ background: cw.color }} />Editing on the <b>{cw.marker?.lens ?? 'preview'}</b> lens — {cw.marker?.label ?? cw.action}</div>
+				<div className="vs-follow-live"><span className="vs-follow-pulse" style={{ background: cw.color }} />Editing on the <b>{cw.marker?.lens ?? 'browser'}</b> lens — {cw.marker?.label ?? cw.action}</div>
 				{checkpoint && (
 					<>
 						<div className="vs-follow-sec">Latest checkpoint</div>
@@ -389,21 +389,45 @@ function CoworkerCard({ c, manager }: { c: Coworker; manager?: boolean }) {
 	);
 }
 
+const ROLE_LABEL2: Record<CollabRole, string> = { owner: 'Owner', editor: 'Editor', viewer: 'Viewer' };
+
+/** Unified "Workers" — AI coworkers and human teammates on the same project. */
 function CoworkersPanel() {
 	const state = useWorkspace();
 	const [name, setName] = useState('');
 	const [role, setRole] = useState('Frontend');
+	const [email, setEmail] = useState('');
+	const [invRole, setInvRole] = useState<CollabRole>('editor');
+	const validEmail = /.+@.+\..+/.test(email);
 	return (
 		<>
-			<header className="vs-rail-head"><Users size={15} /><h3>Coworkers</h3><span className="vs-count">{state.coworkers.length}</span>
+			<header className="vs-rail-head"><Users size={15} /><h3>Workers</h3><span className="vs-count">{state.coworkers.length + state.collaborators.length}</span>
 				<button className="vs-icon" onClick={() => runtime.closeRight()} aria-label="Close"><X size={16} /></button></header>
 			<div className="vs-rail-body">
+				<div className="vs-worker-sec">Coworkers · AI</div>
 				{state.coworkers.map((c) => <CoworkerCard key={c.id} c={c} manager={c.specialists.length > 0} />)}
 				<div className="vs-addcw">
 					<input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" />
 					<input value={role} onChange={(e) => setRole(e.target.value)} placeholder="Role" />
 					<button className="vs-app-primary sm" disabled={!name.trim()} onClick={() => { runtime.addCoworker(name.trim(), role.trim() || 'Contributor'); setName(''); }}><Plus size={13} />Add</button>
 				</div>
+
+				<div className="vs-worker-sec">People</div>
+				{state.collaborators.map((c) => (
+					<div key={c.id} className="vs-person">
+						<span className="vs-avatar" style={{ background: c.color }}>{c.initials}</span>
+						<div className="vs-person-id"><b>{c.name}{c.id === 'you' && ' (you)'}</b><span>{c.email}</span></div>
+						{c.status === 'invited' ? <span className="vs-tag">invited</span> : c.id !== 'you' && <span className="vs-collab-live" title="Active now" />}
+						<span className="vs-person-role">{ROLE_LABEL2[c.role]}</span>
+						{c.role !== 'owner' && <button className="vs-icon sm" onClick={() => runtime.removeCollaborator(c.id)} aria-label={`Remove ${c.name}`}><X size={13} /></button>}
+					</div>
+				))}
+				<div className="vs-invite">
+					<input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@company.com" onKeyDown={(e) => { if (e.key === 'Enter' && validEmail) { runtime.inviteCollaborator(email, invRole); setEmail(''); } }} />
+					<select value={invRole} onChange={(e) => setInvRole(e.target.value as CollabRole)}><option value="editor">Editor</option><option value="viewer">Viewer</option></select>
+					<button className="vs-app-primary sm" disabled={!validEmail} onClick={() => { runtime.inviteCollaborator(email, invRole); setEmail(''); }}><UserPlus size={13} />Invite</button>
+				</div>
+
 				{state.archived.length > 0 && (
 					<div className="vs-archive">
 						<div className="vs-archive-head">Archived</div>
@@ -596,7 +620,7 @@ export function CommandBar() {
 		return [
 			{ id: 'mission', label: 'New mission', hint: '⌘⇧N', run: () => runtime.openMissionSheet(true) },
 			{ id: 'coworkers', label: 'Open coworkers', run: () => runtime.openRight('coworkers') },
-			{ id: 'share', label: 'Share & invite people', run: () => runtime.openShare(true) },
+			{ id: 'share', label: 'Workers — invite people & coworkers', run: () => runtime.openRight('coworkers') },
 			{ id: 'comment', label: 'Add a comment', hint: 'click stage', run: () => runtime.toggleCommentMode() },
 			{ id: 'activity', label: 'Open activity feed', run: () => runtime.openRight('activity') },
 			{ id: 'checkpoint', label: 'Review latest checkpoint', run: () => runtime.openRight('checkpoint') },

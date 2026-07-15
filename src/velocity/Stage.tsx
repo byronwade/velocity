@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import {
 	Play, Check, X, ShieldCheck, Sparkles, ArrowRight, Server, Database, Clock, Gauge, Circle,
-	MessageSquare, Send, CheckCheck, Monitor, Code2, CheckCircle2, ChevronDown, SplitSquareHorizontal, SplitSquareVertical,
+	MessageSquare, Send, CheckCheck, Code2, CheckCircle2, ChevronDown, SplitSquareHorizontal, SplitSquareVertical,
 	Globe, FlaskConical, ChevronLeft, ChevronRight, RotateCw, Lock, GitCompare,
 } from 'lucide-react';
 import { EditorMode } from '../modes/EditorMode';
 import { useWorkspace, runtime } from './useWorkspace';
 import { LENS_META, COMPARE_LABEL } from './model';
 import { leafIds } from './panes';
+import { ContextMenu, useContextMenu } from './ContextMenu';
 import type { Collaborator, Comment, CompareSource, Coworker, Lens, PaneLeaf, PaneNode, PaneSplit } from './model';
 
 const ARTIFACT_ACTIONS = ['Improve', 'Fix', 'Rebuild', 'Investigate', 'Explain', 'Assign', 'Compare', 'Test'] as const;
@@ -269,9 +270,8 @@ function TestsLens() {
 	);
 }
 
-function renderLens(lens: Lens, candidate: boolean) {
+function renderLens(lens: Lens) {
 	switch (lens) {
-		case 'preview': return <PreviewLens candidate={candidate} />;
 		case 'code': return <div className="vs-code"><EditorMode paneId="velocity:stage:editor" /></div>;
 		case 'browser': return <BrowserLens />;
 		case 'system': return <SystemLens />;
@@ -434,9 +434,9 @@ function StageOverlay({ lens }: { lens: Lens }) {
 // --------------------------------------------------------------------------
 // Split-pane workspace — each pane picks its own view and can split / close.
 // --------------------------------------------------------------------------
-const LENS_ORDER: Lens[] = ['preview', 'code', 'browser', 'system', 'data', 'tests', 'verify'];
-const LENS_ICON: Record<Lens, typeof Monitor> = {
-	preview: Monitor, code: Code2, browser: Globe, system: Server, data: Database, tests: FlaskConical, verify: CheckCircle2,
+const LENS_ORDER: Lens[] = ['browser', 'code', 'system', 'data', 'tests', 'verify'];
+const LENS_ICON: Record<Lens, typeof Globe> = {
+	browser: Globe, code: Code2, system: Server, data: Database, tests: FlaskConical, verify: CheckCircle2,
 };
 const COMPARE_ORDER: CompareSource[] = ['none', 'stable', 'live', 'preview', 'branch'];
 
@@ -468,9 +468,19 @@ function CompareMenu({ leaf }: { leaf: PaneLeaf }) {
 /** Compact, adaptive per-pane toolbar (Framer-style) — view switcher + splits. */
 function PaneToolbar({ leaf, single }: { leaf: PaneLeaf; single: boolean }) {
 	const [menu, setMenu] = useState(false);
+	const ctx = useContextMenu();
 	const Icon = LENS_ICON[leaf.view];
 	return (
-		<div className="vs-pane-bar">
+		<div className="vs-pane-bar" onContextMenu={ctx.onContextMenu}>
+			{ctx.at && (
+				<ContextMenu x={ctx.at.x} y={ctx.at.y} onClose={ctx.close} items={[
+					{ label: 'Split right', icon: <SplitSquareHorizontal size={14} />, onClick: () => runtime.splitPane(leaf.id, 'row') },
+					{ label: 'Split down', icon: <SplitSquareVertical size={14} />, onClick: () => runtime.splitPane(leaf.id, 'col') },
+					...(leaf.view === 'browser' ? [{ label: 'Compare with Stable', icon: <GitCompare size={14} />, onClick: () => runtime.setPaneCompare(leaf.id, leaf.compareSource === 'stable' ? 'none' : 'stable') }] : []),
+					{ separator: true },
+					{ label: 'Close pane', icon: <X size={14} />, danger: true, disabled: single, onClick: () => runtime.closePane(leaf.id) },
+				]} />
+			)}
 			<div className="vs-pane-left">
 				<div className="vs-pane-view">
 					<button className="vs-pane-viewbtn" onClick={(e) => { e.stopPropagation(); setMenu((v) => !v); }} title="Switch view">
@@ -492,7 +502,7 @@ function PaneToolbar({ leaf, single }: { leaf: PaneLeaf; single: boolean }) {
 						</>
 					)}
 				</div>
-				{leaf.view === 'preview' && <CompareMenu leaf={leaf} />}
+				{leaf.view === 'browser' && <CompareMenu leaf={leaf} />}
 			</div>
 			<div className="vs-pane-tools">
 				<button className="vs-pane-tool" title="Split right" onClick={(e) => { e.stopPropagation(); runtime.splitPane(leaf.id, 'row'); }}><SplitSquareHorizontal size={14} /></button>
@@ -506,30 +516,35 @@ function PaneToolbar({ leaf, single }: { leaf: PaneLeaf; single: boolean }) {
 function Pane({ leaf, single }: { leaf: PaneLeaf; single: boolean }) {
 	const state = useWorkspace();
 	const active = state.layout.activePaneId === leaf.id;
-	const candidateHealthy = state.candidate.health === 'healthy';
-	const comparing = leaf.view === 'preview' && !!leaf.compareSource && leaf.compareSource !== 'none';
+	const comparing = leaf.view === 'browser' && !!leaf.compareSource && leaf.compareSource !== 'none';
 	return (
 		<section className={`vs-pane${active ? ' active' : ''}${state.layout.commentMode ? ' commenting' : ''}`} onMouseDown={() => runtime.focusPane(leaf.id)}>
 			<PaneToolbar leaf={leaf} single={single} />
 			<div className="vs-pane-body">
-				{comparing ? <PreviewCompare source={leaf.compareSource!} /> : renderLens(leaf.view, candidateHealthy)}
+				{comparing ? <PreviewCompare source={leaf.compareSource!} /> : renderLens(leaf.view)}
 				{!comparing && <StageOverlay lens={leaf.view} />}
 			</div>
 		</section>
 	);
 }
 
+const SNAP_POINTS = [0.25, 1 / 3, 0.5, 2 / 3, 0.75];
+
 function SplitView({ split }: { split: PaneSplit }) {
 	const ref = useRef<HTMLDivElement>(null);
 	const dragging = useRef(false);
+	const [snapped, setSnapped] = useState(false);
 	useEffect(() => {
 		const move = (e: MouseEvent) => {
 			if (!dragging.current || !ref.current) return;
 			const r = ref.current.getBoundingClientRect();
-			const ratio = split.dir === 'row' ? (e.clientX - r.left) / r.width : (e.clientY - r.top) / r.height;
+			let ratio = split.dir === 'row' ? (e.clientX - r.left) / r.width : (e.clientY - r.top) / r.height;
+			// Snap to quarters / thirds / center when close.
+			const near = SNAP_POINTS.find((s) => Math.abs(s - ratio) < 0.022);
+			if (near !== undefined) { ratio = near; setSnapped(true); } else setSnapped(false);
 			runtime.setPaneRatio(split.id, ratio);
 		};
-		const up = () => { dragging.current = false; document.body.style.userSelect = ''; document.body.style.cursor = ''; };
+		const up = () => { dragging.current = false; setSnapped(false); document.body.style.userSelect = ''; document.body.style.cursor = ''; };
 		window.addEventListener('mousemove', move);
 		window.addEventListener('mouseup', up);
 		return () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
@@ -538,7 +553,7 @@ function SplitView({ split }: { split: PaneSplit }) {
 	return (
 		<div ref={ref} className={`vs-split ${split.dir}`}>
 			<div className="vs-split-slot" style={{ flex: `${split.ratio} 1 0` }}><PaneNodeView node={split.a} single={false} /></div>
-			<div className={`vs-split-divider ${split.dir}`} onMouseDown={startDrag} />
+			<div className={`vs-split-divider ${split.dir}${snapped ? ' snapped' : ''}`} onMouseDown={startDrag} onDoubleClick={() => runtime.setPaneRatio(split.id, 0.5)} title="Drag to resize · double-click to center" />
 			<div className="vs-split-slot" style={{ flex: `${1 - split.ratio} 1 0` }}><PaneNodeView node={split.b} single={false} /></div>
 		</div>
 	);

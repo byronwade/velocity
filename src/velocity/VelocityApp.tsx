@@ -4,10 +4,10 @@ import type { Lens } from './model';
 import { TabBar } from './TabBar';
 import { Stage } from './Stage';
 import { Dock } from './Dock';
-import { MissionSheet, RightRail, ToolDrawer, CommandBar, ShareSheet, ShipSheet } from './surfaces';
+import { MissionSheet, RightRail, ToolDrawer, CommandBar, ShipSheet } from './surfaces';
 import './velocity.css';
 
-const LENS_ORDER: Lens[] = ['preview', 'code', 'browser', 'system', 'data', 'tests', 'verify'];
+const LENS_ORDER: Lens[] = ['browser', 'code', 'system', 'data', 'tests', 'verify'];
 
 function Confetti() {
 	const state = useWorkspace();
@@ -61,7 +61,6 @@ export function VelocityApp() {
 				<RightRail />
 				<Dock />
 				<MissionSheet />
-				<ShareSheet />
 				<ShipSheet />
 				<CommandBar />
 				<Toast />

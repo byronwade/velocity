@@ -17,16 +17,16 @@ function budget(spent: number, total: number, unit: Budget['unit'] = '$'): Budge
 
 const project = { name: 'Aurora', repo: 'aurora/storefront', branch: 'main', environment: 'Preview' };
 
-function baseLayout(lens: Lens = 'preview', leftCompare?: CompareSource) {
-	// The app is always the left pane; the scenario's focus lens sits on the right.
-	const right: Lens = lens === 'preview' ? 'code' : lens;
+function baseLayout(lens: Lens = 'browser', leftCompare?: CompareSource) {
+	// The app is always the left (Browser) pane; the scenario's focus lens is on the right.
+	const right: Lens = lens === 'browser' ? 'code' : lens;
 	const panes = {
 		kind: 'split' as const, id: 's-root', dir: 'row' as const, ratio: 0.6,
-		a: { kind: 'leaf' as const, id: 'p-left', view: 'preview' as Lens, compareSource: leftCompare },
+		a: { kind: 'leaf' as const, id: 'p-left', view: 'browser' as Lens, compareSource: leftCompare },
 		b: { kind: 'leaf' as const, id: 'p-right', view: right },
 	};
 	return {
-		lens: 'preview' as Lens, panes, activePaneId: 'p-left',
+		lens: 'browser' as Lens, panes, activePaneId: 'p-left',
 		openTool: null, dockExpanded: false, focusMode: false, followingId: null,
 		shipOpen: false, rightSurface: 'none' as const, activeCheckpointId: null,
 		activeDecisionId: null, missionSheetOpen: false, commandOpen: false,
@@ -40,7 +40,7 @@ const CO = { you: '#6f74c9', nadia: '#c96f9a', dev: '#e0873d' };
 function defaultCollaborators(): Collaborator[] {
 	return [
 		{ id: 'you', name: 'You', initials: 'BW', color: CO.you, email: 'byron@aurora.dev', role: 'owner', status: 'active', cursor: null },
-		{ id: 'nadia', name: 'Nadia Rao', initials: 'NR', color: CO.nadia, email: 'nadia@aurora.dev', role: 'editor', status: 'active', cursor: { lens: 'preview', x: 68, y: 34 } },
+		{ id: 'nadia', name: 'Nadia Rao', initials: 'NR', color: CO.nadia, email: 'nadia@aurora.dev', role: 'editor', status: 'active', cursor: { lens: 'browser', x: 68, y: 34 } },
 		{ id: 'devon', name: 'Devon Hale', initials: 'DH', color: CO.dev, email: 'devon@aurora.dev', role: 'viewer', status: 'active', cursor: { lens: 'code', x: 40, y: 30 } },
 	];
 }
@@ -48,13 +48,13 @@ function defaultCollaborators(): Collaborator[] {
 function baseComments(): Comment[] {
 	return [
 		{
-			id: 'cm1', lens: 'preview', x: 40, y: 66, authorName: 'Nadia Rao', authorColor: CO.nadia,
+			id: 'cm1', lens: 'browser', x: 40, y: 66, authorName: 'Nadia Rao', authorColor: CO.nadia,
 			text: 'The passkey button should read “Continue with a passkey” — and can we soften the border?',
 			createdLabel: '4m', resolved: false, assignedCoworkerId: 'theo',
 			replies: [{ authorName: 'Theo', authorColor: '#4a8dd1', text: 'On it — adjusting the label and border weight now.', tsLabel: '3m', fromCoworker: true }],
 		},
 		{
-			id: 'cm2', lens: 'preview', x: 12, y: 30, authorName: 'You', authorColor: CO.you,
+			id: 'cm2', lens: 'browser', x: 12, y: 30, authorName: 'You', authorColor: CO.you,
 			text: 'Hero headline could be one line on mobile. Worth a pass?',
 			createdLabel: '2m', resolved: false, assignedCoworkerId: null, replies: [],
 		},
@@ -112,7 +112,7 @@ function makeCoworkers(): Coworker[] {
 	return [
 		coworker({ id: 'maya', name: 'Maya', role: 'Design Lead', department: 'Design', initials: 'MA', color: C.maya,
 			action: 'Refining onboarding layout', state: 'active', scope: 'onboarding · /checkout/new',
-			marker: { lens: 'preview', x: 29, y: 55, label: 'Onboarding' }, latestCheckpointId: 'k1',
+			marker: { lens: 'browser', x: 29, y: 55, label: 'Onboarding' }, latestCheckpointId: 'k1',
 			specialists: [
 				{ id: 'sp1', name: 'Responsive', role: 'Layout Specialist', state: 'active', action: 'Adapting to mobile breakpoints',
 					workOrder: { objective: 'Make onboarding responsive 360–1440', scope: 'src/checkout/Onboarding.tsx', acceptanceCriteria: ['No overflow at 360px', 'Tap targets ≥ 44px'], maxCycles: 6, budget: budget(0.4, 2), allowedTools: ['editor', 'preview'], stopConditions: ['criteria met', 'budget'] } },
@@ -121,7 +121,7 @@ function makeCoworkers(): Coworker[] {
 			] }),
 		coworker({ id: 'theo', name: 'Theo', role: 'Frontend', department: 'Engineering', initials: 'TH', color: C.theo,
 			action: 'Wiring passkey button state', state: 'active', scope: 'src/auth/PasskeyButton.tsx',
-			marker: { lens: 'preview', x: 40, y: 66, label: 'Passkey' } }),
+			marker: { lens: 'browser', x: 40, y: 66, label: 'Passkey' } }),
 		coworker({ id: 'rowan', name: 'Rowan', role: 'Backend', department: 'Engineering', initials: 'RO', color: C.rowan,
 			action: 'Waiting for the auth contract', state: 'waiting', waitingOn: 'auth contract from Theo',
 			scope: 'services/session', marker: { lens: 'system', x: 62, y: 44, label: '/session' }, autonomy: 'guarded' }),
@@ -155,7 +155,7 @@ const builders: Record<string, Builder> = {
 		coworkers: makeCoworkers().map((c) => ({ ...c, state: c.id === 'iris' ? 'verifying' : 'active' })),
 		archived: [], events: baseEvents(), checkpoints: baseCheckpoints(), decisions: [],
 		candidate: { health: 'healthy', checks: { passed: 12, total: 12 }, changedRegions: ['onboarding', 'passkey'] },
-		paused: false, layout: baseLayout('preview'),
+		paused: false, layout: baseLayout(),
 	}),
 
 	empty: () => ({
@@ -163,7 +163,7 @@ const builders: Record<string, Builder> = {
 		project: { ...project, name: 'Untitled', repo: 'you/new-project' }, mission: null, missions: [],
 		coworkers: [], archived: [], events: [], checkpoints: [], decisions: [],
 		candidate: { health: 'healthy', checks: { passed: 0, total: 0 }, changedRegions: [] },
-		paused: false, layout: { ...baseLayout('preview'), missionSheetOpen: false },
+		paused: false, layout: { ...baseLayout(), missionSheetOpen: false },
 	}),
 
 	parallel: () => ({
@@ -171,7 +171,7 @@ const builders: Record<string, Builder> = {
 		project, mission: mission(), missions: [mission()], coworkers: makeCoworkers(),
 		archived: [], events: baseEvents(), checkpoints: baseCheckpoints(), decisions: [],
 		candidate: { health: 'building', checks: { passed: 9, total: 12 }, changedRegions: ['onboarding', 'passkey', 'session'] },
-		paused: false, layout: baseLayout('preview'),
+		paused: false, layout: baseLayout(),
 	}),
 
 	conflict: () => {
@@ -196,7 +196,7 @@ const builders: Record<string, Builder> = {
 			]),
 			checkpoints: baseCheckpoints(), decisions: [decision],
 			candidate: { health: 'building', checks: { passed: 11, total: 12 }, changedRegions: ['hero'] },
-			paused: false, layout: { ...baseLayout('preview'), rightSurface: 'decision', activeDecisionId: 'd1' },
+			paused: false, layout: { ...baseLayout(), rightSurface: 'decision', activeDecisionId: 'd1' },
 		};
 	},
 
@@ -242,7 +242,7 @@ const builders: Record<string, Builder> = {
 		archived: [], events: baseEvents(),
 		checkpoints: [checkpoint({ id: 'k2', coworkerId: 'maya', outcome: 'Passkey-first onboarding — ready for review', createdLabel: 'just now' }), ...baseCheckpoints()],
 		decisions: [], candidate: { health: 'healthy', checks: { passed: 12, total: 12 }, changedRegions: ['onboarding'] },
-		paused: false, layout: { ...baseLayout('preview'), rightSurface: 'checkpoint', activeCheckpointId: 'k2' },
+		paused: false, layout: { ...baseLayout(), rightSurface: 'checkpoint', activeCheckpointId: 'k2' },
 	}),
 
 	compare: () => ({
@@ -250,7 +250,7 @@ const builders: Record<string, Builder> = {
 		project, mission: mission(), missions: [mission()], coworkers: makeCoworkers(),
 		archived: [], events: baseEvents(), checkpoints: baseCheckpoints(), decisions: [],
 		candidate: { health: 'healthy', checks: { passed: 12, total: 12 }, changedRegions: ['onboarding', 'passkey'] },
-		paused: false, layout: baseLayout('preview', 'stable'),
+		paused: false, layout: baseLayout('browser', 'stable'),
 	}),
 
 	shipping: () => ({

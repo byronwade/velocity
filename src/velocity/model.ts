@@ -7,8 +7,8 @@
 // mutates it deterministically. Nothing here talks to a provider or the network.
 // ---------------------------------------------------------------------------
 
-/** The views a pane can show. */
-export type Lens = 'preview' | 'code' | 'browser' | 'system' | 'data' | 'tests' | 'verify';
+/** The views a pane can show. The running app lives in Browser (no separate Preview). */
+export type Lens = 'browser' | 'code' | 'system' | 'data' | 'tests' | 'verify';
 
 /** What a Preview pane compares the Candidate against. */
 export type CompareSource = 'none' | 'stable' | 'live' | 'preview' | 'branch';
@@ -316,9 +316,8 @@ export const DEPLOY_TARGETS: { id: DeployTarget; label: string; domain: string }
 ];
 
 export const LENS_META: Record<Lens, { label: string; hint: string }> = {
-	preview: { label: 'Preview', hint: 'The running application' },
+	browser: { label: 'Browser', hint: 'Live preview of the app' },
 	code: { label: 'IDE', hint: 'Editor, files + diff' },
-	browser: { label: 'Browser', hint: 'Live app in a browser' },
 	system: { label: 'System', hint: 'Services, endpoints, request flow' },
 	data: { label: 'Data', hint: 'Schema + records' },
 	tests: { label: 'Tests', hint: 'Unit + integration runner' },

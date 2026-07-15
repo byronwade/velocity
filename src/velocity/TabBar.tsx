@@ -1,18 +1,56 @@
-import { useState } from 'react';
-import { Plus, X, Flag, ShieldQuestion, Pause, Sun, Moon, UserPlus, Rocket } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Plus, X, Flag, ShieldQuestion, Pause, Sun, Moon, Settings, CheckCircle2, Clock, Pencil } from 'lucide-react';
 import { useShell } from '../lib/store';
 import { useProjects, useWorkspace, manager, runtime } from './useWorkspace';
 import { SCENARIOS as SCENARIO_LIST } from './scenarios';
+import { ContextMenu, useContextMenu } from './ContextMenu';
 import type { TabView } from './workspace';
+
+/** Rich hover card — what's happening on a project and what needs attention. */
+function TabHover({ tab }: { tab: TabView }) {
+	return (
+		<div className="vs-tabhover" role="tooltip">
+			<div className="vs-tabhover-head">
+				<b>{tab.name}</b>
+				{tab.missionTotal > 0 && <span className="vs-tabhover-prog">{tab.missionDone}/{tab.missionTotal} verified</span>}
+			</div>
+			{tab.missionTitle && <div className="vs-tabhover-mission">{tab.missionTitle}</div>}
+			{tab.roster.length > 0 && (
+				<div className="vs-tabhover-roster">
+					{tab.roster.map((r, i) => (
+						<div key={i} className="vs-tabhover-row"><span className={`vs-dotmark tone-${r.tone}`} style={{ background: r.color }} /><b>{r.name}</b><span>{r.action}</span></div>
+					))}
+				</div>
+			)}
+			{tab.needs.length > 0 && (
+				<div className="vs-tabhover-needs">
+					{tab.needs.map((n, i) => <div key={i} className="vs-tabhover-need"><Flag size={11} />{n}</div>)}
+				</div>
+			)}
+			{tab.roster.length === 0 && tab.needs.length === 0 && <div className="vs-tabhover-empty">No coworkers yet.</div>}
+		</div>
+	);
+}
 
 function Tab({ tab, active }: { tab: TabView; active: boolean }) {
 	const [renaming, setRenaming] = useState(false);
 	const [name, setName] = useState(tab.name);
+	const [hover, setHover] = useState(false);
+	const ctx = useContextMenu();
+
+	const openMission = (e: React.MouseEvent) => {
+		e.stopPropagation();
+		manager.switchProject(tab.id);
+		runtime.setLens('verify');
+	};
+
 	return (
 		<div className={`vs-tab${active ? ' active' : ''}`} onClick={() => manager.switchProject(tab.id)}
-			onDoubleClick={() => { setName(tab.name); setRenaming(true); }} role="tab" aria-selected={active} title={`${tab.name} · ${tab.scenarioLabel}`}>
-			<span className={`vs-tab-status${tab.pendingReview ? ' review' : tab.openDecision ? ' decision' : tab.paused ? ' paused' : ''}`}>
-				{tab.pendingReview ? <Flag size={11} /> : tab.openDecision ? <ShieldQuestion size={11} /> : tab.paused ? <Pause size={10} /> : <span className="vs-tab-dot" />}
+			onDoubleClick={() => { setName(tab.name); setRenaming(true); }} onContextMenu={ctx.onContextMenu}
+			onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
+			role="tab" aria-selected={active}>
+			<span className={`vs-tab-status${tab.working ? ' working' : tab.pendingReview ? ' review' : tab.openDecision ? ' decision' : tab.paused ? ' paused' : ''}`}>
+				{tab.working ? <span className="vs-tab-spin" /> : tab.pendingReview ? <Flag size={11} /> : tab.openDecision ? <ShieldQuestion size={11} /> : tab.paused ? <Pause size={10} /> : <span className="vs-tab-dot" />}
 			</span>
 			{renaming ? (
 				<input className="vs-tab-rename" autoFocus value={name} onClick={(e) => e.stopPropagation()}
@@ -22,45 +60,45 @@ function Tab({ tab, active }: { tab: TabView; active: boolean }) {
 			) : (
 				<span className="vs-tab-name">{tab.name}</span>
 			)}
-			<span className="vs-tab-meta">{tab.coworkers}</span>
+			{tab.missionTotal > 0 && (
+				<button className="vs-tab-mission" onClick={openMission} title={`Mission ${tab.missionDone}/${tab.missionTotal} — open Verify`}>
+					<span className="vs-tab-ring" style={{ ['--pct' as string]: `${Math.round((tab.missionDone / tab.missionTotal) * 100)}` }} />
+					{tab.missionDone}/{tab.missionTotal}
+				</button>
+			)}
 			<button className="vs-tab-close" onClick={(e) => { e.stopPropagation(); manager.closeProject(tab.id); }} aria-label={`Close ${tab.name}`}><X size={12} /></button>
+
+			{hover && !renaming && !ctx.at && <TabHover tab={tab} />}
+			{ctx.at && (
+				<ContextMenu x={ctx.at.x} y={ctx.at.y} onClose={ctx.close} items={[
+					{ label: 'Rename', icon: <Pencil size={14} />, onClick: () => { setName(tab.name); setRenaming(true); } },
+					{ label: 'Open Verify', icon: <CheckCircle2 size={14} />, onClick: () => { manager.switchProject(tab.id); runtime.setLens('verify'); } },
+					{ separator: true },
+					{ label: 'New project', icon: <Plus size={14} />, onClick: () => manager.newProject() },
+					{ label: 'Close', icon: <X size={14} />, danger: true, onClick: () => manager.closeProject(tab.id) },
+				]} />
+			)}
 		</div>
 	);
 }
 
-/** Compact mission progress — dots + N/M, click to jump to Verify. */
-function MissionMini() {
-	const state = useWorkspace();
-	if (!state.mission) return null;
-	const done = state.mission.criteria.filter((c) => c.state === 'verified').length;
-	const total = state.mission.criteria.length;
-	return (
-		<button className="vs-mission-chip" onClick={() => runtime.setLens('verify')} title={`${state.mission.title} — ${done}/${total} verified`}>
-			<span className="vs-mission-dots">{state.mission.criteria.map((c) => <span key={c.id} className={`vs-mdot ${c.state}`} />)}</span>
-			<span className="vs-mission-n">{done}/{total}</span>
-		</button>
-	);
-}
-
-function Facepile() {
-	const state = useWorkspace();
-	const here = state.collaborators.filter((c) => c.status === 'active').slice(0, 4);
-	if (here.length === 0) return null;
-	return (
-		<div className="vs-facepile" title="People on this project">
-			{here.map((c) => <span key={c.id} className="vs-face" style={{ background: c.color }} title={`${c.name} · ${c.role}`}>{c.initials}</span>)}
-		</div>
-	);
-}
-
+/** Account / settings — everything that used to live in the header lives here. */
 function Profile() {
 	const { account } = useProjects();
 	const state = useWorkspace();
+	const theme = useShell((s) => s.theme);
+	const setTheme = useShell((s) => s.setTheme);
 	const [open, setOpen] = useState(false);
+	const [density, setDensity] = useState(() => document.documentElement.dataset.density ?? 'comfortable');
+	const [motion, setMotion] = useState(() => document.documentElement.dataset.motion ?? 'full');
 	const pct = Math.min(100, (account.credits.used / account.credits.total) * 100);
+
+	useEffect(() => { document.documentElement.dataset.density = density; try { localStorage.setItem('vs-density', density); } catch { /* ignore */ } }, [density]);
+	useEffect(() => { document.documentElement.dataset.motion = motion; try { localStorage.setItem('vs-motion', motion); } catch { /* ignore */ } }, [motion]);
+
 	return (
 		<div className="vs-profile-wrap">
-			<button className="vs-profile" onClick={() => setOpen((v) => !v)} aria-label="Account" style={{ ['--id' as string]: account.user.color }}>
+			<button className="vs-profile" onClick={() => setOpen((v) => !v)} aria-label="Account & settings" style={{ ['--id' as string]: account.user.color }}>
 				<span className="vs-profile-badge" style={{ background: account.user.color }}>{account.user.initials}</span>
 			</button>
 			{open && (
@@ -77,8 +115,27 @@ function Profile() {
 							<div className="vs-pc-bar"><span style={{ width: `${pct}%` }} /></div>
 							<div className="vs-pc-usage">{account.usageLabel}</div>
 						</div>
+						<div className="vs-set-sec"><Settings size={13} />Settings</div>
+						<div className="vs-set-row"><span>Appearance</span>
+							<div className="vs-seg">
+								<button className={theme === 'light' ? 'on' : ''} onClick={() => setTheme('light')}><Sun size={13} />Light</button>
+								<button className={theme === 'dark' ? 'on' : ''} onClick={() => setTheme('dark')}><Moon size={13} />Dark</button>
+							</div>
+						</div>
+						<div className="vs-set-row"><span>Density</span>
+							<div className="vs-seg">
+								<button className={density === 'comfortable' ? 'on' : ''} onClick={() => setDensity('comfortable')}>Cozy</button>
+								<button className={density === 'compact' ? 'on' : ''} onClick={() => setDensity('compact')}>Compact</button>
+							</div>
+						</div>
+						<div className="vs-set-row"><span>Motion</span>
+							<div className="vs-seg">
+								<button className={motion === 'full' ? 'on' : ''} onClick={() => setMotion('full')}>Full</button>
+								<button className={motion === 'reduced' ? 'on' : ''} onClick={() => setMotion('reduced')}>Reduced</button>
+							</div>
+						</div>
 						<label className="vs-profile-scenario">
-							<span>Demo scenario</span>
+							<span><Clock size={12} />Demo scenario</span>
 							<select value={state.scenario} onChange={(e) => runtime.load(e.target.value)}>
 								{SCENARIO_LIST.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
 							</select>
@@ -92,8 +149,6 @@ function Profile() {
 
 export function TabBar() {
 	const { tabs, activeId } = useProjects();
-	const theme = useShell((s) => s.theme);
-	const setTheme = useShell((s) => s.setTheme);
 	return (
 		<div className="vs-tabbar" role="tablist">
 			<span className="vs-tabbar-logo" />
@@ -102,14 +157,6 @@ export function TabBar() {
 				<button className="vs-tab-new" onClick={() => manager.newProject()} title="New project" aria-label="New project"><Plus size={15} /></button>
 			</div>
 			<div className="vs-tabbar-right">
-				<MissionMini />
-				<Facepile />
-				<button className="vs-tabbar-icon" onClick={() => runtime.openShare(true)} title="Share & invite"><UserPlus size={15} /></button>
-				<button className="vs-ship-btn" onClick={() => runtime.openShip(true)} title="Ship — deploy (⌘⇧D)"><Rocket size={14} />Ship</button>
-				<div className="vs-tabbar-sep" />
-				<button className="vs-tabbar-icon" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} title="Toggle theme">
-					{theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
-				</button>
 				<Profile />
 			</div>
 		</div>

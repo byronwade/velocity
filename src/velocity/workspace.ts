@@ -11,6 +11,7 @@
 // ---------------------------------------------------------------------------
 
 import { PrototypeCoworkerRuntime, type CoworkerRuntime } from './runtime';
+import { STATE_TONE } from './model';
 import type { WorkspaceState } from './model';
 
 export interface ProjectTab {
@@ -30,6 +31,15 @@ export interface TabView {
 	openDecision: boolean;
 	paused: boolean;
 	shipped: boolean;
+	/** True while any coworker is actively working (drives the tab spinner). */
+	working: boolean;
+	missionTitle: string | null;
+	missionDone: number;
+	missionTotal: number;
+	/** Compact per-coworker lines for the tab hover card. */
+	roster: { name: string; color: string; action: string; tone: string }[];
+	/** What needs the human's attention on this project. */
+	needs: string[];
 }
 
 export interface Account {
@@ -97,16 +107,30 @@ export class WorkspaceManager {
 			account: this.account,
 			tabs: this.projects.map((p): TabView => {
 				const s = p.runtime.getState();
+				const live = s.coworkers.filter((c) => c.state !== 'archived' && c.state !== 'dismissed');
+				const pendingReview = s.checkpoints.some((k) => k.state === 'ready');
+				const openDecision = s.decisions.some((d) => d.state === 'open');
+				const needs: string[] = [];
+				if (openDecision) needs.push('A decision needs you');
+				if (pendingReview) needs.push('A checkpoint is ready to review');
+				const waiting = live.filter((c) => c.state === 'waiting').length;
+				if (waiting) needs.push(`${waiting} coworker${waiting > 1 ? 's' : ''} waiting on a dependency`);
 				return {
 					id: p.id,
 					name: s.project.name,
 					scenarioLabel: s.scenarioLabel,
 					lens: s.layout.lens,
-					coworkers: s.coworkers.filter((c) => c.state !== 'archived' && c.state !== 'dismissed').length,
-					pendingReview: s.checkpoints.some((k) => k.state === 'ready'),
-					openDecision: s.decisions.some((d) => d.state === 'open'),
+					coworkers: live.length,
+					pendingReview,
+					openDecision,
 					paused: s.paused,
 					shipped: !!s.celebrate,
+					working: !s.paused && live.some((c) => c.state === 'active' || c.state === 'verifying' || c.state === 'planning'),
+					missionTitle: s.mission?.title ?? null,
+					missionDone: s.mission?.criteria.filter((c) => c.state === 'verified').length ?? 0,
+					missionTotal: s.mission?.criteria.length ?? 0,
+					roster: live.slice(0, 5).map((c) => ({ name: c.name, color: c.color, action: c.action, tone: STATE_TONE[c.state] })),
+					needs,
 				};
 			}),
 		};

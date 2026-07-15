@@ -131,7 +131,7 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 		const l = this.state.layout;
 		const src = findLeaf(l.panes, id);
 		const newId = uid('pane');
-		const newView: Lens = src?.view === 'code' ? 'preview' : 'code';
+		const newView: Lens = src?.view === 'code' ? 'browser' : 'code';
 		this.patchLayout({ panes: splitLeaf(l.panes, id, dir, newId, newView), activePaneId: newId, lens: newView });
 	}
 	closePane(id: string): void {
@@ -157,13 +157,13 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 	/** Point the nearest Preview pane at a compare source (Stable / Live / …). */
 	comparePreview(source: CompareSource): void {
 		const l = this.state.layout;
-		const target = firstLeafOfView(l.panes, 'preview');
+		const target = firstLeafOfView(l.panes, 'browser');
 		if (target) {
 			const next = target.compareSource === source ? 'none' : source;
-			this.patchLayout({ panes: setCompareSource(l.panes, target.id, next), activePaneId: target.id, lens: 'preview' });
+			this.patchLayout({ panes: setCompareSource(l.panes, target.id, next), activePaneId: target.id, lens: 'browser' });
 		} else {
-			// no preview pane open — turn the active pane into a comparing Preview
-			this.patchLayout({ panes: setCompareSource(setView(l.panes, l.activePaneId, 'preview'), l.activePaneId, source), lens: 'preview' });
+			// no Browser pane open — turn the active pane into a comparing Browser
+			this.patchLayout({ panes: setCompareSource(setView(l.panes, l.activePaneId, 'browser'), l.activePaneId, source), lens: 'browser' });
 		}
 	}
 	openShip(open: boolean): void { this.patchLayout({ shipOpen: open }); }
@@ -225,7 +225,7 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 			? [{
 				id: 'maya', name: 'Maya', role: 'Design Lead', department: 'Design', initials: 'MA', color: IDENTITY_COLORS[0],
 				missionId: id, action: 'Planning the mission', state: 'planning', scope: input.includedScope[0] ?? 'project',
-				marker: { lens: 'preview', x: 48, y: 44, label: 'Planning' }, branch: 'cw/maya', worktree: 'proj-maya',
+				marker: { lens: 'browser', x: 48, y: 44, label: 'Planning' }, branch: 'cw/maya', worktree: 'proj-maya',
 				candidateHealth: 'healthy', staffing: 'auto', model: 'Auto · frontier', fallbackModel: 'Local · qwen2.5-coder',
 				autonomy: input.autonomy, approvalPolicy: input.approvalPolicy, budget: input.budget, permissions: ['read', 'write', 'run', 'test'],
 				latestCheckpointId: null, specialists: [], following: false,
