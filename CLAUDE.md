@@ -79,3 +79,27 @@ by driving the built app in a headless browser (Playwright) over asserting on co
   the keybinding service dispatches them from commands.
 - Prettier is available in-browser (`src/services/format.ts`), lazy-loaded; house style is tabs,
   single quotes, width 100.
+
+## Roadmap & changelog discipline (MANDATORY)
+
+[`ROADMAP.md`](ROADMAP.md) and [`CHANGELOG.md`](CHANGELOG.md) at the repo root are the product's
+public record — a future website renders them, so their format contracts (documented at the top of
+each file) must never break. **Any commit that adds, changes, removes, or moves a user-facing
+feature updates both files in that same commit.** Concretely:
+
+1. **Slugs are the join key.** Every feature has one stable kebab-case slug used identically in
+   both files. Never rename or reuse a slug; corrections get a new changelog entry under the same
+   slug.
+2. **Ship a feature** → add a `CHANGELOG.md` entry under today's `## YYYY-MM-DD · Title` release
+   (`### Added`, format `- **slug** — Name. User-facing description. (\`commit\`)`) **and** check
+   its `ROADMAP.md` item `- [x] … _(shipped YYYY-MM-DD)_` — adding the item first if it was never
+   planned.
+3. **Change a shipped feature materially** → `### Changed` entry under the same slug; the roadmap
+   line's description is updated to describe the current behavior.
+4. **Remove/drop a feature** → `### Removed` entry with the why; the roadmap item MOVES to the
+   `## Dropped` section with date + reason (never delete roadmap lines — the history is the point).
+5. **Plan a feature** → add an unchecked roadmap item with a phase or `(planned)`; no changelog
+   entry until it ships.
+6. Entries are written for END USERS (what it does, why it matters), not commit prose; keep one
+   entry per feature, newest release first, and prefer several small dated releases over one giant
+   one.

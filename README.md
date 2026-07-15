@@ -2,7 +2,9 @@
 
 Velocity is an open-source, local-first **autonomous software-development workspace**. Named AI
 coworkers continuously build a shared project while you direct, observe, and approve — it is not a
-chat app. The full product thesis lives in [`VELOCITY_PRODUCT_VISION.md`](VELOCITY_PRODUCT_VISION.md).
+chat app. The full product thesis lives in [`VELOCITY_PRODUCT_VISION.md`](VELOCITY_PRODUCT_VISION.md);
+what's shipped and what's next live in the [**Roadmap**](ROADMAP.md) and the
+[**Changelog**](CHANGELOG.md).
 
 ![Velocity — a project on the Browser lens beside the IDE, with coworker presence markers and the floating dock](docs/screenshots/prototype/velocity-calm-light.png)
 
