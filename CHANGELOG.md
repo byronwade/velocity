@@ -23,6 +23,7 @@ corrections get a new entry. Newest release first.
 
 ### Fixed
 - **comment-dismiss** — Comment windows close on click-away. Clicking anywhere outside an open thread or composer dismisses it (Esc still works).
+- **chat-sidebar** — The activity portion of the feed no longer repeats itself: cycling sim tasks are deduped against recent entries, so the chat stays readable while the full history remains in the Activity panel.
 
 ## 2026-07-15 · The first real coworker
 

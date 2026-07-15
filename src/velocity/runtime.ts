@@ -220,11 +220,15 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 	}
 	private addEvent(kind: WorkspaceState['events'][number]['kind'], text: string, coworkerId: string | null): void {
 		const cw = coworkerId ? this.state.coworkers.find((c) => c.id === coworkerId) : null;
+		// Every activity event also lands in the chat feed — the sidebar doubles
+		// as the live record of what's in progress and completed. The sim
+		// heartbeat cycles the same tasks, so drop a repeat the feed already
+		// shows among its recent entries (the activity list keeps everything).
+		const recent = this.state.feed.slice(-8);
+		const dupe = recent.some((f) => f.kind === 'event' && f.text === text);
 		this.set({
 			events: [{ id: uid('e'), kind, text, coworkerId, tsLabel: 'now' }, ...this.state.events].slice(0, 24),
-			// Every activity event also lands in the chat feed — the sidebar
-			// doubles as the live record of what's in progress and completed.
-			feed: [...this.state.feed, { id: uid('f'), kind: 'event' as const, authorName: cw?.name ?? 'System', text, tsLabel: 'now', eventKind: kind }].slice(-120),
+			feed: dupe ? this.state.feed : [...this.state.feed, { id: uid('f'), kind: 'event' as const, authorName: cw?.name ?? 'System', text, tsLabel: 'now', eventKind: kind }].slice(-120),
 		});
 	}
 	private addFeed(entry: Omit<WorkspaceState['feed'][number], 'id' | 'tsLabel'>): void {

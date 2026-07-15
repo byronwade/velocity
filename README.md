@@ -15,32 +15,45 @@ A polished, deterministic, design-first prototype of the workspace lives in
 or the network — a `CoworkerRuntime` produces every state transition deterministically, so the
 demo is fully repeatable.
 
-- **Project tabs** — the top row is a tab per project; each tab is a fully isolated workspace
-  (its own coworkers, missions, lens, open terminals/tools, and rails). Above the tabs sits the
-  account bar — credits/usage meter, the light/dark toggle, and the user profile.
-- **Split-pane workspace (Cursor-style)** — the running app is the left pane; the right holds the
-  IDE (or any tool). Every pane has its own **contextual** toolbar with a **view dropdown**
-  (Browser · IDE · System · Data · Tests · Verify) and **split-right / split-down / close** — build
-  50/50, stacked, or 2×2 layouts with draggable dividers. The Browser pane adds a **compare
-  selector** (vs Stable / Live / Preview / Branch); the IDE pane adds **toggle file tree**, **search
-  files**, and **find & replace**. **Spatial presence markers** show where each coworker is working;
-  click one to Follow.
-- **Real in-app browser** — a Chrome-style browser (address bar, history, bookmarks, zoom) that runs
-  the **live workspace preview** for local URLs and iframes external sites. Built-in **DevTools**
-  (⌥⌘I) with **Elements** (the real parsed DOM), **Console** (live output from the preview), and
-  **Network** — docked at the bottom of the pane.
-- **Real IDE** — a file tree bound to the in-memory filesystem beside a live CodeMirror editor;
-  open/close and search the tree, and full **find & replace** (match case, regexp, by word).
-- **Comments are the work** — there is no chat. **New work** (or ⌘⇧N) arms placement; click the app
-  to drop a pin, describe the change, and it **auto-assigns** the best-fit coworker (design →
-  Maya, backend → Rowan, tests → Iris…). One compact popover holds who / which model / how many
-  coworkers — all presets, mostly automatic. Pins show the assigned coworker's face; right-click a
-  pin for the same menu.
+- **Project tabs** — a tab per project; each is a fully isolated workspace (its own coworkers,
+  missions, lens, terminals, and rails) with live status rings and drag-to-reorder. Settings can
+  switch the top row into an **Arc-style collapsible vertical rail**.
+- **Split-pane workspace (Cursor-style)** — every pane has a **contextual** toolbar with a **view
+  dropdown** (Browser · IDE · Terminal · System · Data · Tests · Verify) and split/close controls;
+  **drag any panel by its toolbar** onto another and a blue outline previews where it lands.
+  Dividers have obvious grab bars with snap points. The Browser pane adds a **compare selector**;
+  the IDE pane adds tree-toggle / file-search / find-replace. **Spatial presence markers** show
+  where each coworker is working; click one to Follow.
+- **The workspace is alive** — a deterministic heartbeat advances every working coworker; they land
+  checkpoints, pick up their next task, and a chime + desktop notification fires when work is ready
+  to review.
+- **Real work on local models** — create a work item with the **Local** model and the assigned
+  coworker actually does it via Ollama: real tool calls against the workspace, live action updates,
+  and a checkpoint whose diff is computed from actual file changes. No API key required.
+- **Real in-app browser** — IDE-style **browser tabs** (each with its own history), a compact
+  v0-style toolbar, device preview (desktop / tablet / mobile), and built-in **DevTools** (⌥⌘I):
+  Elements (the real parsed DOM), Console (live output + eval), and Network.
+- **Real IDE** — a file tree bound to the filesystem beside a live CodeMirror editor;
+  open/close and search the tree, full **find & replace**, and **⌘P quick-open**.
+- **Comments are the work** — directing work happens on the app, not in a chat. **New work** (⌘⇧N)
+  arms placement; click the app, describe the change, and it **auto-assigns** the best-fit coworker.
+  One compact popover holds who / which model / how many — all presets. Pins show the assigned
+  coworker's face; click away to dismiss any thread.
+- **Collaborative chat + activity sidebar** — togglable left of the tabs: humans and coworkers in
+  one thread (agents answer and riff off each other, `@Name` directs), pinned work appears inline,
+  and progress/completion events flow through automatically.
+- **Agents as files** — every coworker is mirrored to `.velocity/coworkers/<id>.md`; edit the file
+  in the IDE and the coworker updates live.
+- **The workspace speaks MCP** — fs / shell / browser exposed as Model Context Protocol tools
+  in-process; Settings → Integrations lists the live toolbelt.
 - **Coworkers** — add / rename / pause / dismiss / restore / follow; name and role read louder than
   the model; a manager (Maya) with two reporting specialists, shown with live tools and subagents.
 - **Docked developer tools** — a bottom panel (Explorer · Terminal · Logs · Problems · Source ·
   Checkpoints) that pushes the workspace up, with a real shell over the filesystem and a shell
-  chooser (bash / zsh / pwsh / node).
+  chooser (bash / zsh / pwsh / node). The desktop build upgrades to a **true PTY terminal**
+  (ConPTY/openpty via portable-pty + xterm.js).
+- **Native desktop** — projects persist across restarts, native notifications, a system-tray
+  attention badge, a global summon shortcut (Ctrl/⌘⇧V), and remembered window state.
 - **Checkpoints, Evidence, and Decision Sheets** — review work with diffs, tests, traces, blast
   radius, and rollback; resolve conflicts and protected actions with a recommended option.
 - **Follow Mode** — following a coworker opens a panel showing what they're doing now, their latest
@@ -71,8 +84,8 @@ npm run dev            # http://localhost:5199
 # also: parallel, verifyFail   ·   append &theme=dark for dark mode
 ```
 
-Keyboard: `1`–`6` switch lenses, `c` compare, `f` focus, `.` pause all, `⌘K` commands,
-`⌘⇧N` new work, `⌘\` split right, `⌘J` terminal, `Esc` closes the topmost surface.
+Keyboard: `1`–`7` switch views, `c` compare, `f` focus, `.` pause all, `⌘K` commands, `⌘P` go to
+file, `⌘⇧N` new work, `⌘\` split right, `⌘J` terminal, `Esc` closes the topmost surface.
 
 <details>
 <summary>The earlier workstream environment</summary>
