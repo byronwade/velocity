@@ -29,30 +29,56 @@
 	overflow: hidden;
 }
 
-/* --- Chat sidebar — the collaborative record, docked left ---------------- */
-.vs-chat { flex: 0 0 316px; width: 316px; display: flex; flex-direction: column; min-height: 0; background: var(--panel); border-right: 1px solid var(--line); }
+/* --- Chat sidebar — the collaborative record, docked left ----------------
+   AI SDK Elements vocabulary (Conversation / Message / PromptInput /
+   Suggestions / Actions) on Velocity's tokens. Width is inline (resizable). */
+.vs-chat { position: relative; flex: 0 0 auto; display: flex; flex-direction: column; min-height: 0; background: var(--panel); border-right: 1px solid var(--line); }
+.vs-chat-resize { position: absolute; top: 0; right: -4px; bottom: 0; width: 8px; cursor: col-resize; z-index: 7; }
+.vs-chat-resize:hover { background: color-mix(in srgb, var(--fg) 14%, transparent); }
 .vs-chat-head { display: flex; align-items: center; gap: 7px; height: 40px; flex: 0 0 40px; padding: 0 14px; border-bottom: 1px solid var(--line); }
 .vs-chat-head b { font-size: var(--text-13); font-weight: var(--fw-semibold); }
 .vs-chat-head span { margin-left: auto; font-size: var(--text-11); color: var(--faint); }
 .vs-chat-head svg { color: var(--muted); }
-.vs-chat-feed { flex: 1; overflow-y: auto; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+
+/* Conversation */
+.vs-chat-feed { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
 .vs-chat-empty { color: var(--faint); font-size: var(--text-12); line-height: 1.55; padding: 12px 4px; }
-.vs-chat-msg { display: flex; gap: 8px; }
+
+/* Message — assistant: avatar + plain text left; user: bubble right. */
+.vs-chat-msg.bot { display: flex; gap: 9px; }
 .vs-chat-msg-body { flex: 1; min-width: 0; }
-.vs-chat-msg-head { display: flex; align-items: baseline; gap: 6px; }
+.vs-chat-msg-head { display: flex; align-items: center; gap: 6px; }
 .vs-chat-msg-head b { font-size: var(--text-12); font-weight: var(--fw-semibold); }
 .vs-chat-msg-head em { font-style: normal; font-size: 10px; color: var(--faint); border: 1px solid var(--line); border-radius: 999px; padding: 0 6px; }
 .vs-chat-msg-head span { font-size: 10px; color: var(--faint); margin-left: auto; }
-.vs-chat-msg-text { font-size: var(--text-12); color: var(--fg); line-height: 1.5; margin-top: 1px; white-space: pre-wrap; word-break: break-word; }
-.vs-chat-msg.bot .vs-chat-msg-text { color: var(--muted); }
+.vs-chat-msg-text { font-size: var(--text-13); color: var(--fg); line-height: 1.55; margin-top: 2px; white-space: pre-wrap; word-break: break-word; }
+.vs-chat-msg.user { display: flex; justify-content: flex-end; }
+.vs-chat-bubble { position: relative; max-width: 85%; background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--r-lg); border-bottom-right-radius: var(--r-sm); padding: 8px 12px; font-size: var(--text-13); color: var(--fg); line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+
+/* Actions — reveal on hover. */
+.vs-chat-act { width: 20px; height: 20px; display: grid; place-items: center; border: 0; background: transparent; color: var(--faint); border-radius: var(--r-sm); cursor: pointer; opacity: 0; transition: opacity var(--dur) var(--ease); flex: 0 0 auto; }
+.vs-chat-msg:hover .vs-chat-act, .vs-chat-bubble:hover .vs-chat-act { opacity: 1; }
+.vs-chat-act:hover { background: var(--line); color: var(--fg); }
+.vs-chat-bubble .vs-chat-act { position: absolute; right: 4px; bottom: -22px; }
+
+/* Task / activity rows */
 .vs-chat-row { display: flex; align-items: flex-start; gap: 7px; padding-left: 4px; color: var(--faint); }
 .vs-chat-row svg { flex: 0 0 auto; margin-top: 3px; }
 .vs-chat-row-text { font-size: var(--text-11); line-height: 1.5; }
 .vs-chat-row.work .vs-chat-row-text { color: var(--muted); }
-.vs-chat-composer { display: flex; align-items: flex-end; gap: 6px; padding: 10px 12px; border-top: 1px solid var(--line); }
-.vs-chat-composer textarea { flex: 1; min-width: 0; max-height: 96px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--panel); color: var(--fg); padding: 7px 10px; font: inherit; font-size: var(--text-12); resize: none; outline: none; }
-.vs-chat-composer textarea:focus { border-color: var(--line-2); }
-.vs-chat-composer .vs-icon:disabled { opacity: 0.4; cursor: default; }
+
+/* Suggestions — one-tap starters when the thread is empty. */
+.vs-chat-suggests { display: flex; flex-direction: column; gap: 6px; padding: 0 14px 10px; }
+.vs-chat-suggest { text-align: left; padding: 8px 11px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--panel); color: var(--muted); font: inherit; font-size: var(--text-12); cursor: pointer; transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease); }
+.vs-chat-suggest:hover { color: var(--fg); border-color: var(--line-2); background: var(--panel-2); }
+
+/* PromptInput — one bordered container that lifts on focus. */
+.vs-chat-input { position: relative; display: flex; align-items: flex-end; margin: 0 12px 12px; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--panel); transition: border-color var(--dur) var(--ease); }
+.vs-chat-input:focus-within { border-color: var(--line-2); box-shadow: var(--elev-1); }
+.vs-chat-input textarea { flex: 1; min-width: 0; max-height: 120px; border: 0; background: transparent; color: var(--fg); padding: 9px 40px 9px 12px; font: inherit; font-size: var(--text-13); line-height: 1.5; resize: none; outline: none; }
+.vs-chat-send { position: absolute; right: 6px; bottom: 6px; width: 26px; height: 26px; display: grid; place-items: center; border: 0; border-radius: var(--r-md); background: var(--fg); color: var(--shell); cursor: pointer; transition: opacity var(--dur) var(--ease); }
+.vs-chat-send:hover { opacity: 0.85; }
+.vs-chat-send:disabled { opacity: 0.25; cursor: default; }
 
 /* Tab-bar icon toggle (chat) */
 .vs-tabbar-icon.on { background: var(--panel-2); color: var(--fg); }
@@ -946,7 +972,14 @@
 .vs-xterm .xterm, .vs-xterm .xterm-viewport { height: 100%; }
 .vs-term-loading { padding: 12px 14px; color: var(--faint); font-family: var(--mono); font-size: var(--text-12); }
 .vs-term-bar { display: flex; align-items: center; gap: 2px; padding: 5px 8px; border-bottom: 1px solid var(--line); background: var(--panel-2); flex: 0 0 auto; }
-.vs-term-tab { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 10px; border-radius: var(--r-sm); border: 0; background: transparent; color: var(--muted); font: inherit; font-size: var(--text-12); font-family: var(--mono); cursor: pointer; }
+.vs-term-tab { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 9px; border-radius: var(--r-sm); border: 0; background: transparent; color: var(--muted); font: inherit; font-size: var(--text-12); font-family: var(--mono); cursor: pointer; }
+.vs-term-x { width: 15px; height: 15px; display: grid; place-items: center; border: 0; background: transparent; color: var(--faint); border-radius: 4px; cursor: pointer; flex: 0 0 auto; }
+.vs-term-x:hover { background: var(--line); color: var(--fg); }
+.vs-term-newwrap { position: relative; }
+.vs-term-picker { position: absolute; top: 28px; left: 0; z-index: 26; width: 148px; background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-lg); box-shadow: var(--elev-2); padding: 6px; }
+.vs-term-pick { display: flex; align-items: center; gap: 9px; width: 100%; height: 30px; padding: 0 9px; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: var(--text-13); font-family: var(--mono); border-radius: var(--r-sm); cursor: pointer; text-align: left; }
+.vs-term-pick:hover { background: var(--panel-2); }
+.vs-term-pick svg { color: var(--muted); }
 .vs-term-tab:hover { background: var(--panel); color: var(--fg); }
 .vs-term-tab.on { background: var(--panel); color: var(--fg); box-shadow: var(--elev-1); }
 .vs-term-host { flex: 1; position: relative; min-height: 0; }

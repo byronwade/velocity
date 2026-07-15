@@ -26,6 +26,8 @@ corrections get a new entry. Newest release first.
 - **vertical-tabs** — Arc-style vertical tabs. Settings → Appearance can switch the project tabs from the top row to a collapsible left rail — tabs stacked with their status rings, inbox and profile at the bottom.
 
 ### Changed
+- **chat-sidebar** — The chat is a real AI surface now: wider by default (380px) and drag-resizable like every panel, restyled on the AI SDK Elements patterns — user messages as right-aligned bubbles, coworker replies plain-left with identity, a proper PromptInput (auto-growing, embedded send), one-tap Suggestions before the first message, and hover copy Actions on every message.
+- **real-terminal** — VS Code-style terminal sessions: a tab per terminal (`bash · 1`, `pwsh · 2`, …) with per-tab kill, a **+** dropdown that opens any shell type (bash / zsh / pwsh / node), and a kill-active control — in both the docked panel and the Terminal pane view.
 - **browser-compact** — The browser is ONE bar. Nav, tabs, the centered omnibox, device preview, DevTools, and a ⚙ settings menu (new tab, copy URL, open externally, start page, zoom) all live in a single 40px row, fully on the design tokens — bookmarks bar and the profile avatar are gone (not needed in this environment).
 - **divider-grip** — Panel grab bars are obvious now: a wider hit area, a visible grip pill on hover, and a strong active state; resizing stays smooth with live snap points.
 

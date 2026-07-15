@@ -605,27 +605,62 @@ const SHELLS = [
 	{ id: 'node', label: 'node' },
 ];
 
-/** Real terminal (executes against the in-memory FS) + a shell chooser.
+/** Real terminal with VS Code-style session management: a tab per terminal
+ *  (closable), a + dropdown that opens any shell type, and kill-active.
  *  Exported: it renders both in the docked tools panel and as a pane view. */
 export function TerminalPanel() {
-	const [kind, setKind] = useState('bash');
-	const [ids, setIds] = useState<Record<string, number>>({ bash: 1 });
-	const sessionId = `velocity:term:${kind}:${ids[kind] ?? 1}`;
+	const [sessions, setSessions] = useState<{ id: number; shell: string }[]>([{ id: 1, shell: 'bash' }]);
+	const [active, setActive] = useState(1);
+	const [pickerOpen, setPickerOpen] = useState(false);
+	const nextId = useRef(2);
+
+	const add = (shell: string) => {
+		const id = nextId.current++;
+		setSessions((s) => [...s, { id, shell }]);
+		setActive(id);
+		setPickerOpen(false);
+	};
+	const kill = (id: number) => {
+		setSessions((s) => {
+			if (s.length <= 1) return s; // always keep one terminal
+			const next = s.filter((x) => x.id !== id);
+			if (id === active) setActive(next[next.length - 1].id);
+			return next;
+		});
+	};
+	const session = sessions.find((s) => s.id === active) ?? sessions[0];
+	const sessionKey = `velocity:term:${session.shell}:${session.id}`;
+
 	return (
 		<div className="vs-termpanel">
 			<div className="vs-term-bar">
-				{SHELLS.map((s) => (
-					<button key={s.id} className={`vs-term-tab${kind === s.id ? ' on' : ''}`} onClick={() => { setKind(s.id); setIds((m) => ({ ...m, [s.id]: m[s.id] ?? 1 })); }}>
-						<TermIcon size={12} />{s.label}
-					</button>
+				{sessions.map((s) => (
+					<div key={s.id} className={`vs-term-tab${s.id === active ? ' on' : ''}`} role="tab" aria-selected={s.id === active} onClick={() => setActive(s.id)}>
+						<TermIcon size={12} />
+						<span>{s.shell} · {s.id}</span>
+						{sessions.length > 1 && <button className="vs-term-x" aria-label={`Kill ${s.shell} ${s.id}`} onClick={(e) => { e.stopPropagation(); kill(s.id); }}><X size={11} /></button>}
+					</div>
 				))}
+				<div className="vs-term-newwrap">
+					<button className="vs-icon sm" title="New terminal — choose a shell" aria-label="New terminal" aria-expanded={pickerOpen} onClick={() => setPickerOpen((v) => !v)}><Plus size={13} /></button>
+					{pickerOpen && (
+						<>
+							<div className="vs-pane-scrim" onClick={() => setPickerOpen(false)} />
+							<div className="vs-term-picker" role="menu">
+								{SHELLS.map((sh) => (
+									<button key={sh.id} className="vs-term-pick" onClick={() => add(sh.id)}><TermIcon size={13} />{sh.label}</button>
+								))}
+							</div>
+						</>
+					)}
+				</div>
 				<div className="vs-spacer" />
-				<button className="vs-icon sm" title="New terminal session" onClick={() => setIds((m) => ({ ...m, [kind]: (m[kind] ?? 1) + 1 }))}><Plus size={13} /></button>
+				<button className="vs-icon sm" title="Kill the active terminal" aria-label="Kill terminal" disabled={sessions.length <= 1} onClick={() => kill(active)}><Trash2 size={13} /></button>
 			</div>
 			<div className="vs-term-host">
 				{isTauri
-					? <Suspense fallback={<div className="vs-term-loading">starting shell…</div>}><NativeTerminal key={sessionId} sessionId={sessionId} shell={kind} /></Suspense>
-					: <TerminalMode key={sessionId} paneId={sessionId} />}
+					? <Suspense fallback={<div className="vs-term-loading">starting shell…</div>}><NativeTerminal key={sessionKey} sessionId={sessionKey} shell={session.shell} /></Suspense>
+					: <TerminalMode key={sessionKey} paneId={sessionKey} />}
 			</div>
 		</div>
 	);
