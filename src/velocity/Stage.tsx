@@ -212,18 +212,51 @@ function VerifyLens() {
 						</div>
 					))}
 				</div>
-				<div className="vs-panel-card">
-					<div className="vs-panel-head"><span>Checkout scenario</span><span className="vs-tag good">passed · 0.9s</span></div>
-					<div className="vs-scenario-steps">
-						{SCENARIO_STEPS.map((s, i) => (
-							<div key={i} className="vs-scenario-step">
-								<span className="vs-scenario-node"><Check size={11} /></span>
-								<span>{s.label}</span><span className="vs-trace-ms">{s.ms}ms</span>
-							</div>
-						))}
+				<div className="vs-verify-side">
+					<div className="vs-panel-card">
+						<div className="vs-panel-head"><span>Checkout scenario</span><span className="vs-tag good">passed · 0.9s</span></div>
+						<div className="vs-scenario-steps">
+							{SCENARIO_STEPS.map((s, i) => (
+								<div key={i} className="vs-scenario-step">
+									<span className="vs-scenario-node"><Check size={11} /></span>
+									<span>{s.label}</span><span className="vs-trace-ms">{s.ms}ms</span>
+								</div>
+							))}
+						</div>
+						<button className="vs-run"><Play size={14} />Re-run scenario</button>
 					</div>
-					<button className="vs-run"><Play size={14} />Re-run scenario</button>
+					<MissionTimeline />
 				</div>
+			</div>
+		</div>
+	);
+}
+
+/** The mission's arc — landed checkpoints, merges, failures, and handoffs,
+ *  newest first, derived from the live event stream. */
+function MissionTimeline() {
+	const state = useWorkspace();
+	const MILESTONES = new Set(['checkpoint', 'merge', 'verify-fail', 'reassign']);
+	const rows = state.events.filter((e) => MILESTONES.has(e.kind)).slice(0, 8);
+	const byId = (id: string | null) => state.coworkers.find((c) => c.id === id);
+	return (
+		<div className="vs-panel-card">
+			<div className="vs-panel-head"><span>Mission timeline</span>{state.mission && <span className="vs-tag">{state.mission.title}</span>}</div>
+			<div className="vs-timeline">
+				{rows.length === 0 && <div className="vs-timeline-empty">Milestones appear here as coworkers land work.</div>}
+				{rows.map((e) => {
+					const cw = byId(e.coworkerId);
+					return (
+						<div key={e.id} className={`vs-timeline-row${e.kind === 'verify-fail' ? ' fail' : ''}`}>
+							<span className={`vs-timeline-dot${e.kind === 'checkpoint' || e.kind === 'merge' ? ' solid' : ''}`} />
+							<div className="vs-timeline-body">
+								<span className="vs-timeline-text">{e.text}</span>
+								<span className="vs-timeline-meta">{cw ? `${cw.name} · ` : ''}{e.tsLabel}</span>
+							</div>
+						</div>
+					);
+				})}
+				{state.mission && <div className="vs-timeline-row"><span className="vs-timeline-dot" /><div className="vs-timeline-body"><span className="vs-timeline-text">Mission started — “{state.mission.title}”</span><span className="vs-timeline-meta">start</span></div></div>}
 			</div>
 		</div>
 	);

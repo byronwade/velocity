@@ -592,6 +592,19 @@
 .vs-ring span { width: 42px; height: 42px; border-radius: 50%; background: var(--panel); display: grid; place-items: center; font-size: var(--text-12); font-weight: var(--fw-semibold); font-variant-numeric: tabular-nums; }
 .vs-verify-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; align-items: start; max-width: 900px; }
 .vs-verify-list { display: flex; flex-direction: column; gap: 8px; }
+.vs-verify-side { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+/* Mission timeline — a monochrome vertical rail of milestones. */
+.vs-timeline { display: flex; flex-direction: column; position: relative; padding-left: 4px; }
+.vs-timeline::before { content: ''; position: absolute; left: 8px; top: 8px; bottom: 8px; width: 1px; background: var(--line); }
+.vs-timeline-row { position: relative; display: flex; gap: 12px; padding: 6px 0; }
+.vs-timeline-dot { position: relative; z-index: 1; width: 9px; height: 9px; margin-top: 4px; border-radius: 50%; background: var(--panel); border: 1.5px solid var(--faint); flex: 0 0 auto; }
+.vs-timeline-dot.solid { background: var(--fg); border-color: var(--fg); }
+.vs-timeline-row.fail .vs-timeline-dot { border-color: var(--muted); background: var(--panel-2); }
+.vs-timeline-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.vs-timeline-text { font-size: var(--text-12); color: var(--fg); line-height: 1.45; }
+.vs-timeline-meta { font-size: var(--text-11); color: var(--faint); }
+.vs-timeline-empty { padding: 10px 0 6px 20px; font-size: var(--text-12); color: var(--faint); }
 .vs-verify-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--panel); }
 .vs-verify-row > svg:first-child { flex: 0 0 auto; color: var(--faint); }
 .vs-verify-body { flex: 1; display: flex; flex-direction: column; gap: 1px; }

@@ -28,7 +28,7 @@ to the Dropped section at the bottom with a reason.
 - [x] **auto-assign** — Deterministic best-fit routing of work to coworkers by department and load. _(shipped 2026-07-15)_
 - [x] **work-items-chip** — All open work pins in one dock popover. _(shipped 2026-07-15)_
 - [x] **agents-as-files** — Coworkers as versionable files: `.velocity/coworkers/<id>.md` (name, role, department, model, autonomy, scope, budget) mirrors the active project's team; editing a file in the IDE applies live. _(shipped 2026-07-15)_
-- [ ] **mission-timeline** — A mission timeline in the Verify lens showing criteria proven over time. _(planned)_
+- [x] **mission-timeline** — A mission timeline in the Verify lens: landed checkpoints, merges, failures, and handoffs on a vertical rail, fed live by the heartbeat. _(shipped 2026-07-15)_
 
 ## Coworkers
 

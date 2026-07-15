@@ -12,6 +12,7 @@ corrections get a new entry. Newest release first.
 
 ### Added
 - **agents-as-files** — Coworkers are files. Every live coworker is mirrored to `.velocity/coworkers/<id>.md` — simple frontmatter for name, role, department, model, autonomy, scope, and budget. Edit a file in the IDE and save: the coworker updates live. Coworkers are now versionable, diffable, shareable artifacts, the same pattern as Cursor rules and Claude Code subagents.
+- **mission-timeline** — Mission timeline. The Verify lens gains a vertical milestone rail — landed checkpoints, merges, failures, and handoffs, newest first, fed live by the heartbeat — so the mission's arc is readable at a glance.
 
 ## 2026-07-15 · The workspace comes alive
 
