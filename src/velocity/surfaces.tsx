@@ -4,9 +4,9 @@ import {
 	CornerUpLeft, ShieldQuestion, FlaskConical, Camera, Activity, FileDiff, Circle,
 	Users, ChevronRight, ArchiveRestore, Terminal as TermIcon, Folder, AlertTriangle, GitBranch, Flag, EyeOff,
 } from 'lucide-react';
-import { Link2, UserPlus, Check as CheckIcon } from 'lucide-react';
+import { Link2, UserPlus, Check as CheckIcon, Rocket } from 'lucide-react';
 import { useWorkspace, runtime } from './useWorkspace';
-import { AUTONOMY_LABEL, STATE_TONE, STATE_LABEL, LENS_META, EVENT_TONE } from './model';
+import { AUTONOMY_LABEL, STATE_TONE, STATE_LABEL, LENS_META, EVENT_TONE, DEPLOY_TARGETS } from './model';
 import type { Autonomy, CollabRole, Coworker, EvidenceKind, Lens, Risk, ToolId, WorkspaceEvent } from './model';
 
 // --------------------------------------------------------------------------
@@ -151,6 +151,62 @@ export function ShareSheet() {
 					<button className="vs-app-ghost" onClick={copy}>{copied ? <><CheckIcon size={14} />Copied</> : <><Link2 size={14} />Copy invite link</>}</button>
 					<div className="vs-spacer" />
 					<button className="vs-app-primary" onClick={() => runtime.openShare(false)}>Done</button>
+				</footer>
+			</div>
+		</div>
+	);
+}
+
+// --------------------------------------------------------------------------
+// Ship — deploy to a host (opened from the header Ship button).
+// --------------------------------------------------------------------------
+export function ShipSheet() {
+	const state = useWorkspace();
+	if (!state.layout.shipOpen) return null;
+	const dep = state.deployment ?? null;
+	return (
+		<div className="vs-scrim" onClick={() => runtime.openShip(false)}>
+			<div className="vs-sheet vs-shipsheet" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Ship project">
+				<header className="vs-sheet-head">
+					<div><h2>Ship {state.project.name}</h2><p>All acceptance criteria verified · Candidate healthy · rollback ready.</p></div>
+					<button className="vs-icon" onClick={() => runtime.openShip(false)} aria-label="Close"><X size={16} /></button>
+				</header>
+				<div className="vs-sheet-body">
+					<div className="vs-ship-checks">
+						<span className="vs-tag good">Build ok</span><span className="vs-tag good">28/28 tests</span><span className="vs-tag good">a11y AA</span><span className="vs-tag">Rollback @ 09:41</span>
+					</div>
+					<div className="vs-deploy-head">Deploy to a host</div>
+					<div className="vs-deploy-grid">
+						{DEPLOY_TARGETS.map((t) => {
+							const on = dep?.provider === t.id;
+							const deploying = on && dep?.status === 'deploying';
+							const live = on && dep?.status === 'live';
+							return (
+								<div key={t.id} className={`vs-deploy${on ? ' on' : ''}${live ? ' live' : ''}`}>
+									<div className="vs-deploy-top">
+										<span className={`vs-deploy-mark ${t.id}`}>{t.label[0]}</span><b>{t.label}</b>
+										{live && <span className="vs-tag good">Live</span>}
+									</div>
+									<div className="vs-deploy-url">{t.domain}</div>
+									{deploying ? (
+										<button className="vs-deploy-btn" disabled><span className="vs-spin" />Deploying…</button>
+									) : live ? (
+										<div className="vs-deploy-live">
+											<a className="vs-deploy-visit" href={`https://${t.domain}`} target="_blank" rel="noreferrer">Visit ↗</a>
+											<button className="vs-deploy-btn ghost" onClick={() => runtime.deploy(t.id)}>Redeploy</button>
+										</div>
+									) : (
+										<button className="vs-deploy-btn" onClick={() => runtime.deploy(t.id)}><Rocket size={13} />Deploy</button>
+									)}
+								</div>
+							);
+						})}
+					</div>
+				</div>
+				<footer className="vs-sheet-foot">
+					<button className="vs-app-ghost" onClick={() => runtime.comparePreview('stable')}><GitCompare size={14} />Compare with Stable</button>
+					<div className="vs-spacer" />
+					{dep?.status === 'live' ? <span className="vs-ship-livenote">Production · {dep.url}</span> : <button className="vs-app-ghost" onClick={() => runtime.openShip(false)}>Done</button>}
 				</footer>
 			</div>
 		</div>
@@ -402,7 +458,7 @@ function CheckpointPanel() {
 			</div>
 			<footer className="vs-ckp-foot">
 				<div className="vs-ckp-utils">
-					<button onClick={() => runtime.toggleCompare()}><GitCompare size={14} />Compare</button>
+					<button onClick={() => runtime.comparePreview('stable')}><GitCompare size={14} />Compare</button>
 					<button onClick={() => runtime.reviseCheckpoint(k.id)}><Pencil size={14} />Revise</button>
 					<button onClick={() => runtime.rollback(k.id)}><RotateCcw size={14} />Roll back</button>
 				</div>
@@ -545,12 +601,12 @@ export function CommandBar() {
 			{ id: 'activity', label: 'Open activity feed', run: () => runtime.openRight('activity') },
 			{ id: 'checkpoint', label: 'Review latest checkpoint', run: () => runtime.openRight('checkpoint') },
 			{ id: 'decision', label: 'Open decision', run: () => runtime.openRight('decision') },
-			{ id: 'compare', label: 'Compare Stable vs Candidate', run: () => runtime.toggleCompare() },
+			{ id: 'compare', label: 'Compare Candidate vs Stable', run: () => runtime.comparePreview('stable') },
 			{ id: 'pause', label: state.paused ? 'Resume all coworkers' : 'Pause all coworkers', run: () => runtime.togglePause() },
 			{ id: 'focus', label: 'Toggle focus mode', run: () => runtime.toggleFocus() },
 			{ id: 'tools', label: 'Toggle developer tools', run: () => runtime.openTool(state.layout.openTool ? null : 'explorer') },
 			{ id: 'reset', label: 'Reset workspace layout', run: () => runtime.resetLayout() },
-			{ id: 'ship', label: 'Go to Ship', hint: '⌘⇧D', run: () => runtime.setLens('ship') },
+			{ id: 'ship', label: 'Ship — deploy to a host', hint: '⌘⇧D', run: () => runtime.openShip(true) },
 			...lensCmds,
 		];
 	}, [state.paused, state.layout.openTool]);

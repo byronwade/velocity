@@ -261,12 +261,59 @@
 .vs-pane-tool { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 6px; border: 0; background: transparent; color: var(--faint); cursor: pointer; }
 .vs-pane-tool:hover { background: var(--panel-2); color: var(--fg); }
 
+.vs-pane-left { display: flex; align-items: center; gap: 3px; min-width: 0; }
+.vs-pane-cmpbtn { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; height: 24px; padding: 0 7px; border-radius: 6px; border: 1px solid transparent; background: transparent; color: var(--muted); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer; }
+.vs-pane-cmpbtn:hover { background: var(--panel-2); border-color: var(--line); color: var(--fg); }
+.vs-pane-cmpbtn > svg:first-child { flex: 0 0 auto; }
+.vs-pane-cmpbtn.on { background: color-mix(in srgb, var(--accent) 12%, var(--panel)); border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); color: color-mix(in srgb, var(--accent) 60%, var(--fg)); }
+
+@container (max-width: 300px) {
+	.vs-pane-cmpbtn .vs-pane-viewname, .vs-pane-cmpbtn .vs-pane-chev { display: none; }
+}
 @container (max-width: 240px) {
 	.vs-pane-viewname, .vs-pane-chev { display: none; }
 }
 @container (max-width: 170px) {
 	.vs-pane-tool[title="Split down"] { display: none; }
 }
+
+/* In-pane Preview compare (vs Stable / Live / Preview / Branch). */
+.vs-pane-compare { position: absolute; inset: 0; display: flex; }
+.vs-cmp-side { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.vs-cmp-tag { display: flex; align-items: center; gap: 8px; padding: 8px 14px; font-size: var(--text-12); font-weight: var(--fw-semibold); border-bottom: 1px solid var(--line); background: var(--panel-2); flex: 0 0 auto; }
+.vs-cmp-frame { flex: 1; overflow: auto; position: relative; }
+.vs-cmp-div { width: 1px; background: var(--line-2); flex: 0 0 auto; }
+
+/* Browser view — chrome around the running app. */
+.vs-browser { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--panel); }
+.vs-browser-bar { display: flex; align-items: center; gap: 6px; padding: 7px 10px; border-bottom: 1px solid var(--line); background: var(--panel-2); flex: 0 0 auto; }
+.vs-browser-nav { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 7px; border: 0; background: transparent; color: var(--muted); cursor: pointer; flex: 0 0 auto; }
+.vs-browser-nav:hover { background: var(--panel); color: var(--fg); }
+.vs-browser-url { flex: 1; display: flex; align-items: center; gap: 7px; height: 30px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); font-size: var(--text-12); }
+.vs-browser-url svg { color: var(--good); flex: 0 0 auto; }
+.vs-browser-url span { color: var(--faint); }
+.vs-browser-view { flex: 1; overflow: auto; position: relative; }
+
+/* Tests view — suite runner. */
+.vs-tests { min-height: 100%; padding: 32px 36px; }
+.vs-tests-head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.vs-tests-head h2 { font-size: var(--text-20); font-weight: var(--fw-semibold); }
+.vs-tests-head p { color: var(--muted); font-size: var(--text-13); margin-top: 2px; }
+.vs-tests-head .vs-tag { margin-left: auto; }
+.vs-tests-list { display: flex; flex-direction: column; gap: 8px; max-width: 720px; }
+.vs-test-suite { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--panel); }
+.vs-test-suite.fail { border-color: color-mix(in srgb, var(--danger) 38%, var(--line)); }
+.vs-test-icon { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--good) 18%, var(--panel)); color: var(--good); flex: 0 0 auto; }
+.vs-test-suite.fail .vs-test-icon { background: color-mix(in srgb, var(--danger) 16%, var(--panel)); color: var(--danger); }
+.vs-test-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.vs-test-body code { font-family: var(--mono); font-size: var(--text-12); color: var(--fg); }
+.vs-test-body span { font-size: var(--text-11); color: var(--faint); }
+.vs-run.sm { min-width: 0; }
+
+/* Header Ship button + compact Share icon. */
+.vs-ship-btn { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; border-radius: 8px; border: 0; background: var(--fg); color: var(--shell); font: inherit; font-size: var(--text-12); font-weight: var(--fw-semibold); cursor: pointer; }
+.vs-ship-btn:hover { opacity: 0.9; }
+.vs-shipsheet { width: min(560px, 100%); }
 
 /* Presence flags — calm, Figma-style coworker presence (no pulsing dot). */
 /* Collapsed to an avatar chip by default; expands on hover / when followed —

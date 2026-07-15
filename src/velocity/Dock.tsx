@@ -1,4 +1,4 @@
-import { Plus, Pause, Play, Command, PanelBottom, Users, Eye, Activity, MessageSquarePlus, GitCompare, Maximize2, Flag, ShieldQuestion } from 'lucide-react';
+import { Plus, Pause, Play, Command, PanelBottom, Users, Eye, Activity, MessageSquarePlus, Maximize2, Flag, ShieldQuestion } from 'lucide-react';
 import { useWorkspace, runtime } from './useWorkspace';
 import { STATE_TONE, STATE_LABEL } from './model';
 
@@ -54,9 +54,6 @@ export function Dock() {
 			</button>
 			<button className={`vs-dock-btn${state.paused ? ' warn' : ''}`} onClick={() => runtime.togglePause()} title={state.paused ? 'Resume all' : 'Pause all (safe points)'}>
 				{state.paused ? <Play size={15} /> : <Pause size={15} />}
-			</button>
-			<button className={`vs-dock-btn${state.layout.compare ? ' on' : ''}`} onClick={() => runtime.toggleCompare()} title="Compare Stable vs Candidate">
-				<GitCompare size={15} />
 			</button>
 			<button className={`vs-dock-btn${state.layout.openTool ? ' on' : ''}`} onClick={() => runtime.openTool(state.layout.openTool ? null : 'explorer')} title="Developer tools">
 				<PanelBottom size={15} />

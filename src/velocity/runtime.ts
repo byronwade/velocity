@@ -11,9 +11,9 @@
 
 import { buildScenario } from './scenarios';
 import { DEPLOY_TARGETS } from './model';
-import { findLeaf, firstLeafId, leafIds, removeLeaf, setRatio, setView, splitLeaf } from './panes';
+import { findLeaf, firstLeafId, firstLeafOfView, leafIds, removeLeaf, setCompareSource, setRatio, setView, splitLeaf } from './panes';
 import type {
-	Autonomy, CollabRole, Coworker, DeployTarget, Lens, MissionInput, SplitDir, ToolId, WorkspaceState,
+	Autonomy, CollabRole, CompareSource, Coworker, DeployTarget, Lens, MissionInput, SplitDir, ToolId, WorkspaceState,
 } from './model';
 
 export interface CoworkerRuntime {
@@ -28,11 +28,13 @@ export interface CoworkerRuntime {
 	setPaneView(id: string, view: Lens): void;
 	focusPane(id: string): void;
 	setPaneRatio(splitId: string, ratio: number): void;
+	setPaneCompare(id: string, source: CompareSource): void;
+	comparePreview(source: CompareSource): void;
+	openShip(open: boolean): void;
 	openTool(tool: ToolId | null): void;
 	toggleDock(): void;
 	toggleFocus(): void;
 	follow(coworkerId: string | null): void;
-	toggleCompare(): void;
 	togglePause(): void;
 	openMissionSheet(open: boolean): void;
 	openCommand(open: boolean): void;
@@ -123,14 +125,14 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 	// --- layout / lens / panes ---
 	setLens(lens: Lens): void {
 		const l = this.state.layout;
-		this.patchLayout({ panes: setView(l.panes, l.activePaneId, lens), lens, compare: false });
+		this.patchLayout({ panes: setView(l.panes, l.activePaneId, lens), lens });
 	}
 	splitPane(id: string, dir: SplitDir): void {
 		const l = this.state.layout;
 		const src = findLeaf(l.panes, id);
 		const newId = uid('pane');
 		const newView: Lens = src?.view === 'code' ? 'preview' : 'code';
-		this.patchLayout({ panes: splitLeaf(l.panes, id, dir, newId, newView), activePaneId: newId, lens: newView, compare: false });
+		this.patchLayout({ panes: splitLeaf(l.panes, id, dir, newId, newView), activePaneId: newId, lens: newView });
 	}
 	closePane(id: string): void {
 		const l = this.state.layout;
@@ -140,7 +142,7 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 		this.patchLayout({ panes, activePaneId, lens: findLeaf(panes, activePaneId)?.view ?? l.lens });
 	}
 	setPaneView(id: string, view: Lens): void {
-		this.patchLayout({ panes: setView(this.state.layout.panes, id, view), activePaneId: id, lens: view, compare: false });
+		this.patchLayout({ panes: setView(this.state.layout.panes, id, view), activePaneId: id, lens: view });
 	}
 	focusPane(id: string): void {
 		const view = findLeaf(this.state.layout.panes, id)?.view ?? this.state.layout.lens;
@@ -149,10 +151,25 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 	setPaneRatio(splitId: string, ratio: number): void {
 		this.patchLayout({ panes: setRatio(this.state.layout.panes, splitId, ratio) });
 	}
+	setPaneCompare(id: string, source: CompareSource): void {
+		this.patchLayout({ panes: setCompareSource(this.state.layout.panes, id, source), activePaneId: id });
+	}
+	/** Point the nearest Preview pane at a compare source (Stable / Live / …). */
+	comparePreview(source: CompareSource): void {
+		const l = this.state.layout;
+		const target = firstLeafOfView(l.panes, 'preview');
+		if (target) {
+			const next = target.compareSource === source ? 'none' : source;
+			this.patchLayout({ panes: setCompareSource(l.panes, target.id, next), activePaneId: target.id, lens: 'preview' });
+		} else {
+			// no preview pane open — turn the active pane into a comparing Preview
+			this.patchLayout({ panes: setCompareSource(setView(l.panes, l.activePaneId, 'preview'), l.activePaneId, source), lens: 'preview' });
+		}
+	}
+	openShip(open: boolean): void { this.patchLayout({ shipOpen: open }); }
 	openTool(tool: ToolId | null): void { this.patchLayout({ openTool: tool }); }
 	toggleDock(): void { this.patchLayout({ dockExpanded: !this.state.layout.dockExpanded }); }
 	toggleFocus(): void { this.patchLayout({ focusMode: !this.state.layout.focusMode, openTool: null, rightSurface: 'none' }); }
-	toggleCompare(): void { this.patchLayout({ compare: !this.state.layout.compare }); }
 	togglePause(): void {
 		const paused = !this.state.paused;
 		this.set({ paused });
@@ -168,6 +185,7 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 	closeRight(): void { this.patchLayout({ rightSurface: 'none' }); }
 	closeTopmost(): void {
 		const l = this.state.layout;
+		if (l.shipOpen) return this.patchLayout({ shipOpen: false });
 		if (l.shareOpen) return this.patchLayout({ shareOpen: false });
 		if (l.commandOpen) return this.patchLayout({ commandOpen: false });
 		if (l.missionSheetOpen) return this.patchLayout({ missionSheetOpen: false });
@@ -176,11 +194,10 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 		if (l.rightSurface !== 'none') return this.patchLayout({ rightSurface: 'none' });
 		if (l.openTool) return this.patchLayout({ openTool: null });
 		if (l.followingId) return this.follow(null);
-		if (l.compare) return this.patchLayout({ compare: false });
 		if (l.focusMode) return this.patchLayout({ focusMode: false });
 	}
 	resetLayout(): void {
-		this.patchLayout({ openTool: null, dockExpanded: false, focusMode: false, followingId: null, compare: false, rightSurface: 'none', missionSheetOpen: false, commandOpen: false });
+		this.patchLayout({ openTool: null, dockExpanded: false, focusMode: false, followingId: null, shipOpen: false, rightSurface: 'none', missionSheetOpen: false, commandOpen: false });
 		this.toast('Workspace layout reset.');
 	}
 

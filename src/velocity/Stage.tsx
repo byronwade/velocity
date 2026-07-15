@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-	Play, Check, X, RotateCcw, Rocket, ShieldCheck, Sparkles, ArrowRight, Server, Database, Clock, Gauge, Circle,
+	Play, Check, X, ShieldCheck, Sparkles, ArrowRight, Server, Database, Clock, Gauge, Circle,
 	MessageSquare, Send, CheckCheck, Monitor, Code2, CheckCircle2, ChevronDown, SplitSquareHorizontal, SplitSquareVertical,
+	Globe, FlaskConical, ChevronLeft, ChevronRight, RotateCw, Lock, GitCompare,
 } from 'lucide-react';
 import { EditorMode } from '../modes/EditorMode';
 import { useWorkspace, runtime } from './useWorkspace';
-import { DEPLOY_TARGETS, LENS_META } from './model';
+import { LENS_META, COMPARE_LABEL } from './model';
 import { leafIds } from './panes';
-import type { Collaborator, Comment, Coworker, Lens, PaneLeaf, PaneNode, PaneSplit } from './model';
+import type { Collaborator, Comment, CompareSource, Coworker, Lens, PaneLeaf, PaneNode, PaneSplit } from './model';
 
 const ARTIFACT_ACTIONS = ['Improve', 'Fix', 'Rebuild', 'Investigate', 'Explain', 'Assign', 'Compare', 'Test'] as const;
 
@@ -220,52 +221,49 @@ function VerifyLens() {
 	);
 }
 
-function ShipLens() {
-	const state = useWorkspace();
-	const dep = state.deployment ?? null;
+function BrowserLens() {
 	return (
-		<div className="vs-ship">
-			<div className="vs-ship-card">
-				<div className="vs-ship-top">
-					<Rocket size={20} />
-					<div><h2>Ready to ship</h2><p>All acceptance criteria verified · Candidate healthy · rollback ready.</p></div>
-				</div>
-				<div className="vs-ship-checks">
-					<span className="vs-tag good">Build ok</span><span className="vs-tag good">12/12 tests</span><span className="vs-tag good">a11y AA</span><span className="vs-tag">Rollback @ 09:41</span>
-				</div>
+		<div className="vs-browser">
+			<div className="vs-browser-bar">
+				<button className="vs-browser-nav" title="Back"><ChevronLeft size={15} /></button>
+				<button className="vs-browser-nav" title="Forward"><ChevronRight size={15} /></button>
+				<button className="vs-browser-nav" title="Reload"><RotateCw size={13} /></button>
+				<div className="vs-browser-url"><Lock size={11} />aurora.app <span>· candidate.aurora.app</span></div>
+			</div>
+			<div className="vs-browser-view"><PreviewLens candidate /></div>
+		</div>
+	);
+}
 
-				<div className="vs-deploy-head">Deploy to a host</div>
-				<div className="vs-deploy-grid">
-					{DEPLOY_TARGETS.map((t) => {
-						const on = dep?.provider === t.id;
-						const deploying = on && dep?.status === 'deploying';
-						const live = on && dep?.status === 'live';
-						return (
-							<div key={t.id} className={`vs-deploy${on ? ' on' : ''}${live ? ' live' : ''}`}>
-								<div className="vs-deploy-top">
-									<span className={`vs-deploy-mark ${t.id}`}>{t.label[0]}</span>
-									<b>{t.label}</b>
-									{live && <span className="vs-tag good">Live</span>}
-								</div>
-								<div className="vs-deploy-url">{t.domain}</div>
-								{deploying ? (
-									<button className="vs-deploy-btn" disabled><span className="vs-spin" />Deploying…</button>
-								) : live ? (
-									<div className="vs-deploy-live">
-										<a className="vs-deploy-visit" href={`https://${t.domain}`} target="_blank" rel="noreferrer">Visit ↗</a>
-										<button className="vs-deploy-btn ghost" onClick={() => runtime.deploy(t.id)}>Redeploy</button>
-									</div>
-								) : (
-									<button className="vs-deploy-btn" onClick={() => runtime.deploy(t.id)}><Rocket size={13} />Deploy</button>
-								)}
-							</div>
-						);
-					})}
-				</div>
-				<div className="vs-ship-foot">
-					<button className="vs-app-ghost" onClick={() => runtime.toggleCompare()}>Compare with Stable</button>
-					{dep?.status === 'live' && <span className="vs-ship-livenote">Production · {dep.url}</span>}
-				</div>
+const TEST_SUITES = [
+	{ name: 'onboarding/Onboarding.test.tsx', total: 12, passed: 12, ms: 420, failing: '' },
+	{ name: 'auth/passkey.test.ts', total: 8, passed: 8, ms: 180, failing: '' },
+	{ name: 'checkout/cancel.test.ts', total: 3, passed: 3, ms: 96, failing: '' },
+	{ name: 'session/contract.test.ts', total: 5, passed: 5, ms: 61, failing: '' },
+];
+
+function TestsLens() {
+	const passed = TEST_SUITES.reduce((a, s) => a + s.passed, 0);
+	const total = TEST_SUITES.reduce((a, s) => a + s.total, 0);
+	return (
+		<div className="vs-tests">
+			<div className="vs-tests-head">
+				<div><h2>Tests</h2><p>Unit + integration suites for the candidate.</p></div>
+				<span className="vs-tag good">{passed}/{total} passing</span>
+				<button className="vs-run"><Play size={14} />Run all</button>
+			</div>
+			<div className="vs-tests-list">
+				{TEST_SUITES.map((s) => {
+					const ok = s.passed === s.total;
+					return (
+						<div key={s.name} className={`vs-test-suite${ok ? '' : ' fail'}`}>
+							<span className="vs-test-icon">{ok ? <Check size={13} /> : <X size={13} />}</span>
+							<div className="vs-test-body"><code>{s.name}</code><span>{s.passed}/{s.total} passed{s.failing && ` · ✗ ${s.failing}`}</span></div>
+							<span className="vs-trace-ms">{s.ms}ms</span>
+							<button className="vs-run sm"><Play size={11} /></button>
+						</div>
+					);
+				})}
 			</div>
 		</div>
 	);
@@ -275,11 +273,32 @@ function renderLens(lens: Lens, candidate: boolean) {
 	switch (lens) {
 		case 'preview': return <PreviewLens candidate={candidate} />;
 		case 'code': return <div className="vs-code"><EditorMode paneId="velocity:stage:editor" /></div>;
+		case 'browser': return <BrowserLens />;
 		case 'system': return <SystemLens />;
 		case 'data': return <DataLens />;
+		case 'tests': return <TestsLens />;
 		case 'verify': return <VerifyLens />;
-		case 'ship': return <ShipLens />;
 	}
+}
+
+const CMP_SIDE_LABEL: Record<CompareSource, string> = {
+	none: 'Reference', stable: 'Stable', live: 'Live · production', preview: 'Preview deploy', branch: 'Branch · main',
+};
+
+function PreviewCompare({ source }: { source: CompareSource }) {
+	return (
+		<div className="vs-pane-compare">
+			<div className="vs-cmp-side">
+				<div className="vs-cmp-tag">{CMP_SIDE_LABEL[source]} <span className="vs-tag">reference</span></div>
+				<div className="vs-cmp-frame"><PreviewLens candidate={false} /></div>
+			</div>
+			<div className="vs-cmp-div" />
+			<div className="vs-cmp-side">
+				<div className="vs-cmp-tag">Candidate <span className="vs-tag good">your changes</span></div>
+				<div className="vs-cmp-frame"><PreviewLens candidate /></div>
+			</div>
+		</div>
+	);
 }
 
 /** Calm, Figma-style presence flag for an AI coworker pinned to its artifact. */
@@ -415,10 +434,36 @@ function StageOverlay({ lens }: { lens: Lens }) {
 // --------------------------------------------------------------------------
 // Split-pane workspace — each pane picks its own view and can split / close.
 // --------------------------------------------------------------------------
-const LENS_ORDER: Lens[] = ['preview', 'code', 'system', 'data', 'verify', 'ship'];
+const LENS_ORDER: Lens[] = ['preview', 'code', 'browser', 'system', 'data', 'tests', 'verify'];
 const LENS_ICON: Record<Lens, typeof Monitor> = {
-	preview: Monitor, code: Code2, system: Server, data: Database, verify: CheckCircle2, ship: Rocket,
+	preview: Monitor, code: Code2, browser: Globe, system: Server, data: Database, tests: FlaskConical, verify: CheckCircle2,
 };
+const COMPARE_ORDER: CompareSource[] = ['none', 'stable', 'live', 'preview', 'branch'];
+
+/** The Preview pane's compare-source picker (vs Stable / Live / Preview / Branch). */
+function CompareMenu({ leaf }: { leaf: PaneLeaf }) {
+	const [menu, setMenu] = useState(false);
+	const src = leaf.compareSource ?? 'none';
+	return (
+		<div className="vs-pane-view">
+			<button className={`vs-pane-cmpbtn${src !== 'none' ? ' on' : ''}`} onClick={(e) => { e.stopPropagation(); setMenu((v) => !v); }} title="Compare against…">
+				<GitCompare size={13} /><span className="vs-pane-viewname">{COMPARE_LABEL[src]}</span><ChevronDown size={12} className="vs-pane-chev" />
+			</button>
+			{menu && (
+				<>
+					<div className="vs-pane-scrim" onClick={() => setMenu(false)} />
+					<div className="vs-pane-menu" onClick={(e) => e.stopPropagation()}>
+						{COMPARE_ORDER.map((c) => (
+							<button key={c} className={`vs-pane-menuitem${c === src ? ' on' : ''}`} onClick={() => { runtime.setPaneCompare(leaf.id, c); setMenu(false); }}>
+								<GitCompare size={15} /><span>{COMPARE_LABEL[c]}</span>{c === 'none' && <em>no compare</em>}
+							</button>
+						))}
+					</div>
+				</>
+			)}
+		</div>
+	);
+}
 
 /** Compact, adaptive per-pane toolbar (Framer-style) — view switcher + splits. */
 function PaneToolbar({ leaf, single }: { leaf: PaneLeaf; single: boolean }) {
@@ -426,25 +471,28 @@ function PaneToolbar({ leaf, single }: { leaf: PaneLeaf; single: boolean }) {
 	const Icon = LENS_ICON[leaf.view];
 	return (
 		<div className="vs-pane-bar">
-			<div className="vs-pane-view">
-				<button className="vs-pane-viewbtn" onClick={(e) => { e.stopPropagation(); setMenu((v) => !v); }} title="Switch view">
-					<Icon size={14} /><span className="vs-pane-viewname">{LENS_META[leaf.view].label}</span><ChevronDown size={12} className="vs-pane-chev" />
-				</button>
-				{menu && (
-					<>
-						<div className="vs-pane-scrim" onClick={() => setMenu(false)} />
-						<div className="vs-pane-menu" onClick={(e) => e.stopPropagation()}>
-							{LENS_ORDER.map((v) => {
-								const I = LENS_ICON[v];
-								return (
-									<button key={v} className={`vs-pane-menuitem${v === leaf.view ? ' on' : ''}`} onClick={() => { runtime.setPaneView(leaf.id, v); setMenu(false); }}>
-										<I size={15} /><span>{LENS_META[v].label}</span><em>{LENS_META[v].hint}</em>
-									</button>
-								);
-							})}
-						</div>
-					</>
-				)}
+			<div className="vs-pane-left">
+				<div className="vs-pane-view">
+					<button className="vs-pane-viewbtn" onClick={(e) => { e.stopPropagation(); setMenu((v) => !v); }} title="Switch view">
+						<Icon size={14} /><span className="vs-pane-viewname">{LENS_META[leaf.view].label}</span><ChevronDown size={12} className="vs-pane-chev" />
+					</button>
+					{menu && (
+						<>
+							<div className="vs-pane-scrim" onClick={() => setMenu(false)} />
+							<div className="vs-pane-menu" onClick={(e) => e.stopPropagation()}>
+								{LENS_ORDER.map((v) => {
+									const I = LENS_ICON[v];
+									return (
+										<button key={v} className={`vs-pane-menuitem${v === leaf.view ? ' on' : ''}`} onClick={() => { runtime.setPaneView(leaf.id, v); setMenu(false); }}>
+											<I size={15} /><span>{LENS_META[v].label}</span><em>{LENS_META[v].hint}</em>
+										</button>
+									);
+								})}
+							</div>
+						</>
+					)}
+				</div>
+				{leaf.view === 'preview' && <CompareMenu leaf={leaf} />}
 			</div>
 			<div className="vs-pane-tools">
 				<button className="vs-pane-tool" title="Split right" onClick={(e) => { e.stopPropagation(); runtime.splitPane(leaf.id, 'row'); }}><SplitSquareHorizontal size={14} /></button>
@@ -459,12 +507,13 @@ function Pane({ leaf, single }: { leaf: PaneLeaf; single: boolean }) {
 	const state = useWorkspace();
 	const active = state.layout.activePaneId === leaf.id;
 	const candidateHealthy = state.candidate.health === 'healthy';
+	const comparing = leaf.view === 'preview' && !!leaf.compareSource && leaf.compareSource !== 'none';
 	return (
 		<section className={`vs-pane${active ? ' active' : ''}${state.layout.commentMode ? ' commenting' : ''}`} onMouseDown={() => runtime.focusPane(leaf.id)}>
 			<PaneToolbar leaf={leaf} single={single} />
 			<div className="vs-pane-body">
-				{renderLens(leaf.view, candidateHealthy)}
-				<StageOverlay lens={leaf.view} />
+				{comparing ? <PreviewCompare source={leaf.compareSource!} /> : renderLens(leaf.view, candidateHealthy)}
+				{!comparing && <StageOverlay lens={leaf.view} />}
 			</div>
 		</section>
 	);
@@ -501,8 +550,7 @@ function PaneNodeView({ node, single }: { node: PaneNode; single: boolean }) {
 
 export function Stage() {
 	const state = useWorkspace();
-	const { compare, focusMode } = state.layout;
-	const candidateHealthy = state.candidate.health === 'healthy';
+	const { focusMode } = state.layout;
 
 	if (state.scenario === 'empty' && !state.mission) {
 		return (
@@ -512,29 +560,6 @@ export function Stage() {
 					<h1>What should we build?</h1>
 					<p>Describe an outcome. Velocity staffs a coworker and starts building — you direct, review, and approve.</p>
 					<button className="vs-app-primary lg" onClick={() => runtime.openMissionSheet(true)}>Create a mission</button>
-				</div>
-			</div>
-		);
-	}
-
-	if (compare) {
-		return (
-			<div className={`vs-stage vs-compare${focusMode ? ' focus' : ''}`}>
-				<div className="vs-compare-pane">
-					<div className="vs-compare-tag">Stable <span className="vs-tag">interactive</span></div>
-					<div className="vs-compare-frame"><PreviewLens candidate={false} /></div>
-				</div>
-				<div className="vs-compare-divider" />
-				<div className="vs-compare-pane">
-					<div className="vs-compare-tag">Candidate <span className={`vs-tag ${candidateHealthy ? 'good' : 'warn'}`}>{state.candidate.checks.passed}/{state.candidate.checks.total}</span></div>
-					<div className="vs-compare-frame"><PreviewLens candidate /><PresenceFlags lens="preview" coworkers={state.coworkers} /></div>
-				</div>
-				<div className="vs-compare-bar">
-					<button className="vs-app-ghost" onClick={() => runtime.toggleCompare()}>Close compare</button>
-					<div className="vs-spacer" />
-					<button className="vs-app-ghost" onClick={() => runtime.rollback(state.checkpoints[0]?.id ?? '')}><RotateCcw size={14} />Roll back</button>
-					<button className="vs-app-ghost" onClick={() => state.checkpoints[0] && runtime.reviseCheckpoint(state.checkpoints[0].id)}>Revise</button>
-					<button className="vs-app-primary" onClick={() => state.checkpoints[0] && runtime.acceptCheckpoint(state.checkpoints[0].id)}><Check size={14} />Promote Candidate</button>
 				</div>
 			</div>
 		);

@@ -7,8 +7,15 @@
 // mutates it deterministically. Nothing here talks to a provider or the network.
 // ---------------------------------------------------------------------------
 
-/** The way the central stage represents the project right now. */
-export type Lens = 'preview' | 'code' | 'system' | 'data' | 'verify' | 'ship';
+/** The views a pane can show. */
+export type Lens = 'preview' | 'code' | 'browser' | 'system' | 'data' | 'tests' | 'verify';
+
+/** What a Preview pane compares the Candidate against. */
+export type CompareSource = 'none' | 'stable' | 'live' | 'preview' | 'branch';
+
+export const COMPARE_LABEL: Record<CompareSource, string> = {
+	none: 'Candidate', stable: 'vs Stable', live: 'vs Live', preview: 'vs Preview', branch: 'vs Branch',
+};
 
 /** Secondary, on-demand developer surfaces (drawers). */
 export type ToolId = 'explorer' | 'terminal' | 'logs' | 'problems' | 'scm' | 'checkpoints';
@@ -241,7 +248,7 @@ export interface CandidateEnv {
 
 // --- Split workspace: a binary tree of panes, each showing one view ---------
 export type SplitDir = 'row' | 'col';
-export interface PaneLeaf { kind: 'leaf'; id: string; view: Lens; }
+export interface PaneLeaf { kind: 'leaf'; id: string; view: Lens; compareSource?: CompareSource; }
 export interface PaneSplit { kind: 'split'; id: string; dir: SplitDir; ratio: number; a: PaneNode; b: PaneNode; }
 export type PaneNode = PaneLeaf | PaneSplit;
 
@@ -255,7 +262,7 @@ export interface LayoutState {
 	dockExpanded: boolean;
 	focusMode: boolean;
 	followingId: string | null;
-	compare: boolean;
+	shipOpen: boolean;
 	rightSurface: 'none' | 'checkpoint' | 'coworkers' | 'decision' | 'inspector' | 'activity' | 'follow';
 	activeCheckpointId: string | null;
 	activeDecisionId: string | null;
@@ -310,11 +317,12 @@ export const DEPLOY_TARGETS: { id: DeployTarget; label: string; domain: string }
 
 export const LENS_META: Record<Lens, { label: string; hint: string }> = {
 	preview: { label: 'Preview', hint: 'The running application' },
-	code: { label: 'Code', hint: 'Files + semantic diff' },
+	code: { label: 'IDE', hint: 'Editor, files + diff' },
+	browser: { label: 'Browser', hint: 'Live app in a browser' },
 	system: { label: 'System', hint: 'Services, endpoints, request flow' },
 	data: { label: 'Data', hint: 'Schema + records' },
-	verify: { label: 'Verify', hint: 'Scenarios + evidence' },
-	ship: { label: 'Ship', hint: 'Deployment readiness + rollback' },
+	tests: { label: 'Tests', hint: 'Unit + integration runner' },
+	verify: { label: 'Verify', hint: 'Acceptance scenarios + evidence' },
 };
 
 export const AUTONOMY_LABEL: Record<Autonomy, string> = {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, X, Flag, ShieldQuestion, Pause, Sun, Moon, UserPlus } from 'lucide-react';
+import { Plus, X, Flag, ShieldQuestion, Pause, Sun, Moon, UserPlus, Rocket } from 'lucide-react';
 import { useShell } from '../lib/store';
 import { useProjects, useWorkspace, manager, runtime } from './useWorkspace';
 import { SCENARIOS as SCENARIO_LIST } from './scenarios';
@@ -104,7 +104,8 @@ export function TabBar() {
 			<div className="vs-tabbar-right">
 				<MissionMini />
 				<Facepile />
-				<button className="vs-share-btn" onClick={() => runtime.openShare(true)} title="Share & invite"><UserPlus size={14} />Share</button>
+				<button className="vs-tabbar-icon" onClick={() => runtime.openShare(true)} title="Share & invite"><UserPlus size={15} /></button>
+				<button className="vs-ship-btn" onClick={() => runtime.openShip(true)} title="Ship — deploy (⌘⇧D)"><Rocket size={14} />Ship</button>
 				<div className="vs-tabbar-sep" />
 				<button className="vs-tabbar-icon" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} title="Toggle theme">
 					{theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}

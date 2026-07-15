@@ -3,7 +3,7 @@
 // calls these to produce a new immutable tree, then stores it in layout.panes.
 // ---------------------------------------------------------------------------
 
-import type { Lens, PaneLeaf, PaneNode, SplitDir } from './model';
+import type { CompareSource, Lens, PaneLeaf, PaneNode, SplitDir } from './model';
 
 export function firstLeafId(node: PaneNode): string {
 	return node.kind === 'leaf' ? node.id : firstLeafId(node.a);
@@ -21,6 +21,16 @@ export function leafIds(node: PaneNode): string[] {
 export function setView(node: PaneNode, id: string, view: Lens): PaneNode {
 	if (node.kind === 'leaf') return node.id === id ? { ...node, view } : node;
 	return { ...node, a: setView(node.a, id, view), b: setView(node.b, id, view) };
+}
+
+export function setCompareSource(node: PaneNode, id: string, source: CompareSource): PaneNode {
+	if (node.kind === 'leaf') return node.id === id ? { ...node, compareSource: source } : node;
+	return { ...node, a: setCompareSource(node.a, id, source), b: setCompareSource(node.b, id, source) };
+}
+
+export function firstLeafOfView(node: PaneNode, view: Lens): PaneLeaf | undefined {
+	if (node.kind === 'leaf') return node.view === view ? node : undefined;
+	return firstLeafOfView(node.a, view) ?? firstLeafOfView(node.b, view);
 }
 
 export function setRatio(node: PaneNode, splitId: string, ratio: number): PaneNode {

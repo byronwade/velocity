@@ -4,10 +4,10 @@ import type { Lens } from './model';
 import { TabBar } from './TabBar';
 import { Stage } from './Stage';
 import { Dock } from './Dock';
-import { MissionSheet, RightRail, ToolDrawer, CommandBar, ShareSheet } from './surfaces';
+import { MissionSheet, RightRail, ToolDrawer, CommandBar, ShareSheet, ShipSheet } from './surfaces';
 import './velocity.css';
 
-const LENS_ORDER: Lens[] = ['preview', 'code', 'system', 'data', 'verify', 'ship'];
+const LENS_ORDER: Lens[] = ['preview', 'code', 'browser', 'system', 'data', 'tests', 'verify'];
 
 function Confetti() {
 	const state = useWorkspace();
@@ -38,10 +38,10 @@ export function VelocityApp() {
 			if (e.key === 'Escape') { runtime.closeTopmost(); return; }
 			if (mod && e.key.toLowerCase() === 'k') { e.preventDefault(); runtime.openCommand(true); return; }
 			if (mod && e.shiftKey && e.key.toLowerCase() === 'n') { e.preventDefault(); runtime.openMissionSheet(true); return; }
-			if (mod && e.shiftKey && e.key.toLowerCase() === 'd') { e.preventDefault(); runtime.setLens('ship'); return; }
+			if (mod && e.shiftKey && e.key.toLowerCase() === 'd') { e.preventDefault(); runtime.openShip(true); return; }
 			if (typing || mod) return;
-			if (e.key >= '1' && e.key <= '6') { runtime.setLens(LENS_ORDER[Number(e.key) - 1]); return; }
-			if (e.key.toLowerCase() === 'c') runtime.toggleCompare();
+			if (e.key >= '1' && e.key <= '7') { runtime.setLens(LENS_ORDER[Number(e.key) - 1]); return; }
+			if (e.key.toLowerCase() === 'c') runtime.comparePreview('stable');
 			if (e.key.toLowerCase() === 'f') runtime.toggleFocus();
 			if (e.key === '.') runtime.togglePause();
 		};
@@ -62,6 +62,7 @@ export function VelocityApp() {
 				<Dock />
 				<MissionSheet />
 				<ShareSheet />
+				<ShipSheet />
 				<CommandBar />
 				<Toast />
 				<Confetti />

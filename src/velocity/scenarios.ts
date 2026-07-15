@@ -5,7 +5,7 @@
 // ---------------------------------------------------------------------------
 
 import type {
-	Budget, Coworker, Collaborator, Comment, Decision, Checkpoint, Mission, WorkspaceEvent, WorkspaceState, Lens,
+	Budget, Coworker, Collaborator, Comment, CompareSource, Decision, Checkpoint, Mission, WorkspaceEvent, WorkspaceState, Lens,
 } from './model';
 
 // Muted, cool identity colors — distinct from semantic green/amber/red.
@@ -17,18 +17,18 @@ function budget(spent: number, total: number, unit: Budget['unit'] = '$'): Budge
 
 const project = { name: 'Aurora', repo: 'aurora/storefront', branch: 'main', environment: 'Preview' };
 
-function baseLayout(lens: Lens = 'preview') {
+function baseLayout(lens: Lens = 'preview', leftCompare?: CompareSource) {
 	// The app is always the left pane; the scenario's focus lens sits on the right.
 	const right: Lens = lens === 'preview' ? 'code' : lens;
 	const panes = {
 		kind: 'split' as const, id: 's-root', dir: 'row' as const, ratio: 0.6,
-		a: { kind: 'leaf' as const, id: 'p-left', view: 'preview' as Lens },
+		a: { kind: 'leaf' as const, id: 'p-left', view: 'preview' as Lens, compareSource: leftCompare },
 		b: { kind: 'leaf' as const, id: 'p-right', view: right },
 	};
 	return {
 		lens: 'preview' as Lens, panes, activePaneId: 'p-left',
 		openTool: null, dockExpanded: false, focusMode: false, followingId: null,
-		compare: false, rightSurface: 'none' as const, activeCheckpointId: null,
+		shipOpen: false, rightSurface: 'none' as const, activeCheckpointId: null,
 		activeDecisionId: null, missionSheetOpen: false, commandOpen: false,
 		commentMode: false, activeCommentId: null, shareOpen: false,
 	};
@@ -250,7 +250,7 @@ const builders: Record<string, Builder> = {
 		project, mission: mission(), missions: [mission()], coworkers: makeCoworkers(),
 		archived: [], events: baseEvents(), checkpoints: baseCheckpoints(), decisions: [],
 		candidate: { health: 'healthy', checks: { passed: 12, total: 12 }, changedRegions: ['onboarding', 'passkey'] },
-		paused: false, layout: { ...baseLayout('preview'), compare: true },
+		paused: false, layout: baseLayout('preview', 'stable'),
 	}),
 
 	shipping: () => ({
@@ -260,7 +260,7 @@ const builders: Record<string, Builder> = {
 		archived: [], events: events([['merge', 'Two healthy checkpoints merged into Candidate.', 'maya', '2m'], ['verify-pass', 'All acceptance criteria verified.', 'iris', 'now']]),
 		checkpoints: baseCheckpoints(), decisions: [],
 		candidate: { health: 'healthy', checks: { passed: 12, total: 12 }, changedRegions: [] },
-		paused: false, layout: baseLayout('ship'),
+		paused: false, layout: { ...baseLayout(), shipOpen: true },
 	}),
 
 	devtools: () => ({

@@ -18,10 +18,12 @@ demo is fully repeatable.
   account bar — credits/usage meter, the light/dark toggle, and the user profile.
 - **Quiet top bar** — project + mission progress, compare, focus, and a demo-scenario picker.
 - **Split-pane workspace (Cursor-style)** — the app is the left pane; the right holds tools. Every
-  pane has its own compact toolbar with a **view dropdown** (Preview · Code · System · Data ·
-  Verify · Ship) and **split-right / split-down / close** — build 50/50, stacked, or 2×2 layouts,
-  with draggable dividers. Toolbars adapt to pane width. **Spatial presence markers** show where
-  each coworker is working in whichever pane shows that view; click one to Follow.
+  pane has its own compact toolbar with a **view dropdown** (Preview · IDE · Browser · System ·
+  Data · Tests · Verify) and **split-right / split-down / close** — build 50/50, stacked, or 2×2
+  layouts, with draggable dividers. Toolbars adapt to pane width. A **Preview** pane also has a
+  **compare selector** (vs Stable / Live / Preview / Branch) that splits it into a side-by-side.
+  **Spatial presence markers** show where each coworker is working; click one to Follow.
+- **Ship** is a header button that opens the deploy sheet (Vercel / Netlify / Cloudflare).
 - **Floating dock** — new work, the coworker avatar stack, global pause, developer tools, ⌘K.
 - **Mission Sheet** — a structured outcome + acceptance-criteria intake (no chat composer).
 - **Coworkers** — add / rename / pause / dismiss / restore / follow; name and role read louder than
