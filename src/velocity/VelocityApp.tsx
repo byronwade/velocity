@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { Maximize2, Minimize2, GitCompare, Flag, ShieldQuestion, UserPlus } from 'lucide-react';
 import { useWorkspace, runtime } from './useWorkspace';
-import { LENS_META } from './model';
 import type { Lens } from './model';
 import { SCENARIOS as SCENARIO_LIST } from './scenarios';
 import { TabBar } from './TabBar';
@@ -14,7 +13,7 @@ const LENS_ORDER: Lens[] = ['preview', 'code', 'system', 'data', 'verify', 'ship
 
 function TopBar() {
 	const state = useWorkspace();
-	const { lens, compare, focusMode } = state.layout;
+	const { compare, focusMode } = state.layout;
 	const pendingCheckpoint = state.checkpoints.some((k) => k.state === 'ready');
 	const openDecision = state.decisions.some((d) => d.state === 'open');
 
@@ -37,14 +36,6 @@ function TopBar() {
 					);
 				})()}
 			</div>
-
-			<nav className="vs-lenses" aria-label="Lenses">
-				{LENS_ORDER.map((l) => (
-					<button key={l} className={`vs-lens${lens === l && !compare ? ' on' : ''}`} onClick={() => runtime.setLens(l)} title={LENS_META[l].hint}>
-						{LENS_META[l].label}
-					</button>
-				))}
-			</nav>
 
 			<div className="vs-top-right">
 				<div className="vs-top-alerts">

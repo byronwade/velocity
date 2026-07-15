@@ -18,8 +18,16 @@ function budget(spent: number, total: number, unit: Budget['unit'] = '$'): Budge
 const project = { name: 'Aurora', repo: 'aurora/storefront', branch: 'main', environment: 'Preview' };
 
 function baseLayout(lens: Lens = 'preview') {
+	// The app is always the left pane; the scenario's focus lens sits on the right.
+	const right: Lens = lens === 'preview' ? 'code' : lens;
+	const panes = {
+		kind: 'split' as const, id: 's-root', dir: 'row' as const, ratio: 0.6,
+		a: { kind: 'leaf' as const, id: 'p-left', view: 'preview' as Lens },
+		b: { kind: 'leaf' as const, id: 'p-right', view: right },
+	};
 	return {
-		lens, openTool: null, dockExpanded: false, focusMode: false, followingId: null,
+		lens: 'preview' as Lens, panes, activePaneId: 'p-left',
+		openTool: null, dockExpanded: false, focusMode: false, followingId: null,
 		compare: false, rightSurface: 'none' as const, activeCheckpointId: null,
 		activeDecisionId: null, missionSheetOpen: false, commandOpen: false,
 		commentMode: false, activeCommentId: null, shareOpen: false,

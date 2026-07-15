@@ -239,8 +239,18 @@ export interface CandidateEnv {
 	changedRegions: string[];
 }
 
+// --- Split workspace: a binary tree of panes, each showing one view ---------
+export type SplitDir = 'row' | 'col';
+export interface PaneLeaf { kind: 'leaf'; id: string; view: Lens; }
+export interface PaneSplit { kind: 'split'; id: string; dir: SplitDir; ratio: number; a: PaneNode; b: PaneNode; }
+export type PaneNode = PaneLeaf | PaneSplit;
+
 export interface LayoutState {
+	/** The ACTIVE pane's view — kept in sync for commands / keyboard. */
 	lens: Lens;
+	/** The split-pane tree filling the workspace. */
+	panes: PaneNode;
+	activePaneId: string;
 	openTool: ToolId | null;
 	dockExpanded: boolean;
 	focusMode: boolean;

@@ -11,8 +11,9 @@
 
 import { buildScenario } from './scenarios';
 import { DEPLOY_TARGETS } from './model';
+import { findLeaf, firstLeafId, leafIds, removeLeaf, setRatio, setView, splitLeaf } from './panes';
 import type {
-	Autonomy, CollabRole, Coworker, DeployTarget, Lens, MissionInput, ToolId, WorkspaceState,
+	Autonomy, CollabRole, Coworker, DeployTarget, Lens, MissionInput, SplitDir, ToolId, WorkspaceState,
 } from './model';
 
 export interface CoworkerRuntime {
@@ -22,6 +23,11 @@ export interface CoworkerRuntime {
 	reset(): void;
 
 	setLens(lens: Lens): void;
+	splitPane(id: string, dir: SplitDir): void;
+	closePane(id: string): void;
+	setPaneView(id: string, view: Lens): void;
+	focusPane(id: string): void;
+	setPaneRatio(splitId: string, ratio: number): void;
 	openTool(tool: ToolId | null): void;
 	toggleDock(): void;
 	toggleFocus(): void;
@@ -114,8 +120,35 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 		this.set({ project: { ...this.state.project, name } });
 	}
 
-	// --- layout / lens ---
-	setLens(lens: Lens): void { this.patchLayout({ lens, compare: false }); }
+	// --- layout / lens / panes ---
+	setLens(lens: Lens): void {
+		const l = this.state.layout;
+		this.patchLayout({ panes: setView(l.panes, l.activePaneId, lens), lens, compare: false });
+	}
+	splitPane(id: string, dir: SplitDir): void {
+		const l = this.state.layout;
+		const src = findLeaf(l.panes, id);
+		const newId = uid('pane');
+		const newView: Lens = src?.view === 'code' ? 'preview' : 'code';
+		this.patchLayout({ panes: splitLeaf(l.panes, id, dir, newId, newView), activePaneId: newId, lens: newView, compare: false });
+	}
+	closePane(id: string): void {
+		const l = this.state.layout;
+		if (leafIds(l.panes).length <= 1) return;
+		const panes = removeLeaf(l.panes, id);
+		const activePaneId = l.activePaneId === id ? firstLeafId(panes) : l.activePaneId;
+		this.patchLayout({ panes, activePaneId, lens: findLeaf(panes, activePaneId)?.view ?? l.lens });
+	}
+	setPaneView(id: string, view: Lens): void {
+		this.patchLayout({ panes: setView(this.state.layout.panes, id, view), activePaneId: id, lens: view, compare: false });
+	}
+	focusPane(id: string): void {
+		const view = findLeaf(this.state.layout.panes, id)?.view ?? this.state.layout.lens;
+		this.patchLayout({ activePaneId: id, lens: view });
+	}
+	setPaneRatio(splitId: string, ratio: number): void {
+		this.patchLayout({ panes: setRatio(this.state.layout.panes, splitId, ratio) });
+	}
 	openTool(tool: ToolId | null): void { this.patchLayout({ openTool: tool }); }
 	toggleDock(): void { this.patchLayout({ dockExpanded: !this.state.layout.dockExpanded }); }
 	toggleFocus(): void { this.patchLayout({ focusMode: !this.state.layout.focusMode, openTool: null, rightSurface: 'none' }); }

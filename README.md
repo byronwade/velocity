@@ -16,10 +16,12 @@ demo is fully repeatable.
 - **Project tabs** — the top row is a tab per project; each tab is a fully isolated workspace
   (its own coworkers, missions, lens, open terminals/tools, and rails). Above the tabs sits the
   account bar — credits/usage meter, the light/dark toggle, and the user profile.
-- **Quiet top bar** — project + mission progress, the six **Lenses** (Preview · Code · System ·
-  Data · Verify · Ship), compare, focus, and a demo-scenario picker.
-- **One dominant stage** — the running app (or the real CodeMirror editor on the Code lens), with
-  **spatial presence markers** showing where each coworker is working. Click a marker to Follow.
+- **Quiet top bar** — project + mission progress, compare, focus, and a demo-scenario picker.
+- **Split-pane workspace (Cursor-style)** — the app is the left pane; the right holds tools. Every
+  pane has its own compact toolbar with a **view dropdown** (Preview · Code · System · Data ·
+  Verify · Ship) and **split-right / split-down / close** — build 50/50, stacked, or 2×2 layouts,
+  with draggable dividers. Toolbars adapt to pane width. **Spatial presence markers** show where
+  each coworker is working in whichever pane shows that view; click one to Follow.
 - **Floating dock** — new work, the coworker avatar stack, global pause, developer tools, ⌘K.
 - **Mission Sheet** — a structured outcome + acceptance-criteria intake (no chat composer).
 - **Coworkers** — add / rename / pause / dismiss / restore / follow; name and role read louder than

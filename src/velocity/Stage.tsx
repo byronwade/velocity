@@ -1,9 +1,13 @@
-import { useState } from 'react';
-import { Play, Check, X, RotateCcw, Rocket, ShieldCheck, Sparkles, ArrowRight, Server, Database, Clock, Gauge, Circle, MessageSquare, Send, CheckCheck } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import {
+	Play, Check, X, RotateCcw, Rocket, ShieldCheck, Sparkles, ArrowRight, Server, Database, Clock, Gauge, Circle,
+	MessageSquare, Send, CheckCheck, Monitor, Code2, CheckCircle2, ChevronDown, SplitSquareHorizontal, SplitSquareVertical,
+} from 'lucide-react';
 import { EditorMode } from '../modes/EditorMode';
 import { useWorkspace, runtime } from './useWorkspace';
-import { DEPLOY_TARGETS } from './model';
-import type { Collaborator, Comment, Coworker, Lens } from './model';
+import { DEPLOY_TARGETS, LENS_META } from './model';
+import { leafIds } from './panes';
+import type { Collaborator, Comment, Coworker, Lens, PaneLeaf, PaneNode, PaneSplit } from './model';
 
 const ARTIFACT_ACTIONS = ['Improve', 'Fix', 'Rebuild', 'Investigate', 'Explain', 'Assign', 'Compare', 'Test'] as const;
 
@@ -408,9 +412,96 @@ function StageOverlay({ lens }: { lens: Lens }) {
 	);
 }
 
+// --------------------------------------------------------------------------
+// Split-pane workspace — each pane picks its own view and can split / close.
+// --------------------------------------------------------------------------
+const LENS_ORDER: Lens[] = ['preview', 'code', 'system', 'data', 'verify', 'ship'];
+const LENS_ICON: Record<Lens, typeof Monitor> = {
+	preview: Monitor, code: Code2, system: Server, data: Database, verify: CheckCircle2, ship: Rocket,
+};
+
+/** Compact, adaptive per-pane toolbar (Framer-style) — view switcher + splits. */
+function PaneToolbar({ leaf, single }: { leaf: PaneLeaf; single: boolean }) {
+	const [menu, setMenu] = useState(false);
+	const Icon = LENS_ICON[leaf.view];
+	return (
+		<div className="vs-pane-bar">
+			<div className="vs-pane-view">
+				<button className="vs-pane-viewbtn" onClick={(e) => { e.stopPropagation(); setMenu((v) => !v); }} title="Switch view">
+					<Icon size={14} /><span className="vs-pane-viewname">{LENS_META[leaf.view].label}</span><ChevronDown size={12} className="vs-pane-chev" />
+				</button>
+				{menu && (
+					<>
+						<div className="vs-pane-scrim" onClick={() => setMenu(false)} />
+						<div className="vs-pane-menu" onClick={(e) => e.stopPropagation()}>
+							{LENS_ORDER.map((v) => {
+								const I = LENS_ICON[v];
+								return (
+									<button key={v} className={`vs-pane-menuitem${v === leaf.view ? ' on' : ''}`} onClick={() => { runtime.setPaneView(leaf.id, v); setMenu(false); }}>
+										<I size={15} /><span>{LENS_META[v].label}</span><em>{LENS_META[v].hint}</em>
+									</button>
+								);
+							})}
+						</div>
+					</>
+				)}
+			</div>
+			<div className="vs-pane-tools">
+				<button className="vs-pane-tool" title="Split right" onClick={(e) => { e.stopPropagation(); runtime.splitPane(leaf.id, 'row'); }}><SplitSquareHorizontal size={14} /></button>
+				<button className="vs-pane-tool" title="Split down" onClick={(e) => { e.stopPropagation(); runtime.splitPane(leaf.id, 'col'); }}><SplitSquareVertical size={14} /></button>
+				{!single && <button className="vs-pane-tool" title="Close pane" onClick={(e) => { e.stopPropagation(); runtime.closePane(leaf.id); }}><X size={14} /></button>}
+			</div>
+		</div>
+	);
+}
+
+function Pane({ leaf, single }: { leaf: PaneLeaf; single: boolean }) {
+	const state = useWorkspace();
+	const active = state.layout.activePaneId === leaf.id;
+	const candidateHealthy = state.candidate.health === 'healthy';
+	return (
+		<section className={`vs-pane${active ? ' active' : ''}${state.layout.commentMode ? ' commenting' : ''}`} onMouseDown={() => runtime.focusPane(leaf.id)}>
+			<PaneToolbar leaf={leaf} single={single} />
+			<div className="vs-pane-body">
+				{renderLens(leaf.view, candidateHealthy)}
+				<StageOverlay lens={leaf.view} />
+			</div>
+		</section>
+	);
+}
+
+function SplitView({ split }: { split: PaneSplit }) {
+	const ref = useRef<HTMLDivElement>(null);
+	const dragging = useRef(false);
+	useEffect(() => {
+		const move = (e: MouseEvent) => {
+			if (!dragging.current || !ref.current) return;
+			const r = ref.current.getBoundingClientRect();
+			const ratio = split.dir === 'row' ? (e.clientX - r.left) / r.width : (e.clientY - r.top) / r.height;
+			runtime.setPaneRatio(split.id, ratio);
+		};
+		const up = () => { dragging.current = false; document.body.style.userSelect = ''; document.body.style.cursor = ''; };
+		window.addEventListener('mousemove', move);
+		window.addEventListener('mouseup', up);
+		return () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
+	}, [split.id, split.dir]);
+	const startDrag = () => { dragging.current = true; document.body.style.userSelect = 'none'; document.body.style.cursor = split.dir === 'row' ? 'col-resize' : 'row-resize'; };
+	return (
+		<div ref={ref} className={`vs-split ${split.dir}`}>
+			<div className="vs-split-slot" style={{ flex: `${split.ratio} 1 0` }}><PaneNodeView node={split.a} single={false} /></div>
+			<div className={`vs-split-divider ${split.dir}`} onMouseDown={startDrag} />
+			<div className="vs-split-slot" style={{ flex: `${1 - split.ratio} 1 0` }}><PaneNodeView node={split.b} single={false} /></div>
+		</div>
+	);
+}
+
+function PaneNodeView({ node, single }: { node: PaneNode; single: boolean }) {
+	return node.kind === 'leaf' ? <Pane leaf={node} single={single} /> : <SplitView split={node} />;
+}
+
 export function Stage() {
 	const state = useWorkspace();
-	const { lens, compare, focusMode } = state.layout;
+	const { compare, focusMode } = state.layout;
 	const candidateHealthy = state.candidate.health === 'healthy';
 
 	if (state.scenario === 'empty' && !state.mission) {
@@ -450,11 +541,8 @@ export function Stage() {
 	}
 
 	return (
-		<div className={`vs-stage${focusMode ? ' focus' : ''}${state.layout.commentMode ? ' commenting' : ''}`}>
-			<div className="vs-stage-inner">
-				{renderLens(lens, candidateHealthy)}
-				<StageOverlay lens={lens} />
-			</div>
+		<div className={`vs-workspace${focusMode ? ' focus' : ''}`}>
+			<PaneNodeView node={state.layout.panes} single={leafIds(state.layout.panes).length === 1} />
 		</div>
 	);
 }
