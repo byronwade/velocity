@@ -1,5 +1,12 @@
 # Integrations research — building Velocity the way Cursor is built
 
+> **Scope note:** This focused runtime-integration memo is now one component of the broader
+> [Velocity Platform Research & Integration Roadmap](../../research/platform-roadmap/README.md).
+> Use the platform roadmap and the accepted
+> [Code-OSS convergence ADR](../../architecture/0001-platform-convergence.md) for production
+> architecture, phase sequencing, security boundaries, evidence requirements, and the complete
+> 457-record backlog. This memo remains the implementation reference for its specific stack choices.
+
 _Research date: July 15, 2026. Three parallel web-research passes (Vercel AI stack, Tauri
 native capabilities, agent-runtime OSS), synthesized against Velocity's seams: the
 `CoworkerRuntime` interface, the service container (fs/shell/browser/preview), the credits/budget
