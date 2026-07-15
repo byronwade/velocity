@@ -66,9 +66,9 @@ function landing(prompt: string): { title: string; entry: string } {
 <footer class="wrap">© ${name}. Built with Velocity.</footer>`;
 	const style = `.row{display:flex;align-items:center;justify-content:space-between;gap:16px}.gap{gap:12px;justify-content:flex-start}
 .nav{border-bottom:1px solid #ececf0;padding:14px 0}nav a{margin-left:20px;color:#52525b;text-decoration:none;font-size:14px;cursor:pointer}
-.cta{background:#5b5bd6;color:#fff!important;padding:9px 16px;border-radius:9px;font-weight:600}.ghost{padding:9px 16px;border:1px solid #d4d4d8;border-radius:9px}
-.hero{padding:88px 0;text-align:center;background:radial-gradient(60% 120% at 50% 0,rgba(91,91,214,.12),transparent)}
-.pill{display:inline-block;font-size:12px;color:#5b5bd6;border:1px solid #d6d6f5;border-radius:20px;padding:4px 12px;margin-bottom:18px}
+.cta{background:#18181b;color:#fff!important;padding:9px 16px;border-radius:8px;font-weight:600}.ghost{padding:9px 16px;border:1px solid #e4e4e7;border-radius:8px}
+.hero{padding:88px 0;text-align:center;background:radial-gradient(60% 120% at 50% 0,rgba(0,0,0,.04),transparent)}
+.pill{display:inline-block;font-size:12px;color:#52525b;border:1px solid #e4e4e7;border-radius:20px;padding:4px 12px;margin-bottom:18px}
 .hero h1{font-size:52px;letter-spacing:-.03em;margin:0 0 14px}.hero p{max-width:56ch;margin:0 auto 26px;color:#52525b;font-size:18px}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:24px}.card{border:1px solid #ececf0;border-radius:14px;padding:22px}
 .card h3{margin:0 0 6px}.card p{margin:0;color:#52525b}footer{padding:40px 24px;color:#a1a1aa;text-align:center}`;
@@ -80,8 +80,8 @@ function todo(_prompt: string): { title: string; entry: string } {
 <form id="f"><input id="i" placeholder="What needs doing?" autocomplete="off" /><button>Add</button></form>
 <ul id="l"></ul></div>`;
 	const style = `.app{max-width:34rem;margin:56px auto}h1{font-size:30px;letter-spacing:-.02em}
-form{display:flex;gap:8px;margin:16px 0}input{flex:1;padding:11px 13px;border:1px solid #d4d4d8;border-radius:10px;font:inherit}
-button{padding:11px 16px;border:0;border-radius:10px;background:#5b5bd6;color:#fff;font-weight:600;cursor:pointer}
+form{display:flex;gap:8px;margin:16px 0}input{flex:1;padding:11px 13px;border:1px solid #e4e4e7;border-radius:8px;font:inherit}
+button{padding:11px 16px;border:0;border-radius:8px;background:#18181b;color:#fff;font-weight:600;cursor:pointer}
 ul{list-style:none;padding:0}li{display:flex;align-items:center;gap:10px;padding:11px 4px;border-bottom:1px solid #ececf0}
 li.done span{opacity:.5;text-decoration:line-through}li input{flex:none}.x{margin-left:auto;color:#a1a1aa;cursor:pointer;background:none;border:0}`;
 	const script = `const l=document.getElementById('l'),f=document.getElementById('f'),i=document.getElementById('i');
@@ -103,12 +103,12 @@ function dashboard(_prompt: string): { title: string; entry: string } {
 <div class="panel"><h3>Weekly signups</h3><div class="bars">${[40, 62, 48, 80, 72, 96, 68].map((h) => `<i style="height:${h}%"></i>`).join('')}</div></div></main></div>`;
 	const style = `body{background:#f6f7f9}.shell{display:flex;min-height:100vh}
 aside{width:210px;background:#fff;border-right:1px solid #ececf0;padding:18px}aside b{display:block;margin-bottom:18px}
-nav{display:flex;flex-direction:column;gap:2px}nav a{padding:8px 10px;border-radius:8px;color:#52525b;font-size:14px;cursor:pointer}nav a.on{background:#eef0ff;color:#5b5bd6;font-weight:600}
-main{flex:1;padding:22px 28px}header{display:flex;justify-content:space-between;align-items:center}.who{width:30px;height:30px;border-radius:50%;background:#5b5bd6;color:#fff;display:grid;place-items:center;font-size:12px}
+nav{display:flex;flex-direction:column;gap:2px}nav a{padding:8px 10px;border-radius:8px;color:#52525b;font-size:14px;cursor:pointer}nav a.on{background:#f4f4f5;color:#18181b;font-weight:600}
+main{flex:1;padding:22px 28px}header{display:flex;justify-content:space-between;align-items:center}.who{width:30px;height:30px;border-radius:50%;background:#18181b;color:#fff;display:grid;place-items:center;font-size:12px}
 .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0}.kpi{background:#fff;border:1px solid #ececf0;border-radius:14px;padding:16px}
 .kpi span{color:#71717a;font-size:13px}.kpi b{display:block;font-size:26px;margin:4px 0}.up{color:#16a34a;font-size:12px}.dn{color:#dc2626;font-size:12px}
 .panel{background:#fff;border:1px solid #ececf0;border-radius:14px;padding:18px}.bars{display:flex;align-items:flex-end;gap:12px;height:180px;margin-top:12px}
-.bars i{flex:1;background:linear-gradient(180deg,#7c7cf0,#5b5bd6);border-radius:6px 6px 0 0}`;
+.bars i{flex:1;background:linear-gradient(180deg,#d4d4d8,#18181b);border-radius:6px 6px 0 0}`;
 	return { title: 'Dashboard', entry: page('Dashboard', body, style) };
 }
 
@@ -117,9 +117,9 @@ function starter(prompt: string): { title: string; entry: string } {
 <h1>${prompt.trim() || 'Your new app'}</h1>
 <p>A clean starting point. Open the files in the editor, tweak, and watch this preview update. Deploy the static output anywhere.</p>
 <div class="row"><a class="cta">Primary action</a><a class="ghost">Secondary</a></div></div>`;
-	const style = `.center{max-width:44rem;margin:14vh auto;text-align:center}.pill{display:inline-block;font-size:12px;color:#5b5bd6;border:1px solid #d6d6f5;border-radius:20px;padding:4px 12px;margin-bottom:16px}
+	const style = `.center{max-width:44rem;margin:14vh auto;text-align:center}.pill{display:inline-block;font-size:12px;color:#52525b;border:1px solid #e4e4e7;border-radius:20px;padding:4px 12px;margin-bottom:16px}
 h1{font-size:44px;letter-spacing:-.03em;margin:0 0 12px}p{color:#52525b;font-size:18px;margin:0 auto 24px;max-width:52ch}
-.row{display:flex;gap:12px;justify-content:center}.cta{background:#5b5bd6;color:#fff;padding:11px 18px;border-radius:10px;font-weight:600;cursor:pointer}.ghost{padding:11px 18px;border:1px solid #d4d4d8;border-radius:10px;cursor:pointer}`;
+.row{display:flex;gap:12px;justify-content:center}.cta{background:#18181b;color:#fff;padding:11px 18px;border-radius:8px;font-weight:600;cursor:pointer}.ghost{padding:11px 18px;border:1px solid #e4e4e7;border-radius:8px;cursor:pointer}`;
 	return { title: 'App', entry: page('App', body, style) };
 }
 
