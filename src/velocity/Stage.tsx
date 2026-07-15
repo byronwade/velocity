@@ -1,12 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
 	Play, Check, X, ShieldCheck, Sparkles, ArrowRight, Server, Database, Clock, Gauge, Circle,
-	MessageSquare, CheckCheck, Code2, CheckCircle2, ChevronDown, SplitSquareHorizontal, SplitSquareVertical,
-	Globe, FlaskConical, GitCompare, Wand2, Trash2, MoreHorizontal,
+	MessageSquare, CheckCheck, Code2, CheckCircle2, ChevronDown, ChevronRight, SplitSquareHorizontal, SplitSquareVertical,
+	Globe, FlaskConical, GitCompare, Wand2, Trash2, MoreHorizontal, Folder, FolderOpen, FileCode,
 } from 'lucide-react';
 import { EditorMode } from '../modes/EditorMode';
 import { BrowserMode } from '../modes/BrowserMode';
 import { useServices } from '../services/container';
+import { usePanePath } from '../services/editorService';
 import { useWorkspace, runtime } from './useWorkspace';
 import { LENS_META, COMPARE_LABEL, WORK_INTENTS, WORK_MODELS } from './model';
 import { leafIds } from './panes';
@@ -225,6 +226,91 @@ function VerifyLens() {
 	);
 }
 
+// --- IDE: a file tree beside the live editor -----------------------------
+interface FileNode { name: string; path: string; dir: boolean; children: FileNode[]; }
+
+function buildFileTree(files: string[], dirs: string[]): FileNode[] {
+	const root: FileNode = { name: '', path: '', dir: true, children: [] };
+	const ensure = (path: string): FileNode => {
+		let node = root, acc = '';
+		for (const part of path.split('/')) {
+			acc = acc ? `${acc}/${part}` : part;
+			let child = node.children.find((e) => e.name === part && e.dir);
+			if (!child) { child = { name: part, path: acc, dir: true, children: [] }; node.children.push(child); }
+			node = child;
+		}
+		return node;
+	};
+	for (const dir of dirs) if (dir) ensure(dir);
+	for (const file of files) {
+		const slash = file.lastIndexOf('/');
+		const parent = slash === -1 ? root : ensure(file.slice(0, slash));
+		parent.children.push({ name: slash === -1 ? file : file.slice(slash + 1), path: file, dir: false, children: [] });
+	}
+	const sort = (node: FileNode) => { node.children.sort((a, b) => (a.dir === b.dir ? a.name.localeCompare(b.name) : a.dir ? -1 : 1)); node.children.forEach(sort); };
+	sort(root);
+	return root.children;
+}
+
+function FileRow({ node, depth, openPath, collapsed, onToggle, onOpen }: { node: FileNode; depth: number; openPath: string | undefined; collapsed: Set<string>; onToggle: (p: string) => void; onOpen: (p: string) => void }) {
+	const pad = { paddingLeft: 8 + depth * 12 };
+	if (node.dir) {
+		const c = collapsed.has(node.path);
+		return (
+			<>
+				<button className="vs-ide-row dir" style={pad} onClick={() => onToggle(node.path)}>
+					<span className="vs-ide-caret">{c ? <ChevronRight size={13} /> : <ChevronDown size={13} />}</span>
+					{c ? <Folder size={13} /> : <FolderOpen size={13} />}<span className="vs-ide-name">{node.name}</span>
+				</button>
+				{!c && node.children.map((ch) => <FileRow key={ch.path} node={ch} depth={depth + 1} openPath={openPath} collapsed={collapsed} onToggle={onToggle} onOpen={onOpen} />)}
+			</>
+		);
+	}
+	return (
+		<button className={`vs-ide-row file${openPath === node.path ? ' active' : ''}`} style={pad} onClick={() => onOpen(node.path)}>
+			<span className="vs-ide-caret" aria-hidden /><FileCode size={13} /><span className="vs-ide-name">{node.name}</span>
+		</button>
+	);
+}
+
+/** File tree bound to the editor pane — clicking a file opens it live. */
+function FileTree({ paneId }: { paneId: string }) {
+	const { fs, editor } = useServices();
+	const [files, setFiles] = useState<string[]>([]);
+	const [dirs, setDirs] = useState<string[]>([]);
+	const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
+	const openPath = usePanePath(paneId);
+	useEffect(() => {
+		let alive = true;
+		const load = () => void Promise.all([fs.list(), fs.directories()]).then(([f, d]) => { if (alive) { setFiles(f); setDirs(d); } });
+		load();
+		const off = fs.onChange(load);
+		return () => { alive = false; off(); };
+	}, [fs]);
+	const tree = useMemo(() => buildFileTree(files, dirs), [files, dirs]);
+	const toggle = (p: string) => setCollapsed((cur) => { const n = new Set(cur); if (n.has(p)) n.delete(p); else n.add(p); return n; });
+	const open = (p: string) => void editor.bindPane(paneId, p);
+	return (
+		<div className="vs-ide-files">
+			<div className="vs-ide-fhead">Files</div>
+			<div className="vs-ide-ftree">
+				{tree.map((n) => <FileRow key={n.path} node={n} depth={0} openPath={openPath} collapsed={collapsed} onToggle={toggle} onOpen={open} />)}
+			</div>
+		</div>
+	);
+}
+
+/** The Code lens — file tree on the left, live CodeMirror editor on the right. */
+function IDELens({ paneKey }: { paneKey: string }) {
+	const paneId = `velocity:editor:${paneKey}`;
+	return (
+		<div className="vs-ide">
+			<FileTree paneId={paneId} />
+			<div className="vs-ide-editor"><EditorMode paneId={paneId} /></div>
+		</div>
+	);
+}
+
 /** The real, working in-app browser (address bar, history, live preview). */
 function BrowserLens({ paneId }: { paneId: string }) {
 	const { browser } = useServices();
@@ -270,7 +356,7 @@ function TestsLens() {
 function renderLens(lens: Lens, paneKey: string) {
 	switch (lens) {
 		case 'browser': return <BrowserLens paneId={`vel:${paneKey}`} />;
-		case 'code': return <div className="vs-code"><EditorMode paneId={`velocity:editor:${paneKey}`} /></div>;
+		case 'code': return <IDELens paneKey={paneKey} />;
 		case 'system': return <SystemLens />;
 		case 'data': return <DataLens />;
 		case 'tests': return <TestsLens />;
