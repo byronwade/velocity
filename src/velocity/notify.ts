@@ -43,12 +43,9 @@ export function chime(): void {
 	} catch { /* no audio available — fine */ }
 }
 
-/** Chime, and when the window is in the background also raise a desktop
- *  notification (in focus the toast + inbox already carry the news). */
-export function notifyCheckpoint(title: string, body: string): void {
-	if (!pref('nCheckpoint', true)) return;
-	chime();
-	if (typeof document !== 'undefined' && !document.hidden) return;
+import { nativeNotify } from './native';
+
+function webNotify(title: string, body: string): void {
 	try {
 		if (typeof Notification === 'undefined') return;
 		if (Notification.permission === 'granted') {
@@ -59,4 +56,14 @@ export function notifyCheckpoint(title: string, body: string): void {
 			});
 		}
 	} catch { /* notifications unsupported — the inbox still has it */ }
+}
+
+/** Chime, and when the window is in the background also raise a desktop
+ *  notification — native (Tauri) first for installed-app identity, the web
+ *  Notification API otherwise. In focus the toast + inbox carry the news. */
+export function notifyCheckpoint(title: string, body: string): void {
+	if (!pref('nCheckpoint', true)) return;
+	chime();
+	if (typeof document !== 'undefined' && !document.hidden) return;
+	void nativeNotify(title, body).then((sent) => { if (!sent) webNotify(title, body); });
 }

@@ -13,6 +13,7 @@
 import { PrototypeCoworkerRuntime, type CoworkerRuntime } from './runtime';
 import { STATE_TONE } from './model';
 import { AGENT_DIR, agentPath, coworkerToFile, identitySignature, parseAgentFile } from './agentfiles';
+import { setTrayAttention } from './native';
 import { getServices } from '../services/container';
 import type { WorkspaceState } from './model';
 
@@ -74,6 +75,8 @@ interface Project extends ProjectTab {
 let pid = 0;
 const projectId = () => `p${++pid}`;
 
+const SAVE_KEY = 'velocity.projects.v1';
+
 const ACCOUNT: Account = {
 	user: { name: 'Byron Wade', initials: 'BW', color: '#6f74c9', plan: 'Pro', email: 'byron@aurora.dev' },
 	credits: { used: 1240, total: 5000 },
@@ -99,15 +102,48 @@ export class WorkspaceManager {
 
 	private agentSig = '';
 	private syncingFiles = false;
+	private saveTimer: ReturnType<typeof setTimeout> | null = null;
 
-	constructor(firstScenario: string) {
-		for (const seed of seedProjects(firstScenario)) this.create(seed.name, seed.scenario);
-		this.activeId = this.projects[0].id;
+	constructor(firstScenario: string, restore: boolean) {
+		const saved = restore ? this.loadSaved() : null;
+		if (saved) {
+			for (const p of saved.projects) this.create(p.name, p.scenario, p.state);
+			this.activeId = (this.projects[saved.activeIndex] ?? this.projects[0]).id;
+		} else {
+			for (const seed of seedProjects(firstScenario)) this.create(seed.name, seed.scenario);
+			this.activeId = this.projects[0].id;
+		}
 		this.snap = this.build();
 		// Agents as files: mirror the ACTIVE project's coworkers to
 		// .velocity/coworkers/*.md, and hydrate edits back (see syncAgentFiles).
 		void this.syncAgentFiles();
 		getServices().fs.onChange(() => void this.hydrateAgentFiles());
+		if (typeof window !== 'undefined') window.addEventListener('beforeunload', () => this.saveNow());
+	}
+
+	// --- persistence: projects survive reloads (?scenario= starts fresh) ---
+	private loadSaved(): { activeIndex: number; projects: { name: string; scenario: string; state: WorkspaceState }[] } | null {
+		try {
+			const raw = localStorage.getItem(SAVE_KEY);
+			if (!raw) return null;
+			const data = JSON.parse(raw) as { activeIndex: number; projects: { name: string; scenario: string; state: WorkspaceState }[] };
+			return Array.isArray(data.projects) && data.projects.length ? data : null;
+		} catch { return null; }
+	}
+
+	private saveNow(): void {
+		try {
+			localStorage.setItem(SAVE_KEY, JSON.stringify({
+				activeIndex: Math.max(0, this.projects.findIndex((p) => p.id === this.activeId)),
+				projects: this.projects.map((p) => ({ name: p.runtime.getState().project.name, scenario: p.scenario, state: p.runtime.getState() })),
+			}));
+		} catch { /* storage full/unavailable — the session still works */ }
+	}
+
+	/** Throttled: the heartbeat mutates state every 3s, so batch writes. */
+	private scheduleSave(): void {
+		if (this.saveTimer) return;
+		this.saveTimer = setTimeout(() => { this.saveTimer = null; this.saveNow(); }, 2500);
 	}
 
 	/** Which coworkers a definition file may exist for (live only). */
@@ -161,8 +197,8 @@ export class WorkspaceManager {
 		this.agentSig = this.liveCoworkers().map(identitySignature).join('\n');
 	}
 
-	private create(name: string, scenario: string): Project {
-		const runtime = new PrototypeCoworkerRuntime(scenario);
+	private create(name: string, scenario: string, restored?: WorkspaceState): Project {
+		const runtime = new PrototypeCoworkerRuntime(scenario, restored);
 		runtime.setProjectName(name);
 		const id = projectId();
 		const unsub = runtime.subscribe(() => this.emit());
@@ -219,6 +255,8 @@ export class WorkspaceManager {
 		this.snap = this.build();
 		for (const l of this.listeners) l();
 		void this.syncAgentFiles();
+		this.scheduleSave();
+		setTrayAttention(this.snap.inbox.length);
 	}
 
 	subscribe = (listener: () => void): (() => void) => {
@@ -280,10 +318,12 @@ export class WorkspaceManager {
 	}
 }
 
-const initialScenario =
-	(typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('scenario')) || 'calm';
+const scenarioParam =
+	typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('scenario') : null;
 
-export const manager = new WorkspaceManager(initialScenario);
+// An explicit ?scenario= means "show me this seed" — start fresh and skip the
+// restore, so demos and tests stay deterministic.
+export const manager = new WorkspaceManager(scenarioParam || 'calm', !scenarioParam);
 
 /**
  * The `runtime` every component imports. A proxy that forwards each call to the
