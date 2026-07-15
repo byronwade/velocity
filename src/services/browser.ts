@@ -16,12 +16,12 @@ export interface Bookmark {
 	url: string;
 }
 
-const BM_KEY = 'velocity.bookmarks.v1';
+const BM_KEY = 'velocity.bookmarks.v2';
 const DEFAULT_BOOKMARKS: Bookmark[] = [
 	{ title: 'Local app', url: 'http://localhost:3000' },
+	{ title: 'Example', url: 'https://example.com' },
 	{ title: 'MDN', url: 'https://developer.mozilla.org' },
 	{ title: 'GitHub', url: 'https://github.com' },
-	{ title: 'Wikipedia', url: 'https://wikipedia.org' },
 ];
 
 export class BrowserService {

@@ -3,8 +3,12 @@ import {
 	X, Plus, Check, RotateCcw, GitCompare, Eye, Pause, Play, Pencil, Trash2,
 	CornerUpLeft, ShieldQuestion, FlaskConical, Camera, Activity, FileDiff, Circle,
 	Users, ChevronRight, ArchiveRestore, Terminal as TermIcon, Folder, AlertTriangle, GitBranch, Flag, EyeOff,
+	Sparkles, Send,
 } from 'lucide-react';
 import { Link2, UserPlus, Check as CheckIcon, Rocket } from 'lucide-react';
+import { MoreHorizontal } from 'lucide-react';
+import { TerminalMode } from '../modes/TerminalMode';
+import { ContextMenu, useContextMenu } from './ContextMenu';
 import { useWorkspace, runtime } from './useWorkspace';
 import { AUTONOMY_LABEL, STATE_TONE, STATE_LABEL, LENS_META, EVENT_TONE, DEPLOY_TARGETS } from './model';
 import type { Autonomy, CollabRole, Coworker, EvidenceKind, Lens, Risk, ToolId, WorkspaceEvent } from './model';
@@ -154,6 +158,70 @@ export function ShareSheet() {
 				</footer>
 			</div>
 		</div>
+	);
+}
+
+// --------------------------------------------------------------------------
+// New Work — an AI chat dropup. Say what to build; the system acts on it.
+// --------------------------------------------------------------------------
+const CHAT_MODELS = ['Auto · frontier', 'Claude Opus 4.8', 'Claude Sonnet 5', 'Local · qwen2.5-coder'];
+
+export function WorkChat() {
+	const state = useWorkspace();
+	const [model, setModel] = useState(CHAT_MODELS[0]);
+	const [draft, setDraft] = useState('');
+	const [msgs, setMsgs] = useState<{ role: 'user' | 'assistant'; text: string }[]>([]);
+	const taRef = useRef<HTMLTextAreaElement>(null);
+	const scrollRef = useRef<HTMLDivElement>(null);
+	useEffect(() => { if (state.layout.workChatOpen) taRef.current?.focus(); }, [state.layout.workChatOpen]);
+	useEffect(() => { scrollRef.current?.scrollTo(0, scrollRef.current.scrollHeight); }, [msgs]);
+	if (!state.layout.workChatOpen) return null;
+
+	const send = () => {
+		const t = draft.trim();
+		if (!t) return;
+		setMsgs((m) => [...m, { role: 'user', text: t }]);
+		const reply = runtime.chatWork(t);
+		setMsgs((m) => [...m, { role: 'assistant', text: reply }]);
+		setDraft('');
+	};
+
+	return (
+		<>
+			<div className="vs-workchat-scrim" onClick={() => runtime.openWorkChat(false)} />
+			<div className="vs-workchat" role="dialog" aria-label="New work">
+				<header className="vs-workchat-head">
+					<Sparkles size={15} /><b>New work</b>
+					<span className="vs-workchat-sub">{state.mission ? 'Direct the team on this project' : 'Describe an outcome to start'}</span>
+					<button className="vs-icon sm" onClick={() => runtime.openWorkChat(false)} aria-label="Close"><X size={15} /></button>
+				</header>
+				<div className="vs-workchat-msgs" ref={scrollRef}>
+					{msgs.length === 0 && (
+						<div className="vs-workchat-hello">
+							Tell me what to build or change and I'll staff a coworker and get started.
+							<div className="vs-workchat-eg">
+								{['Add a pricing page with a monthly/yearly toggle', 'Fix the passkey button label', 'Make onboarding responsive on mobile'].map((s) => (
+									<button key={s} onClick={() => setDraft(s)}>{s}</button>
+								))}
+							</div>
+						</div>
+					)}
+					{msgs.map((m, i) => <div key={i} className={`vs-cmsg ${m.role}`}>{m.text}</div>)}
+				</div>
+				<div className="vs-workchat-composer">
+					<textarea ref={taRef} value={draft} rows={2} placeholder="Describe the work…" onChange={(e) => setDraft(e.target.value)}
+						onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }} />
+					<div className="vs-workchat-foot">
+						<select className="vs-chat-model" value={model} onChange={(e) => setModel(e.target.value)} title="Model">
+							{CHAT_MODELS.map((m) => <option key={m}>{m}</option>)}
+						</select>
+						<button className="vs-chat-brief" onClick={() => { runtime.openWorkChat(false); runtime.openMissionSheet(true); }}>Detailed brief…</button>
+						<div className="vs-spacer" />
+						<button className="vs-app-primary sm" disabled={!draft.trim()} onClick={send}><Send size={13} />Send</button>
+					</div>
+				</div>
+			</div>
+		</>
 	);
 }
 
@@ -318,73 +386,76 @@ function ActivityPanel() {
 	);
 }
 
+const CW_MODELS = ['Auto · frontier', 'Claude Opus 4.8', 'Claude Sonnet 5', 'Local · qwen2.5-coder'];
+
 function CoworkerCard({ c, manager }: { c: Coworker; manager?: boolean }) {
 	const [renaming, setRenaming] = useState(false);
 	const [name, setName] = useState(c.name);
+	const ctx = useContextMenu();
+	const working = c.state === 'active' || c.state === 'verifying' || c.state === 'planning';
 	const budgetPct = Math.min(100, (c.budget.spent / c.budget.total) * 100);
+
+	const menu = () => [
+		{ label: c.state === 'paused' ? 'Resume' : 'Pause', icon: c.state === 'paused' ? <Play size={14} /> : <Pause size={14} />, onClick: () => (c.state === 'paused' ? runtime.resumeCoworker(c.id) : runtime.pauseCoworker(c.id)) },
+		{ label: 'Rename', icon: <Pencil size={14} />, onClick: () => setRenaming(true) },
+		{ separator: true },
+		{ header: true, label: 'Model' },
+		...CW_MODELS.map((m) => ({ label: m, checked: c.model === m, onClick: () => runtime.setModel(m === 'Auto · frontier' ? 'auto' : 'manual', m === c.model ? c.staffing : 'manual', m) })),
+		{ header: true, label: 'Autonomy' },
+		...Object.entries(AUTONOMY_LABEL).map(([k, v]) => ({ label: v, checked: c.autonomy === k, onClick: () => runtime.setAutonomy(c.id, k as Autonomy) })),
+		{ separator: true },
+		{ label: 'Dismiss', icon: <Trash2 size={14} />, danger: true, onClick: () => runtime.dismissCoworker(c.id) },
+	];
+
 	return (
-		<div className={`vs-cw${manager ? ' manager' : ''}`} style={{ ['--id' as string]: c.color }}>
-			<div className="vs-cw-head">
-				<span className="vs-cw-badge" style={{ background: c.color }}>{c.initials}</span>
-				<div className="vs-cw-id">
+		<div className={`vs-wk${manager ? ' manager' : ''}`} style={{ ['--id' as string]: c.color }}>
+			<div className="vs-wk-top">
+				<span className="vs-wk-badge" style={{ background: c.color }}>{c.initials}{working && <span className="vs-wk-live" />}</span>
+				<div className="vs-wk-id">
 					{renaming ? (
 						<input className="vs-rename" autoFocus value={name} onChange={(e) => setName(e.target.value)}
 							onBlur={() => { runtime.renameCoworker(c.id, name.trim() || c.name); setRenaming(false); }}
-							onKeyDown={(e) => { if (e.key === 'Enter') { runtime.renameCoworker(c.id, name.trim() || c.name); setRenaming(false); } }} />
-					) : (
-						<div className="vs-cw-name">{c.name}<button className="vs-icon xs" onClick={() => setRenaming(true)} aria-label="Rename"><Pencil size={11} /></button></div>
-					)}
-					<div className="vs-cw-role">{c.role}</div>
+							onKeyDown={(e) => { if (e.key === 'Enter') { runtime.renameCoworker(c.id, name.trim() || c.name); setRenaming(false); } if (e.key === 'Escape') setRenaming(false); }} />
+					) : <div className="vs-wk-name">{c.name}</div>}
+					<div className="vs-wk-role">{c.role}</div>
 				</div>
 				<span className={`vs-state tone-${STATE_TONE[c.state]}`}>{STATE_LABEL[c.state]}</span>
-			</div>
-			<p className="vs-cw-doing">{c.action}{c.waitingOn ? ` · waiting on ${c.waitingOn}` : ''}</p>
-			{c.scope && <div className="vs-cw-scope"><GitBranch size={11} />{c.scope}</div>}
-
-			<div className="vs-cw-config">
-				<div className="vs-cw-kv">
-					<span>Model</span>
-					<select className="vs-cw-select" value={`${c.staffing}:${c.model}`} onChange={(e) => { const [s, ...m] = e.target.value.split(':'); runtime.setModel(c.id, s as 'auto' | 'manual', m.join(':')); }}>
-						<option value={`${c.staffing}:${c.model}`}>{c.model}</option>
-						<option value="auto:Auto · frontier">Auto · frontier</option>
-						<option value="manual:Claude Opus 4.8">Claude Opus 4.8</option>
-						<option value="manual:Local · qwen2.5-coder">Local · qwen2.5-coder</option>
-					</select>
-				</div>
-				<div className="vs-cw-kv">
-					<span>Autonomy</span>
-					<select className="vs-cw-select" value={c.autonomy} onChange={(e) => runtime.setAutonomy(c.id, e.target.value as Autonomy)}>
-						{Object.entries(AUTONOMY_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-					</select>
-				</div>
-				<div className="vs-cw-kv">
-					<span>Budget</span>
-					<div className="vs-cw-budget" title={`${c.budget.unit}${c.budget.spent} of ${c.budget.unit}${c.budget.total}`}>
-						<div className="vs-cw-budget-bar"><span style={{ width: `${budgetPct}%` }} /></div>
-						<span className="vs-cw-budget-n">{c.budget.unit}{c.budget.spent} / {c.budget.unit}{c.budget.total}</span>
-					</div>
-				</div>
+				<button className={`vs-wk-follow${c.following ? ' on' : ''}`} title={c.following ? 'Following' : 'Follow'} onClick={() => runtime.follow(c.following ? null : c.id)}><Eye size={14} /></button>
+				<button className="vs-wk-more" title="More" onClick={ctx.onContextMenu} onContextMenu={ctx.onContextMenu}><MoreHorizontal size={15} /></button>
 			</div>
 
-			<div className="vs-cw-actions">
-				<button className={`vs-cw-follow${c.following ? ' on' : ''}`} onClick={() => runtime.follow(c.following ? null : c.id)}><Eye size={13} />{c.following ? 'Following' : 'Follow'}</button>
-				{c.state === 'paused'
-					? <button className="vs-cw-act" title="Resume" onClick={() => runtime.resumeCoworker(c.id)}><Play size={14} /></button>
-					: <button className="vs-cw-act" title="Pause" onClick={() => runtime.pauseCoworker(c.id)}><Pause size={14} /></button>}
-				<button className="vs-cw-act danger" title="Dismiss" onClick={() => runtime.dismissCoworker(c.id)}><Trash2 size={14} /></button>
+			<div className="vs-wk-now">
+				<span className="vs-wk-action">{c.action}{c.waitingOn ? ` · waiting on ${c.waitingOn}` : ''}</span>
+				{typeof c.progress === 'number' && <span className="vs-wk-pct">{c.progress}%</span>}
 			</div>
+			{typeof c.progress === 'number' && <div className="vs-wk-bar"><span style={{ width: `${c.progress}%` }} /></div>}
+
+			{(c.scope || c.activeTools?.length) && (
+				<div className="vs-wk-tags">
+					{c.scope && <span className="vs-wk-scope"><GitBranch size={10} />{c.scope}</span>}
+					{c.activeTools?.map((t) => <span key={t} className="vs-wk-tool">{t}</span>)}
+				</div>
+			)}
+
+			<div className="vs-wk-meta">
+				<span>{c.model}</span><span className="vs-wk-sep">·</span>
+				<span>{AUTONOMY_LABEL[c.autonomy]}</span><span className="vs-wk-sep">·</span>
+				<span className="vs-wk-budget"><span className="vs-wk-budget-bar"><span style={{ width: `${budgetPct}%` }} /></span>{c.budget.unit}{c.budget.spent}/{c.budget.total}</span>
+			</div>
+
 			{c.specialists.length > 0 && (
-				<div className="vs-specialists">
-					<div className="vs-spec-head"><ChevronRight size={12} />{c.specialists.length} specialists reporting</div>
+				<div className="vs-wk-subs">
+					<div className="vs-wk-subhead"><ChevronRight size={11} />{c.specialists.length} subagents</div>
 					{c.specialists.map((s) => (
-						<div key={s.id} className="vs-spec">
-							<span className="vs-spec-dot" />
-							<div className="vs-spec-body"><div className="vs-spec-name"><b>{s.name}</b><span className="vs-spec-role">· {s.role}</span></div><div className="vs-spec-action">{s.action}</div></div>
+						<div key={s.id} className="vs-wk-sub">
+							<span className="vs-wk-sub-rail" />
+							<div className="vs-wk-sub-body"><div className="vs-wk-sub-name"><b>{s.name}</b><span>{s.role}</span></div><div className="vs-wk-sub-action">{s.action}</div></div>
 							<span className={`vs-state sm tone-${STATE_TONE[s.state]}`}>{STATE_LABEL[s.state]}</span>
 						</div>
 					))}
 				</div>
 			)}
+			{ctx.at && <ContextMenu x={ctx.at.x} y={ctx.at.y} onClose={ctx.close} items={menu()} />}
 		</div>
 	);
 }
@@ -558,7 +629,35 @@ export function ToolDrawer() {
 				<div className="vs-spacer" />
 				<button className="vs-icon" onClick={() => runtime.openTool(null)} aria-label="Close tools"><X size={15} /></button>
 			</div>
-			<div className="vs-drawer-body">{renderTool(open)}</div>
+			<div className={`vs-drawer-body${open === 'terminal' ? ' term' : ''}`}>{open === 'terminal' ? <TerminalPanel /> : renderTool(open)}</div>
+		</div>
+	);
+}
+
+const SHELLS = [
+	{ id: 'bash', label: 'bash' },
+	{ id: 'zsh', label: 'zsh' },
+	{ id: 'pwsh', label: 'pwsh' },
+	{ id: 'node', label: 'node' },
+];
+
+/** Real terminal (executes against the in-memory FS) + a shell chooser. */
+function TerminalPanel() {
+	const [kind, setKind] = useState('bash');
+	const [ids, setIds] = useState<Record<string, number>>({ bash: 1 });
+	const sessionId = `velocity:term:${kind}:${ids[kind] ?? 1}`;
+	return (
+		<div className="vs-termpanel">
+			<div className="vs-term-bar">
+				{SHELLS.map((s) => (
+					<button key={s.id} className={`vs-term-tab${kind === s.id ? ' on' : ''}`} onClick={() => { setKind(s.id); setIds((m) => ({ ...m, [s.id]: m[s.id] ?? 1 })); }}>
+						<TermIcon size={12} />{s.label}
+					</button>
+				))}
+				<div className="vs-spacer" />
+				<button className="vs-icon sm" title="New terminal session" onClick={() => setIds((m) => ({ ...m, [kind]: (m[kind] ?? 1) + 1 }))}><Plus size={13} /></button>
+			</div>
+			<div className="vs-term-host"><TerminalMode key={sessionId} paneId={sessionId} /></div>
 		</div>
 	);
 }

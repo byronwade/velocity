@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Plus, X, Flag, ShieldQuestion, Pause, Sun, Moon, Settings, CheckCircle2, Clock, Pencil } from 'lucide-react';
 import { useShell } from '../lib/store';
 import { useProjects, useWorkspace, manager, runtime } from './useWorkspace';
@@ -95,12 +95,7 @@ function Profile() {
 	const theme = useShell((s) => s.theme);
 	const setTheme = useShell((s) => s.setTheme);
 	const [open, setOpen] = useState(false);
-	const [density, setDensity] = useState(() => document.documentElement.dataset.density ?? 'comfortable');
-	const [motion, setMotion] = useState(() => document.documentElement.dataset.motion ?? 'full');
 	const pct = Math.min(100, (account.credits.used / account.credits.total) * 100);
-
-	useEffect(() => { document.documentElement.dataset.density = density; try { localStorage.setItem('vs-density', density); } catch { /* ignore */ } }, [density]);
-	useEffect(() => { document.documentElement.dataset.motion = motion; try { localStorage.setItem('vs-motion', motion); } catch { /* ignore */ } }, [motion]);
 
 	return (
 		<div className="vs-profile-wrap">
@@ -121,24 +116,9 @@ function Profile() {
 							<div className="vs-pc-bar"><span style={{ width: `${pct}%` }} /></div>
 							<div className="vs-pc-usage">{account.usageLabel}</div>
 						</div>
-						<div className="vs-set-sec"><Settings size={13} />Settings</div>
-						<div className="vs-set-row"><span>Appearance</span>
-							<div className="vs-seg">
-								<button className={theme === 'light' ? 'on' : ''} onClick={() => setTheme('light')}><Sun size={13} />Light</button>
-								<button className={theme === 'dark' ? 'on' : ''} onClick={() => setTheme('dark')}><Moon size={13} />Dark</button>
-							</div>
-						</div>
-						<div className="vs-set-row"><span>Density</span>
-							<div className="vs-seg">
-								<button className={density === 'comfortable' ? 'on' : ''} onClick={() => setDensity('comfortable')}>Cozy</button>
-								<button className={density === 'compact' ? 'on' : ''} onClick={() => setDensity('compact')}>Compact</button>
-							</div>
-						</div>
-						<div className="vs-set-row"><span>Motion</span>
-							<div className="vs-seg">
-								<button className={motion === 'full' ? 'on' : ''} onClick={() => setMotion('full')}>Full</button>
-								<button className={motion === 'reduced' ? 'on' : ''} onClick={() => setMotion('reduced')}>Reduced</button>
-							</div>
+						<div className="vs-profile-actions">
+							<button className="vs-profile-item" onClick={() => { setOpen(false); runtime.openSettings(true); }}><Settings size={14} />Settings</button>
+							<button className="vs-profile-item" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}Switch to {theme === 'dark' ? 'light' : 'dark'}</button>
 						</div>
 						<label className="vs-profile-scenario">
 							<span><Clock size={12} />Demo scenario</span>

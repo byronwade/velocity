@@ -34,10 +34,11 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 	const [urlInput, setUrlInput] = useState(current === BROWSER_HOME ? '' : current);
 	useSyncExternalStore(browser.subscribe, browser.getSnapshot);
 	const bookmarks = browser.getBookmarks();
-
-	useEffect(() => {
-		setUrlInput(current === BROWSER_HOME ? '' : current);
-	}, [current]);
+	// Most real sites refuse to be embedded (X-Frame-Options / CSP). Rather than
+	// show the browser's ugly "refused to connect", offer a clean card; users can
+	// open the page in a real tab, or try embedding anyway.
+	const [tryFrame, setTryFrame] = useState(false);
+	useEffect(() => { setTryFrame(false); }, [current]);
 
 	// Dismiss the browser menu on outside click.
 	useEffect(() => {
@@ -194,7 +195,18 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 				{isLocal && (
 					<iframe key={`local-${loadKey}-${previewHtml.length}`} className="frame" title="Live preview" srcDoc={previewHtml} sandbox="allow-scripts allow-forms" onLoad={() => setLoading(false)} />
 				)}
-				{isExternal && (
+				{isExternal && !tryFrame && (
+					<div className="cr-blocked">
+						<div className="cr-blocked-mark">{titleFor(current).slice(0, 1).toUpperCase()}</div>
+						<h3>{titleFor(current)}</h3>
+						<p>Most sites block being shown inside another page. Open it in a real tab — or try embedding it here anyway.</p>
+						<div className="cr-blocked-actions">
+							<a className="cr-blocked-open" href={current} target="_blank" rel="noreferrer">Open in new tab ↗</a>
+							<button className="cr-blocked-try" onClick={() => { setTryFrame(true); setLoading(true); }}>Try embedding</button>
+						</div>
+					</div>
+				)}
+				{isExternal && tryFrame && (
 					<iframe
 						key={`${current}-${loadKey}`}
 						className="frame"

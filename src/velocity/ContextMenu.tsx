@@ -9,6 +9,8 @@ export interface MenuItem {
 	danger?: boolean;
 	disabled?: boolean;
 	separator?: boolean;
+	header?: boolean;
+	checked?: boolean;
 }
 
 /** A right-click context menu anchored at (x, y). Closes on any outside click. */
@@ -31,11 +33,14 @@ export function ContextMenu({ x, y, items, onClose }: { x: number; y: number; it
 			<div className="vs-ctx" style={{ left: pos.x, top: pos.y }} role="menu" onClick={(e) => e.stopPropagation()}>
 				{items.map((it, i) => it.separator ? (
 					<div key={i} className="vs-ctx-sep" />
+				) : it.header ? (
+					<div key={i} className="vs-ctx-header">{it.label}</div>
 				) : (
-					<button key={i} className={`vs-ctx-item${it.danger ? ' danger' : ''}`} disabled={it.disabled}
+					<button key={i} className={`vs-ctx-item${it.danger ? ' danger' : ''}${it.checked ? ' checked' : ''}`} disabled={it.disabled}
 						onClick={() => { onClose(); it.onClick?.(); }} role="menuitem">
 						{it.icon && <span className="vs-ctx-icon">{it.icon}</span>}
 						<span className="vs-ctx-label">{it.label}</span>
+						{it.checked && <span className="vs-ctx-check">✓</span>}
 						{it.hint && <kbd>{it.hint}</kbd>}
 					</button>
 				))}

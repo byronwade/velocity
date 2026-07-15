@@ -30,7 +30,7 @@ function baseLayout(lens: Lens = 'browser', leftCompare?: CompareSource) {
 		openTool: null, dockExpanded: false, focusMode: false, followingId: null,
 		shipOpen: false, rightSurface: 'none' as const, activeCheckpointId: null,
 		activeDecisionId: null, missionSheetOpen: false, commandOpen: false,
-		commentMode: false, activeCommentId: null, shareOpen: false,
+		commentMode: false, activeCommentId: null, shareOpen: false, workChatOpen: false, settingsOpen: false,
 	};
 }
 
@@ -112,6 +112,7 @@ function makeCoworkers(): Coworker[] {
 	return [
 		coworker({ id: 'maya', name: 'Maya', role: 'Design Lead', department: 'Design', initials: 'MA', color: C.maya,
 			action: 'Refining onboarding layout', state: 'active', scope: 'onboarding · /checkout/new',
+			activeTools: ['editor', 'browser', 'design'], progress: 68,
 			marker: { lens: 'browser', x: 29, y: 55, label: 'Onboarding' }, latestCheckpointId: 'k1',
 			specialists: [
 				{ id: 'sp1', name: 'Responsive', role: 'Layout Specialist', state: 'active', action: 'Adapting to mobile breakpoints',
@@ -121,12 +122,14 @@ function makeCoworkers(): Coworker[] {
 			] }),
 		coworker({ id: 'theo', name: 'Theo', role: 'Frontend', department: 'Engineering', initials: 'TH', color: C.theo,
 			action: 'Wiring passkey button state', state: 'active', scope: 'src/auth/PasskeyButton.tsx',
+			activeTools: ['editor', 'terminal'], progress: 44,
 			marker: { lens: 'browser', x: 40, y: 66, label: 'Passkey' } }),
 		coworker({ id: 'rowan', name: 'Rowan', role: 'Backend', department: 'Engineering', initials: 'RO', color: C.rowan,
 			action: 'Waiting for the auth contract', state: 'waiting', waitingOn: 'auth contract from Theo',
-			scope: 'services/session', marker: { lens: 'system', x: 62, y: 44, label: '/session' }, autonomy: 'guarded' }),
+			scope: 'services/session', activeTools: ['read'], progress: 12, marker: { lens: 'system', x: 62, y: 44, label: '/session' }, autonomy: 'guarded' }),
 		coworker({ id: 'iris', name: 'Iris', role: 'QA', department: 'Verification', initials: 'IR', color: C.iris,
 			action: 'Running the checkout scenario', state: 'verifying', scope: 'verify · checkout flow',
+			activeTools: ['test', 'browser'], progress: 80,
 			marker: { lens: 'verify', x: 40, y: 50, label: 'Checkout scenario' } }),
 	];
 }

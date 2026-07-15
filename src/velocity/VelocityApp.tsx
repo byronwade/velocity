@@ -4,7 +4,8 @@ import type { Lens } from './model';
 import { TabBar } from './TabBar';
 import { Stage } from './Stage';
 import { Dock } from './Dock';
-import { MissionSheet, RightRail, ToolDrawer, CommandBar, ShipSheet } from './surfaces';
+import { MissionSheet, RightRail, ToolDrawer, CommandBar, ShipSheet, WorkChat } from './surfaces';
+import { SettingsSheet } from './SettingsSheet';
 import './velocity.css';
 
 const LENS_ORDER: Lens[] = ['browser', 'code', 'system', 'data', 'tests', 'verify'];
@@ -28,6 +29,13 @@ function Toast() {
 }
 
 export function VelocityApp() {
+	// Apply saved density / motion preferences on load.
+	useEffect(() => {
+		try {
+			const d = localStorage.getItem('vs-density'); if (d) document.documentElement.dataset.density = d;
+			const m = localStorage.getItem('vs-motion'); if (m) document.documentElement.dataset.motion = m;
+		} catch { /* ignore */ }
+	}, []);
 	// Prototype-scoped keyboard. The production shell routes these through the
 	// keybinding engine; here a single scoped listener keeps the demo self-contained.
 	useEffect(() => {
@@ -63,7 +71,9 @@ export function VelocityApp() {
 				<RightRail />
 				<Dock />
 				<MissionSheet />
+				<WorkChat />
 				<ShipSheet />
+				<SettingsSheet />
 				<CommandBar />
 				<Toast />
 				<Confetti />

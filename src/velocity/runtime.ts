@@ -31,6 +31,9 @@ export interface CoworkerRuntime {
 	setPaneCompare(id: string, source: CompareSource): void;
 	comparePreview(source: CompareSource): void;
 	openShip(open: boolean): void;
+	openWorkChat(open: boolean): void;
+	chatWork(text: string): string;
+	openSettings(open: boolean): void;
 	openTool(tool: ToolId | null): void;
 	toggleDock(): void;
 	toggleFocus(): void;
@@ -167,6 +170,27 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 		}
 	}
 	openShip(open: boolean): void { this.patchLayout({ shipOpen: open }); }
+	openWorkChat(open: boolean): void { this.patchLayout({ workChatOpen: open }); }
+	openSettings(open: boolean): void { this.patchLayout({ settingsOpen: open }); }
+	/** Interpret a freeform chat message and act — the "new work" entry point. */
+	chatWork(text: string): string {
+		const t = text.trim();
+		if (!t) return '';
+		if (!this.state.mission) {
+			const title = t.split(/\s+/).slice(0, 8).join(' ');
+			this.createMission({
+				title, outcome: t, acceptanceCriteria: [], includedScope: [], excludedScope: [],
+				staffing: 'auto', autonomy: 'collaborative', approvalPolicy: 'guarded',
+				budget: { spent: 0, total: 8, unit: '$' }, environment: 'Candidate', risk: 'medium', requiredEvidence: ['test', 'screenshot'],
+			});
+			return `On it. I've opened the mission “${title}” and staffed a coworker — they're planning now. Checkpoints will show up here as they land.`;
+		}
+		const cw = this.state.coworkers.find((c) => c.state !== 'archived' && c.state !== 'dismissed');
+		if (cw) this.mapCoworkers((c) => (c.id === cw.id ? { ...c, state: 'active', action: t.length > 44 ? `${t.slice(0, 44)}…` : t } : c));
+		this.addEvent('note', `You: ${t}`, cw?.id ?? null);
+		this.toast('Sent to the team.');
+		return `Got it — I've passed that to ${cw?.name ?? 'the team'}. Follow along in Workers or the activity feed.`;
+	}
 	openTool(tool: ToolId | null): void { this.patchLayout({ openTool: tool }); }
 	toggleDock(): void { this.patchLayout({ dockExpanded: !this.state.layout.dockExpanded }); }
 	toggleFocus(): void { this.patchLayout({ focusMode: !this.state.layout.focusMode, openTool: null, rightSurface: 'none' }); }
@@ -185,6 +209,8 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 	closeRight(): void { this.patchLayout({ rightSurface: 'none' }); }
 	closeTopmost(): void {
 		const l = this.state.layout;
+		if (l.settingsOpen) return this.patchLayout({ settingsOpen: false });
+		if (l.workChatOpen) return this.patchLayout({ workChatOpen: false });
 		if (l.shipOpen) return this.patchLayout({ shipOpen: false });
 		if (l.shareOpen) return this.patchLayout({ shareOpen: false });
 		if (l.commandOpen) return this.patchLayout({ commandOpen: false });

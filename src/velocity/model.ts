@@ -104,6 +104,10 @@ export interface Coworker {
 	permissions: string[];
 	latestCheckpointId: string | null;
 	specialists: Specialist[];
+	/** Tools the coworker is actively using right now (observability). */
+	activeTools?: string[];
+	/** Progress toward the current step, 0–100 (observability). */
+	progress?: number;
 	following: boolean;
 	/** True while this coworker is waiting on a dependency (see `waitingOn`). */
 	waitingOn?: string;
@@ -272,6 +276,10 @@ export interface LayoutState {
 	commentMode: boolean;
 	activeCommentId: string | null;
 	shareOpen: boolean;
+	/** The New Work AI chat dropup. */
+	workChatOpen: boolean;
+	/** The full settings modal. */
+	settingsOpen: boolean;
 }
 
 /** The whole prototype workspace at one moment — one deterministic snapshot. */

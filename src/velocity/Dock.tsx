@@ -46,7 +46,7 @@ export function Dock() {
 
 	return (
 		<div className="vs-dock" role="toolbar" aria-label="Workspace dock">
-			<button className="vs-dock-btn primary" onClick={() => runtime.openMissionSheet(true)} title="New mission (⌘⇧N)">
+			<button className={`vs-dock-btn primary${state.layout.workChatOpen ? ' active' : ''}`} onClick={() => runtime.openWorkChat(!state.layout.workChatOpen)} title="New work (⌘⇧N)">
 				<Plus size={16} />New work
 			</button>
 
