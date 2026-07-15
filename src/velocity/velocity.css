@@ -88,7 +88,7 @@
 
 .vs-profile-wrap { position: relative; }
 .vs-profile { width: 30px; height: 30px; border-radius: 50%; border: 0; background: transparent; padding: 0; cursor: pointer; display: grid; place-items: center; }
-.vs-profile-badge { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 11px; font-weight: var(--fw-semibold); }
+.vs-profile-badge { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: var(--text-11); font-weight: var(--fw-semibold); }
 .vs-profile-badge.lg { width: 40px; height: 40px; font-size: var(--text-14); }
 .vs-profile-scrim { position: fixed; inset: 0; z-index: 48; }
 .vs-profile-menu { position: absolute; top: 38px; right: 0; z-index: 49; width: 280px; background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-lg); box-shadow: var(--elev-2); padding: 14px; animation: vs-rise var(--dur) var(--ease); }
@@ -437,7 +437,7 @@
 .vs-app-nav { display: flex; gap: 18px; color: var(--muted); font-size: var(--text-13); }
 .vs-app-cta { margin-left: auto; height: 32px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); font: inherit; font-size: var(--text-13); cursor: pointer; }
 .vs-app-hero { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 28px; padding: 44px 26px; align-items: center; }
-.vs-eyebrow { text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; color: var(--faint); font-weight: var(--fw-semibold); }
+.vs-eyebrow { text-transform: uppercase; letter-spacing: 0.12em; font-size: var(--text-11); color: var(--faint); font-weight: var(--fw-semibold); }
 .vs-app-hero-copy h1 { font-size: 34px; line-height: 1.08; letter-spacing: -0.02em; margin: 10px 0; font-weight: var(--fw-semibold); }
 .vs-app-sub { color: var(--muted); font-size: var(--text-16); max-width: 42ch; }
 .vs-app-row { display: flex; gap: 10px; margin-top: 18px; }
@@ -449,7 +449,7 @@
 .vs-app-onboarding h3 { font-size: var(--text-20); font-weight: var(--fw-semibold); }
 .vs-app-onboarding > p { color: var(--muted); margin: 4px 0 16px; }
 .vs-app-passkey { display: inline-flex; align-items: center; gap: 8px; width: 100%; justify-content: center; height: 40px; border-radius: var(--r-md); border: 1px solid var(--line-2); background: var(--panel-2); font-weight: var(--fw-medium); cursor: pointer; }
-.vs-app-or { display: flex; align-items: center; gap: 10px; color: var(--faint); font-size: 11px; margin: 14px 0; }
+.vs-app-or { display: flex; align-items: center; gap: 10px; color: var(--faint); font-size: var(--text-11); margin: 14px 0; }
 .vs-app-or::before, .vs-app-or::after { content: ''; flex: 1; height: 1px; background: var(--line); }
 .vs-app-field { display: flex; flex-direction: column; gap: 6px; font-size: var(--text-12); color: var(--muted); }
 .vs-app-field input { height: 36px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--panel); color: var(--fg); padding: 0 12px; font: inherit; }
@@ -744,7 +744,7 @@
 .vs-ctx-check { color: var(--accent); font-size: var(--text-12); margin-left: auto; }
 .vs-ctx-item.checked .vs-ctx-label { color: var(--fg); font-weight: var(--fw-medium); }
 
-.vs-state { font-size: 11px; font-weight: var(--fw-medium); padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+.vs-state { font-size: var(--text-11); font-weight: var(--fw-medium); padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
 .vs-state.sm { font-size: 10px; padding: 2px 7px; }
 .vs-state.tone-neutral { background: var(--panel-2); color: var(--muted); }
 .vs-state.tone-work { background: color-mix(in srgb, var(--accent) 14%, var(--panel)); color: color-mix(in srgb, var(--accent) 55%, var(--fg)); }
@@ -771,7 +771,7 @@
 .vs-archive-row span:nth-child(2) { flex: 1; }
 
 /* --- Checkpoint / Decision ---------------------------------------------- */
-.vs-risk { font-size: 11px; font-weight: var(--fw-medium); padding: 3px 9px; border-radius: 6px; }
+.vs-risk { font-size: var(--text-11); font-weight: var(--fw-medium); padding: 3px 9px; border-radius: 6px; }
 .vs-risk.low { background: color-mix(in srgb, var(--good) 16%, var(--panel)); color: color-mix(in srgb, var(--good) 55%, var(--fg)); }
 .vs-risk.medium { background: color-mix(in srgb, var(--warn) 18%, var(--panel)); color: color-mix(in srgb, var(--warn) 60%, var(--fg)); }
 .vs-risk.high { background: color-mix(in srgb, var(--danger) 16%, var(--panel)); color: color-mix(in srgb, var(--danger) 55%, var(--fg)); }
@@ -817,7 +817,7 @@
 .vs-feed-rail.tone-danger { background: var(--danger); }
 .vs-feed-main { flex: 1; min-width: 0; }
 .vs-feed-top { display: flex; align-items: center; gap: 7px; margin-bottom: 3px; }
-.vs-feed-kind { font-size: 11px; font-weight: var(--fw-semibold); }
+.vs-feed-kind { font-size: var(--text-11); font-weight: var(--fw-semibold); }
 .vs-feed-kind.tone-good { color: color-mix(in srgb, var(--good) 60%, var(--fg)); }
 .vs-feed-kind.tone-work { color: color-mix(in srgb, var(--accent) 60%, var(--fg)); }
 .vs-feed-kind.tone-warn { color: color-mix(in srgb, var(--warn) 62%, var(--fg)); }
@@ -947,7 +947,7 @@
 .vs-tabhover { position: absolute; left: 4px; top: calc(100% + 8px); z-index: 60; width: 280px; background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-lg); box-shadow: var(--elev-2); padding: 12px; animation: vs-rise var(--dur) var(--ease); cursor: default; }
 .vs-tabhover-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
 .vs-tabhover-head b { font-size: var(--text-13); font-weight: var(--fw-semibold); }
-.vs-tabhover-prog { font-size: 11px; color: var(--good); font-variant-numeric: tabular-nums; }
+.vs-tabhover-prog { font-size: var(--text-11); color: var(--good); font-variant-numeric: tabular-nums; }
 .vs-tabhover-mission { font-size: var(--text-12); color: var(--muted); margin-bottom: 10px; line-height: 1.4; }
 .vs-tabhover-roster { display: flex; flex-direction: column; gap: 7px; }
 .vs-tabhover-row { display: flex; align-items: center; gap: 7px; font-size: var(--text-12); min-width: 0; }
