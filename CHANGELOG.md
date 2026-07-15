@@ -8,6 +8,15 @@ list item of the shape `- **slug** — Name. What changed and why it matters. (\
 **slug** is a stable kebab-case feature id shared with [ROADMAP.md](ROADMAP.md) — never rename one;
 corrections get a new entry. Newest release first.
 
+## 2026-07-15 · Platform research and roadmap
+
+### Added
+- **platform-research-roadmap** — Production roadmap corpus. Velocity now carries the complete VS Code, Cursor, and Figma research in source control: repository audit, accepted architecture, source-of-truth and security models, phases P0–P8, work packages, acceptance gates, metrics, source registry, and a 457-record feature backlog for issue and implementation planning. (`documentation`)
+
+### Changed
+- **integrations-research** — The focused runtime-stack memo now links into the larger platform roadmap and remains the implementation note for Vercel AI, Tauri-native capabilities, agent SDKs, MCP/ACP, worktrees, and native execution. (`documentation`)
+- **real-terminal** — The public roadmap now distinguishes the shipped workspace-filesystem shell from the planned production terminal built on native PTYs, xterm, profiles, shell integration, tasks, and remote authorities. Runtime behavior is unchanged. (`documentation`)
+
 ## 2026-07-15 · Agents as files
 
 ### Added
