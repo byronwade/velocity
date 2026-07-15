@@ -497,16 +497,19 @@
 .vs-dock-follow { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 11px; border-radius: 9px; border: 1px solid color-mix(in srgb, var(--id) 40%, var(--line)); background: color-mix(in srgb, var(--id) 12%, var(--panel)); color: color-mix(in srgb, var(--id) 55%, var(--fg)); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer; }
 
 /* --- Right rail --------------------------------------------------------- */
-/* Panels now POP UP from the dock instead of a full-height side rail. */
+/* Full-height panel docked flush to the right edge — squared, no outer inset,
+   overlays the stage (so it never reflows the layout). */
 .vs-dockpanel {
-	position: fixed; left: 50%; bottom: 62px; transform: translateX(-50%); z-index: 39;
-	width: 384px; max-height: min(66vh, 580px); display: flex; flex-direction: column;
-	background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-xl);
-	box-shadow: var(--elev-2); overflow: hidden; animation: vs-rise var(--dur) var(--ease);
+	position: absolute; top: 53px; right: 0; bottom: 0; z-index: 39;
+	width: 384px; display: flex; flex-direction: column;
+	background: var(--panel); border-left: 1px solid var(--line);
+	box-shadow: var(--elev-2); overflow: hidden; animation: vs-slide-r var(--dur) var(--ease);
 }
-.vs-dockpanel.wide { width: 424px; }
-.vs-dockpanel-caret { position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%) rotate(45deg); width: 11px; height: 11px; background: var(--panel); border-right: 1px solid var(--line-2); border-bottom: 1px solid var(--line-2); }
-.vs-rail { display: flex; flex-direction: column; overflow: hidden; }
+.vs-dockpanel.wide { width: 440px; }
+.vs-root.focus .vs-dockpanel { top: 0; }
+.vs-dockpanel-caret { display: none; }
+@keyframes vs-slide-r { from { transform: translateX(12px); opacity: 0; } }
+.vs-rail { display: flex; flex-direction: column; overflow: hidden; flex: 1; min-height: 0; }
 .vs-rail-head { display: flex; align-items: center; gap: 8px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
 .vs-rail-head h3 { font-size: var(--text-14); font-weight: var(--fw-semibold); flex: 1; }
 .vs-rail-head svg { color: var(--muted); }
@@ -633,14 +636,16 @@
 .vs-feed-text { font-size: var(--text-12); color: var(--muted); line-height: 1.4; }
 
 /* --- Tool drawer -------------------------------------------------------- */
-/* Floating overlay above the dock — never resizes the stage (no layout shift). */
-.vs-drawer { position: absolute; left: 14px; right: 14px; bottom: 64px; z-index: 38; border: 1px solid var(--line-2); border-radius: var(--r-lg); background: var(--panel); display: flex; flex-direction: column; box-shadow: var(--elev-2); overflow: hidden; animation: vs-rise var(--dur) var(--ease); }
+/* Full-width panel docked flush to the bottom — squared, overlays the stage
+   (never resizes it, so no layout shift). */
+.vs-drawer { position: absolute; left: 0; right: 0; bottom: 0; z-index: 38; border-top: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; box-shadow: 0 -8px 24px -12px rgba(0,0,0,0.18); overflow: hidden; animation: vs-slide-up var(--dur) var(--ease); }
+@keyframes vs-slide-up { from { transform: translateY(12px); opacity: 0; } }
 .vs-drawer-grip { position: absolute; top: -3px; left: 0; right: 0; height: 6px; cursor: ns-resize; z-index: 5; }
 .vs-drawer-tabs { display: flex; align-items: center; gap: 2px; padding: 6px 10px; border-bottom: 1px solid var(--line); }
 .vs-dtab { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 7px; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: var(--text-12); cursor: pointer; }
 .vs-dtab:hover { background: var(--panel-2); color: var(--fg); }
 .vs-dtab.on { background: var(--panel-2); color: var(--fg); font-weight: var(--fw-medium); }
-.vs-drawer-body { flex: 1; overflow: auto; padding: 12px 14px; font-family: var(--mono); font-size: var(--text-12); }
+.vs-drawer-body { flex: 1; overflow: auto; padding: 12px 14px 60px; font-family: var(--mono); font-size: var(--text-12); }
 .vs-tree-row { padding: 3px 0; white-space: pre; color: var(--muted); }
 .vs-tree-row.dir { color: var(--fg); font-weight: var(--fw-medium); }
 .vs-tree-row.active { color: var(--accent); }
