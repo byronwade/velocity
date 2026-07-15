@@ -36,6 +36,44 @@ async function applyNarratedToolCalls(text: string, ctx: AgentContext): Promise<
 	return applied;
 }
 
+/** A real unified-style line diff (LCS). Files here are small; bail out on
+ *  anything big so the checkpoint payload stays lean. */
+function diffLines(before: string, after: string): string {
+	const a = before.split('\n');
+	const b = after.split('\n');
+	if (a.length > 400 || b.length > 400) return '';
+	const m = a.length, n = b.length;
+	const dp: number[][] = Array.from({ length: m + 1 }, () => new Array<number>(n + 1).fill(0));
+	for (let i = m - 1; i >= 0; i--) {
+		for (let j = n - 1; j >= 0; j--) {
+			dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+		}
+	}
+	const out: string[] = [];
+	let i = 0, j = 0;
+	while (i < m && j < n) {
+		if (a[i] === b[j]) { out.push(`  ${a[i]}`); i++; j++; }
+		else if (dp[i + 1][j] >= dp[i][j + 1]) { out.push(`- ${a[i]}`); i++; }
+		else { out.push(`+ ${b[j]}`); j++; }
+	}
+	while (i < m) out.push(`- ${a[i++]}`);
+	while (j < n) out.push(`+ ${b[j++]}`);
+	// Collapse long unchanged runs so the patch shows change, not the file.
+	const compact: string[] = [];
+	let run: string[] = [];
+	const flush = () => {
+		if (run.length <= 3) compact.push(...run);
+		else compact.push(run[0], `  ··· ${run.length - 2} unchanged lines ···`, run[run.length - 1]);
+		run = [];
+	};
+	for (const line of out) {
+		if (line.startsWith('  ')) run.push(line);
+		else { flush(); compact.push(line); }
+	}
+	flush();
+	return compact.join('\n');
+}
+
 /** Real line-level delta between two versions (multiset line diff). */
 function lineDelta(was: string, now: string): { added: number; removed: number } {
 	const a = was.split('\n');
@@ -93,19 +131,36 @@ export async function runRealWork(runtime: CoworkerRuntime, commentId: string): 
 		if (rescued) text += `\n\n(applied ${rescued} narrated tool call${rescued > 1 ? 's' : ''})`;
 	} catch { /* rescue is best-effort */ }
 
-	// Compute what actually changed.
+	// Compute what actually changed — counts, a real patch, and the inverse
+	// snapshots that make Reject a true revert.
 	const files: FileChange[] = [];
+	const patches: string[] = [];
+	const revert: { path: string; before: string | null }[] = [];
 	const after = await fs.list();
 	for (const path of after) {
 		if (isBookkeeping(path)) continue;
 		const now = await fs.readFile(path);
 		const was = before.get(path);
-		if (was === undefined) files.push({ path, added: now.split('\n').length, removed: 0 });
-		else if (was !== now) files.push({ path, ...lineDelta(was, now) });
+		if (was === undefined) {
+			files.push({ path, added: now.split('\n').length, removed: 0 });
+			patches.push(`--- ${path} (new file)\n${now.split('\n').map((l) => `+ ${l}`).join('\n')}`);
+			revert.push({ path, before: null });
+		} else if (was !== now) {
+			files.push({ path, ...lineDelta(was, now) });
+			patches.push(`--- ${path}\n${diffLines(was, now)}`);
+			revert.push({ path, before: was });
+		}
 	}
 	for (const [path, was] of before) {
-		if (!after.includes(path)) files.push({ path, added: 0, removed: was.split('\n').length });
+		if (!after.includes(path)) {
+			files.push({ path, added: 0, removed: was.split('\n').length });
+			patches.push(`--- ${path} (deleted)\n${was.split('\n').map((l) => `- ${l}`).join('\n')}`);
+			revert.push({ path, before: was });
+		}
 	}
+	// Keep the persisted checkpoint lean: cap the patch; drop revert if huge.
+	const patch = patches.join('\n\n').slice(0, 4000);
+	const revertSize = revert.reduce((a, r) => a + (r.before?.length ?? 0), 0);
 
-	runtime.realWorkDone(commentId, text.trim(), files, model);
+	runtime.realWorkDone(commentId, text.trim(), files, model, patch, revertSize < 60_000 ? revert : undefined);
 }

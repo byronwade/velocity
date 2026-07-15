@@ -500,6 +500,13 @@ function CheckpointPanel() {
 						<button key={d.path} className="vs-diff-row" title="Open in the IDE" onClick={() => void openInIDE(d.path)}><code>{d.path}</code><span className="vs-add-n">+{d.added}</span><span className="vs-rem-n">−{d.removed}</span></button>
 					))}</div>
 				</div>
+				{k.patch && (
+					<div className="vs-ckp-sec">Diff — what actually changed
+						<pre className="vs-patch">{k.patch.split('\n').map((l, i) => (
+							<span key={i} className={l.startsWith('+') ? 'add' : l.startsWith('-') ? 'rem' : l.startsWith('  ···') ? 'fold' : ''}>{l}{'\n'}</span>
+						))}</pre>
+					</div>
+				)}
 				<div className="vs-ckp-sec">Evidence
 					<div className="vs-ev">{k.evidence.map((e, i) => { const I = EVIDENCE_ICON[e.kind]; return (
 						<div key={i} className="vs-ev-row"><I size={13} /><b>{e.label}</b>{e.detail && <span>· {e.detail}</span>}</div>
@@ -722,6 +729,12 @@ export function CommandBar() {
 		const lensCmds: Cmd[] = (Object.keys(LENS_META) as Lens[]).map((l) => ({ id: `lens:${l}`, label: `Lens: ${LENS_META[l].label}`, hint: LENS_META[l].hint, run: () => runtime.setLens(l) }));
 		return [
 			{ id: 'newwork', label: 'New work — click your app to place it', hint: '⌘⇧N', run: () => runtime.armWork(true) },
+			{ id: 'chat', label: state.layout.chatOpen ? 'Hide chat sidebar' : 'Show chat sidebar', run: () => runtime.openChat(!state.layout.chatOpen) },
+			{ id: 'tablayout', label: 'Toggle vertical tabs (Arc-style)', run: () => {
+				let v = 'side';
+				try { v = localStorage.getItem('vs-tablayout') === 'side' ? 'top' : 'side'; localStorage.setItem('vs-tablayout', v); } catch { /* ignore */ }
+				window.dispatchEvent(new CustomEvent('velocity:tablayout', { detail: v }));
+			} },
 			{ id: 'mission', label: 'Detailed brief — full mission', run: () => runtime.openMissionSheet(true) },
 			{ id: 'coworkers', label: 'Open coworkers', run: () => runtime.openRight('coworkers') },
 			{ id: 'share', label: 'Workers — invite people & coworkers', run: () => runtime.openRight('coworkers') },
@@ -739,7 +752,7 @@ export function CommandBar() {
 			{ id: 'ship', label: 'Ship — deploy to a host', hint: '⌘⇧D', run: () => runtime.openShip(true) },
 			...lensCmds,
 		];
-	}, [state.paused, state.layout.openTool, state.layout.activePaneId]);
+	}, [state.paused, state.layout.openTool, state.layout.activePaneId, state.layout.chatOpen]);
 
 	if (!state.layout.commandOpen) return null;
 	const filtered = cmds.filter((c) => c.label.toLowerCase().includes(q.toLowerCase()));

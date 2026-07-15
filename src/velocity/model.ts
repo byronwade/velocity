@@ -157,6 +157,11 @@ export interface Checkpoint {
 	/** 'real' = produced by an actual model run; the sim heartbeat must never
 	 *  supersede it. Absent/'sim' = deterministic demo momentum. */
 	origin?: 'sim' | 'real';
+	/** Real checkpoints only: the actual line-level patch (unified-style). */
+	patch?: string;
+	/** Real checkpoints only: inverse snapshots so Reject truly reverts —
+	 *  before === null means the file didn't exist (delete on revert). */
+	revert?: { path: string; before: string | null }[];
 	missionId: string | null;
 	outcome: string;
 	beforeLabel: string;

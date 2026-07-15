@@ -65,7 +65,7 @@ export interface CoworkerRuntime {
 	// --- real work (local Ollama loop — see realwork.ts) ---
 	realWorkStarted(commentId: string, model: string): void;
 	realWorkTool(coworkerId: string, label: string): void;
-	realWorkDone(commentId: string, summary: string, files: { path: string; added: number; removed: number }[], model: string): void;
+	realWorkDone(commentId: string, summary: string, files: { path: string; added: number; removed: number }[], model: string, patch?: string, revert?: { path: string; before: string | null }[]): void;
 
 	acceptCheckpoint(id: string): void;
 	rejectCheckpoint(id: string): void;
@@ -477,7 +477,7 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 	realWorkTool(coworkerId: string, label: string): void {
 		this.mapCoworkers((c) => (c.id === coworkerId ? { ...c, action: label } : c));
 	}
-	realWorkDone(commentId: string, summary: string, files: { path: string; added: number; removed: number }[], model: string): void {
+	realWorkDone(commentId: string, summary: string, files: { path: string; added: number; removed: number }[], model: string, patch?: string, revert?: { path: string; before: string | null }[]): void {
 		const comment = this.state.comments.find((c) => c.id === commentId);
 		const cw = comment && this.state.coworkers.find((c) => c.id === comment.assignedCoworkerId);
 		if (!comment || !cw) return;
@@ -490,7 +490,7 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 		if (files.length) {
 			const checkpoint = {
 				id: uid('k'), coworkerId: cw.id, missionId: this.state.mission?.id ?? null,
-				origin: 'real' as const,
+				origin: 'real' as const, patch: patch || undefined, revert,
 				outcome: comment.text.slice(0, 64), beforeLabel: 'Before', afterLabel: 'After',
 				diff: files, buildOk: true, tests: { passed: 0, total: 0 },
 				evidence: [{ kind: 'diff' as const, label: `${files.length} file${files.length > 1 ? 's' : ''} changed`, detail: `by ${model} (local)` }],
@@ -515,8 +515,24 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 		this.toast('Checkpoint accepted. Stable advanced.');
 	}
 	rejectCheckpoint(id: string): void {
-		this.set({ checkpoints: this.state.checkpoints.map((k) => (k.id === id ? { ...k, state: 'rejected' } : k)) });
+		const k = this.state.checkpoints.find((c) => c.id === id);
+		this.set({ checkpoints: this.state.checkpoints.map((c) => (c.id === id ? { ...c, state: 'rejected' } : c)) });
 		this.patchLayout({ rightSurface: 'none' });
+		// A real checkpoint carries inverse snapshots — rejecting it truly
+		// reverts the workspace, not just the label.
+		if (k?.origin === 'real' && k.revert?.length) {
+			const entries = k.revert;
+			void (async () => {
+				const { fs } = getServices();
+				for (const r of entries) {
+					if (r.before === null) await fs.delete(r.path).catch(() => {});
+					else await fs.writeFile(r.path, r.before);
+				}
+				this.addEvent('note', `Reverted ${entries.length} file${entries.length > 1 ? 's' : ''} from a rejected checkpoint.`, k.coworkerId);
+				this.toast(`Rejected — ${entries.length} file${entries.length > 1 ? 's' : ''} reverted.`);
+			})();
+			return;
+		}
 		this.toast('Rejected. Stable preserved; Candidate discarded.');
 	}
 	reviseCheckpoint(id: string): void {

@@ -26,6 +26,10 @@ corrections get a new entry. Newest release first.
 - **vertical-tabs** — Arc-style vertical tabs. Settings → Appearance can switch the project tabs from the top row to a collapsible left rail — tabs stacked with their status rings, inbox and profile at the bottom.
 
 ### Added
+- **checkpoint-patch** — See exactly what changed. Real checkpoints now carry the actual line-level diff (computed from before/after snapshots, long unchanged runs folded) and Review renders it as a proper patch — green additions, red removals, per file.
+- **real-rollback** — Reject really reverts. Rejecting a real checkpoint restores the workspace from inverse snapshots: files the model created are deleted, edits are restored to their prior content. Verified: a model edit to TODO.md was rejected and the file came back byte-for-byte.
+- **chat-pin** — Chat → work in one click. Hover any of your chat messages and pin it as a work item; it lands on the app and auto-assigns exactly like a placed comment.
+- The command palette now covers the new surfaces: toggle the chat sidebar and switch to vertical tabs from ⌘K.
 - **fluid-presence** — Presence moves like people. While coworkers work, their markers drift around what they're working on — the heartbeat sets deterministic waypoints and 2.9-second eased glides carry them there, so motion is continuous and organic, never jagged or teleporting. Human collaborators' cursors glide the same way. Reduced-motion turns it all off.
 - **quiet-chrome** — Minimalism pass. Pane toolbar controls (split, close, IDE tools) stay invisible until you hover or focus the pane; cursor name labels are softer; the resting frame belongs to the content.
 

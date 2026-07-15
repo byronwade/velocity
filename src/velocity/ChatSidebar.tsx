@@ -101,7 +101,13 @@ export function ChatSidebar() {
 						<div key={f.id} className="vs-chat-msg user">
 							<div className="vs-chat-bubble">
 								{f.text}
-								<MsgActions text={f.text} />
+								<span className="vs-chat-bubble-acts">
+									<button className="vs-chat-act" title="Pin as work — auto-assigns a coworker" aria-label="Pin as work"
+										onClick={() => { runtime.addComment('browser', 46, 42, f.text); runtime.notify('Pinned as work.'); }}>
+										<Pin size={12} />
+									</button>
+									<MsgActions text={f.text} />
+								</span>
 							</div>
 						</div>
 					)
