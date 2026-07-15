@@ -3,7 +3,7 @@ import { X, FileCode } from 'lucide-react';
 import { useWorkspace, runtime } from './useWorkspace';
 import { useServices } from '../services/container';
 import { firstLeafOfView } from './panes';
-import type { Lens } from './model';
+import { LENS_ORDER } from './model';
 import { TabBar } from './TabBar';
 import { Stage } from './Stage';
 import { Dock } from './Dock';
@@ -12,7 +12,6 @@ import { SettingsSheet } from './SettingsSheet';
 import { ChatSidebar } from './ChatSidebar';
 import './velocity.css';
 
-const LENS_ORDER: Lens[] = ['browser', 'code', 'terminal', 'system', 'data', 'tests', 'verify'];
 
 const SHORTCUTS: { group: string; keys: [string, string][] }[] = [
 	{ group: 'Views', keys: [['1 – 7', 'Switch the active pane\'s view'], ['C', 'Compare Candidate vs Stable'], ['F', 'Focus mode']] },

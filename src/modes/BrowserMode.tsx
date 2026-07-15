@@ -135,6 +135,7 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 	const [, bump] = useReducer((x: number) => x + 1, 0);
 	const [loadKey, setLoadKey] = useState(0);
 	const [loading, setLoading] = useState(false);
+	const [menuOpen, setMenuOpen] = useState(false);
 	const [zoom, setZoom] = useState(1);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const zoomBy = (d: number) => setZoom((z) => Math.max(0.25, Math.min(3, Math.round((z + d) * 100) / 100)));
@@ -252,35 +253,33 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 
 	return (
 		<div ref={rootRef} className="mode browser chrome" onKeyDown={onKeyDown}>
-			{/* Browser tabs — like the IDE's file tabs; each owns its history. */}
-			<div className="cr-tabstrip" role="tablist">
-				{tabs.map((n) => {
-					const st = browser.for(`${paneId}#t${n}`);
-					const cur = st.history[st.index];
-					return (
-						<div key={n} className={`cr-ttab${n === activeTab ? ' active' : ''}`} role="tab" aria-selected={n === activeTab} onClick={() => setActiveTab(n)}>
-							<Icon.browser />
-							<span className="cr-ttab-title">{cur === BROWSER_HOME ? 'New tab' : titleFor(cur)}</span>
-							{tabs.length > 1 && <button className="cr-ttab-x" aria-label="Close tab" onClick={(e) => { e.stopPropagation(); closeTab(n); }}><Icon.close /></button>}
-						</div>
-					);
-				})}
-				<button className="cr-ttab-new" title="New tab" aria-label="New tab" onClick={newTab}><Icon.plus /></button>
-			</div>
-
-			{/* Compact v0-style toolbar: nav · centered omnibox · view tools. */}
-			<div className="cr-toolbar compact">
+			{/* ONE bar: nav · tabs · omnibox · view tools · settings. */}
+			<div className="cr-bar">
 				<div className="cr-nav">
 					<button className="cr-icb" title="Back" aria-label="Back" disabled={state.index === 0} onClick={back}><Icon.back /></button>
 					<button className="cr-icb" title="Forward" aria-label="Forward" disabled={state.index >= state.history.length - 1} onClick={forward}><Icon.forward /></button>
 					<button className="cr-icb" title="Reload (⌘R)" aria-label="Reload" onClick={() => setLoadKey((k) => k + 1)}><Icon.reload /></button>
 				</div>
-				<form className="cr-omni" onSubmit={(e) => { e.preventDefault(); navigate(urlInput); }}>
+				<div className="cr-btabs" role="tablist">
+					{tabs.map((n) => {
+						const st = browser.for(`${paneId}#t${n}`);
+						const cur = st.history[st.index];
+						return (
+							<div key={n} className={`cr-ttab${n === activeTab ? ' active' : ''}`} role="tab" aria-selected={n === activeTab} onClick={() => setActiveTab(n)}>
+								<Icon.browser />
+								<span className="cr-ttab-title">{cur === BROWSER_HOME ? 'New tab' : titleFor(cur)}</span>
+								{tabs.length > 1 && <button className="cr-ttab-x" aria-label="Close tab" onClick={(e) => { e.stopPropagation(); closeTab(n); }}><Icon.close /></button>}
+							</div>
+						);
+					})}
+					<button className="cr-ttab-new" title="New tab" aria-label="New tab" onClick={newTab}><Icon.plus /></button>
+				</div>
+				<form className="cr-omni2" onSubmit={(e) => { e.preventDefault(); navigate(urlInput); }}>
 					<span className="cr-omni-lead">{isStart ? <Icon.search /> : <Icon.lock />}</span>
-					<input ref={inputRef} value={urlInput} spellCheck={false} placeholder="Search or type a URL — try localhost:3000" aria-label="Address and search bar" onChange={(e) => setUrlInput(e.target.value)} />
+					<input ref={inputRef} value={urlInput} spellCheck={false} placeholder="Search or type a URL" aria-label="Address and search bar" onChange={(e) => setUrlInput(e.target.value)} />
 					{isLocal && <span className="cr-live" title="Live workspace preview">● Live</span>}
 				</form>
-				<div className="cr-actions">
+				<div className="cr-actions2">
 					{zoom !== 1 && (
 						<button className="cr-zoom" title="Reset zoom (⌘0)" aria-label="Reset zoom" onClick={() => setZoom(1)}>{Math.round(zoom * 100)}%</button>
 					)}
@@ -289,8 +288,28 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 							<button key={d.id} className={`cr-dev${device === d.id ? ' on' : ''}`} title={d.label} aria-label={d.label} aria-pressed={device === d.id} onClick={() => setDevice(d.id)}><d.icon size={14} /></button>
 						))}
 					</div>
-					<button className={`cr-icb${devtools ? ' on' : ''}`} title="DevTools (⌥⌘I)" aria-label="DevTools" aria-pressed={devtools} onClick={() => setDevtools((d) => !d)}><Code2 size={16} /></button>
-					{isExternal && <a className="cr-icb" title="Open in a new tab" aria-label="Open externally" href={current} target="_blank" rel="noreferrer noopener"><Icon.share /></a>}
+					<button className={`cr-icb${devtools ? ' on' : ''}`} title="DevTools (⌥⌘I)" aria-label="DevTools" aria-pressed={devtools} onClick={() => setDevtools((d) => !d)}><Code2 size={15} /></button>
+					<div className="cr-menu-anchor">
+						<button className={`cr-icb${menuOpen ? ' on' : ''}`} title="Browser settings" aria-label="Browser settings" aria-expanded={menuOpen} onClick={() => setMenuOpen((o) => !o)}><Icon.dots /></button>
+						{menuOpen && (
+							<>
+								<div className="cr-menu-scrim" onClick={() => setMenuOpen(false)} />
+								<div className="cr-menu2" role="menu">
+									<button className="cr-menu2-item" onClick={() => { newTab(); setMenuOpen(false); }}><Icon.plus />New tab</button>
+									<button className="cr-menu2-item" disabled={isStart} onClick={() => { void navigator.clipboard?.writeText(current); setMenuOpen(false); }}><Icon.share />Copy URL</button>
+									{isExternal && <button className="cr-menu2-item" onClick={() => { window.open(current, '_blank', 'noopener'); setMenuOpen(false); }}><Icon.share />Open in system browser</button>}
+									<button className="cr-menu2-item" onClick={() => { navigate(BROWSER_HOME); setMenuOpen(false); }}><Icon.home />Start page</button>
+									<div className="cr-menu2-sep" />
+									<div className="cr-menu2-zoom">
+										<span>Zoom</span>
+										<button title="Zoom out" aria-label="Zoom out" onClick={() => zoomBy(-0.1)}><Icon.minus /></button>
+										<b>{Math.round(zoom * 100)}%</b>
+										<button title="Zoom in" aria-label="Zoom in" onClick={() => zoomBy(0.1)}><Icon.plus /></button>
+									</div>
+								</div>
+							</>
+						)}
+					</div>
 				</div>
 			</div>
 

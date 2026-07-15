@@ -12,7 +12,7 @@ import { useServices } from '../services/container';
 import { usePanePath } from '../services/editorService';
 import { getActiveEditor } from '../editor/activeView';
 import { useWorkspace, runtime } from './useWorkspace';
-import { LENS_META, COMPARE_LABEL, WORK_INTENTS, WORK_MODELS } from './model';
+import { LENS_META, LENS_ORDER, COMPARE_LABEL, WORK_INTENTS, WORK_MODELS } from './model';
 import { leafIds } from './panes';
 import type { DropEdge } from './panes';
 import { ContextMenu, useContextMenu } from './ContextMenu';
@@ -709,7 +709,6 @@ function StageOverlay({ lens }: { lens: Lens }) {
 // --------------------------------------------------------------------------
 // Split-pane workspace — each pane picks its own view and can split / close.
 // --------------------------------------------------------------------------
-const LENS_ORDER: Lens[] = ['browser', 'code', 'system', 'data', 'tests', 'verify'];
 const LENS_ICON: Record<Lens, typeof Globe> = {
 	browser: Globe, code: Code2, terminal: TerminalSquare, system: Server, data: Database, tests: FlaskConical, verify: CheckCircle2,
 };

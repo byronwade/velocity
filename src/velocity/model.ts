@@ -373,6 +373,9 @@ export const DEPLOY_TARGETS: { id: DeployTarget; label: string; domain: string }
 	{ id: 'cloudflare', label: 'Cloudflare', domain: 'aurora.pages.dev' },
 ];
 
+/** The one canonical view order — the pane dropdown and the 1–7 keys use it. */
+export const LENS_ORDER: Lens[] = ['browser', 'code', 'terminal', 'system', 'data', 'tests', 'verify'];
+
 export const LENS_META: Record<Lens, { label: string; hint: string }> = {
 	browser: { label: 'Browser', hint: 'Live preview of the app' },
 	code: { label: 'IDE', hint: 'Editor, files + diff' },

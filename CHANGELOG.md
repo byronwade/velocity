@@ -26,12 +26,13 @@ corrections get a new entry. Newest release first.
 - **vertical-tabs** — Arc-style vertical tabs. Settings → Appearance can switch the project tabs from the top row to a collapsible left rail — tabs stacked with their status rings, inbox and profile at the bottom.
 
 ### Changed
-- **browser-compact** — The browser header is compact and v0-styled: centered pill omnibox, tokenized icon buttons — bookmarks bar and the profile avatar are gone (not needed in this environment).
+- **browser-compact** — The browser is ONE bar. Nav, tabs, the centered omnibox, device preview, DevTools, and a ⚙ settings menu (new tab, copy URL, open externally, start page, zoom) all live in a single 40px row, fully on the design tokens — bookmarks bar and the profile avatar are gone (not needed in this environment).
 - **divider-grip** — Panel grab bars are obvious now: a wider hit area, a visible grip pill on hover, and a strong active state; resizing stays smooth with live snap points.
 
 ### Fixed
 - **comment-dismiss** — Comment windows close on click-away. Clicking anywhere outside an open thread or composer dismisses it (Esc still works).
 - **chat-sidebar** — The activity portion of the feed no longer repeats itself: cycling sim tasks are deduped against recent entries, so the chat stays readable while the full history remains in the Activity panel.
+- **terminal-lens** — Terminal actually appears in the panel view dropdown now. The dropdown had its own stale view list; there is one canonical `LENS_ORDER` in the model shared by the dropdown and the 1–7 keys.
 
 ## 2026-07-15 · The first real coworker
 
