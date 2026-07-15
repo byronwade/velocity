@@ -388,12 +388,16 @@ function CheckpointPanel() {
 				<div className="vs-ckp-limits"><ShieldQuestion size={13} />{k.limitations}</div>
 				<div className="vs-ckp-rollback"><CornerUpLeft size={12} />Rollback point: {k.rollbackPoint}</div>
 			</div>
-			<footer className="vs-rail-foot">
-				<button className="vs-app-ghost" onClick={() => runtime.rollback(k.id)}><RotateCcw size={14} />Roll back</button>
-				<button className="vs-app-ghost" onClick={() => runtime.toggleCompare()}><GitCompare size={14} />Compare</button>
-				<button className="vs-app-ghost" onClick={() => runtime.reviseCheckpoint(k.id)}>Revise</button>
-				<button className="vs-app-ghost danger" onClick={() => runtime.rejectCheckpoint(k.id)}>Reject</button>
-				<button className="vs-app-primary" onClick={() => runtime.acceptCheckpoint(k.id)}><Check size={14} />Accept</button>
+			<footer className="vs-ckp-foot">
+				<div className="vs-ckp-utils">
+					<button onClick={() => runtime.toggleCompare()}><GitCompare size={14} />Compare</button>
+					<button onClick={() => runtime.reviseCheckpoint(k.id)}><Pencil size={14} />Revise</button>
+					<button onClick={() => runtime.rollback(k.id)}><RotateCcw size={14} />Roll back</button>
+				</div>
+				<div className="vs-ckp-decide">
+					<button className="vs-ckp-reject" onClick={() => runtime.rejectCheckpoint(k.id)}><X size={15} />Reject</button>
+					<button className="vs-ckp-accept" onClick={() => runtime.acceptCheckpoint(k.id)}><Check size={15} />Accept &amp; merge</button>
+				</div>
 			</footer>
 		</>
 	);

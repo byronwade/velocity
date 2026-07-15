@@ -511,6 +511,20 @@
 .vs-rail-body { flex: 1; overflow: auto; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
 .vs-rail-foot { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 14px; border-top: 1px solid var(--line); }
 .vs-rail-foot .vs-app-ghost, .vs-rail-foot .vs-app-primary { height: 34px; font-size: var(--text-12); padding: 0 12px; }
+
+/* Checkpoint footer — utilities row + a clear Reject/Accept decision row. */
+.vs-ckp-foot { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--line); background: var(--panel); }
+.vs-ckp-utils { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.vs-ckp-utils button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--muted); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer; min-width: 0; }
+.vs-ckp-utils button:hover { color: var(--fg); border-color: var(--line-2); background: var(--panel-2); }
+.vs-ckp-utils button svg { flex: 0 0 auto; }
+.vs-ckp-decide { display: grid; grid-template-columns: 1fr 1.4fr; gap: 8px; }
+.vs-ckp-reject, .vs-ckp-accept { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 40px; border-radius: 9px; font: inherit; font-size: var(--text-13); font-weight: var(--fw-semibold); cursor: pointer; white-space: nowrap; }
+.vs-ckp-reject { border: 1px solid color-mix(in srgb, var(--danger) 34%, var(--line)); background: var(--panel); color: var(--danger); }
+.vs-ckp-reject:hover { background: color-mix(in srgb, var(--danger) 8%, var(--panel)); border-color: color-mix(in srgb, var(--danger) 50%, var(--line)); }
+.vs-ckp-accept { border: 0; background: var(--good); color: #fff; }
+.vs-ckp-accept:hover { background: color-mix(in srgb, var(--good) 88%, #000); }
+.vs-ckp-accept:active, .vs-ckp-reject:active { transform: translateY(1px); }
 .vs-empty-rail { color: var(--faint); text-align: center; padding: 40px 0; }
 
 /* --- Coworker card ------------------------------------------------------ */
