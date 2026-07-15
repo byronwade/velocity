@@ -11,6 +11,7 @@ corrections get a new entry. Newest release first.
 ## 2026-07-15 · Native foundation
 
 ### Added
+- **pty-terminal** — A true native terminal. The desktop build's terminal panel now runs real PTY sessions (ConPTY on Windows, openpty elsewhere) through your actual shell — bash, pwsh, cmd, node — rendered by xterm.js with live resize and session tabs. The browser preview keeps the sandboxed workspace shell.
 - **persistence** — Projects survive restarts. Every project tab's full workspace state (coworkers, missions, checkpoints, comments, layout) is snapshotted continuously and restored on the next launch. `?scenario=` still seeds a fresh deterministic demo. Verified: a placed work item survived a full reload.
 - **native-notifications** — Native desktop banners. The Tauri build now uses the OS notification system for "checkpoint ready" (proper installed-app identity); the browser preview keeps the web Notification fallback. Same Settings toggle governs both.
 - **tray-badge** — System tray presence. Velocity gets a tray icon whose tooltip reflects the live cross-project inbox count ("Velocity — 3 need you"), with Open/Quit menu items.

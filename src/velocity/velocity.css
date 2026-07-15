@@ -863,6 +863,9 @@
 .vs-drawer-body { flex: 1; overflow: auto; padding: 12px 14px; font-family: var(--mono); font-size: var(--text-12); }
 .vs-drawer-body.term { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
 .vs-termpanel { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.vs-xterm { position: absolute; inset: 0; padding: 4px 8px; }
+.vs-xterm .xterm, .vs-xterm .xterm-viewport { height: 100%; }
+.vs-term-loading { padding: 12px 14px; color: var(--faint); font-family: var(--mono); font-size: var(--text-12); }
 .vs-term-bar { display: flex; align-items: center; gap: 2px; padding: 5px 8px; border-bottom: 1px solid var(--line); background: var(--panel-2); flex: 0 0 auto; }
 .vs-term-tab { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 10px; border-radius: var(--r-sm); border: 0; background: transparent; color: var(--muted); font: inherit; font-size: var(--text-12); font-family: var(--mono); cursor: pointer; }
 .vs-term-tab:hover { background: var(--panel); color: var(--fg); }

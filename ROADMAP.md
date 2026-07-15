@@ -66,7 +66,7 @@ to the Dropped section at the bottom with a reason.
 - [x] **ide-search-replace** — Searchable tree + full find & replace. _(shipped 2026-07-15)_
 - [x] **real-terminal** — Real shell over the workspace FS with bash/zsh/pwsh/node sessions. _(shipped 2026-07-14)_
 - [x] **docked-tools-panel** — Bottom-docked developer tools panel. _(shipped 2026-07-15)_
-- [ ] **pty-terminal** — True native terminal: portable-pty behind Tauri commands + xterm.js. _(planned · phase 3)_
+- [x] **pty-terminal** — True native terminal in the desktop build: portable-pty (ConPTY/openpty) sessions behind Tauri commands, rendered by xterm.js with live resize; the browser preview keeps the workspace shell. _(shipped 2026-07-15)_
 - [ ] **lsp** — TypeScript language server as a sidecar wired to CodeMirror (completions, diagnostics, rename). _(planned · phase 6)_
 - [ ] **sandpack-preview** — Sandpack 2 self-hosted bundler for real npm projects (or real dev-server + webview). _(planned)_
 

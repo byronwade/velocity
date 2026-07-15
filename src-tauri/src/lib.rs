@@ -1,3 +1,5 @@
+mod pty;
+
 use tauri::Manager;
 
 /// The tray reflects how much needs the human: the frontend calls this
@@ -38,7 +40,14 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         // Remember window size/position across launches.
         .plugin(tauri_plugin_window_state::Builder::default().build())
-        .invoke_handler(tauri::generate_handler![set_attention_count])
+        .manage(pty::PtyState::default())
+        .invoke_handler(tauri::generate_handler![
+            set_attention_count,
+            pty::pty_spawn,
+            pty::pty_write,
+            pty::pty_resize,
+            pty::pty_kill
+        ])
         .setup(|app| {
             // Tray: a persistent presence with an attention tooltip.
             use tauri::menu::{Menu, MenuItem};
