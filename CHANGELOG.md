@@ -8,6 +8,12 @@ list item of the shape `- **slug** — Name. What changed and why it matters. (\
 **slug** is a stable kebab-case feature id shared with [ROADMAP.md](ROADMAP.md) — never rename one;
 corrections get a new entry. Newest release first.
 
+## 2026-07-15 · The first real coworker
+
+### Added
+- **local-coworker** — Real work, no API key. Create a work item with the **Local** model and the assigned coworker actually does it: the Ollama tool loop (read/write files, run commands, search) runs against the real workspace, the coworker's action updates live as tools execute, the model's answer lands as a thread reply, and file changes become a checkpoint whose diff is **computed from actual before/after contents**. Small models that narrate a tool call as JSON instead of invoking it get rescued — the call is parsed and executed for real. Verified end-to-end: `qwen2.5-coder:1.5b` created a file and its `+1 −0` diff landed in Review, credited "by qwen2.5-coder:1.5b (local)".
+- Real checkpoints outrank the demo heartbeat: simulated momentum can never supersede or bury a checkpoint produced by an actual model run.
+
 ## 2026-07-15 · Native foundation
 
 ### Added

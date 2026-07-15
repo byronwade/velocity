@@ -150,6 +150,9 @@ export interface DiffFile {
 export interface Checkpoint {
 	id: string;
 	coworkerId: string;
+	/** 'real' = produced by an actual model run; the sim heartbeat must never
+	 *  supersede it. Absent/'sim' = deterministic demo momentum. */
+	origin?: 'sim' | 'real';
 	missionId: string | null;
 	outcome: string;
 	beforeLabel: string;
@@ -253,7 +256,7 @@ export const WORK_MODELS: { id: string; label: string }[] = [
 	{ id: 'auto', label: 'Auto · frontier' },
 	{ id: 'opus', label: 'Claude Opus 4.8' },
 	{ id: 'sonnet', label: 'Claude Sonnet 5' },
-	{ id: 'local', label: 'Local · qwen2.5-coder' },
+	{ id: 'local', label: 'Local · Ollama (runs it now)' },
 ];
 
 /** A comment pinned to a spot on a lens; work is auto-handed to a coworker. */

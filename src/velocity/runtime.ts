@@ -59,6 +59,10 @@ export interface CoworkerRuntime {
 	updateCoworkerFromFile(id: string, patch: { name?: string; role?: string; department?: string; model?: string; autonomy?: Autonomy; scope?: string }): void;
 	/** Show a transient toast (for UI helpers outside the runtime). */
 	notify(text: string): void;
+	// --- real work (local Ollama loop — see realwork.ts) ---
+	realWorkStarted(commentId: string, model: string): void;
+	realWorkTool(coworkerId: string, label: string): void;
+	realWorkDone(commentId: string, summary: string, files: { path: string; added: number; removed: number }[], model: string): void;
 
 	acceptCheckpoint(id: string): void;
 	rejectCheckpoint(id: string): void;
@@ -157,6 +161,7 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 			const done = landed as Coworker;
 			const checkpoint = {
 				id: uid('k'), coworkerId: done.id, missionId: this.state.mission?.id ?? null,
+				origin: 'sim' as const,
 				outcome: done.action, beforeLabel: 'Stable', afterLabel: 'Candidate',
 				diff: [{ path: this.filePool[this.tickN % Math.max(1, this.filePool.length)] ?? 'src/App.tsx', added: 18 + (this.tickN % 5) * 7, removed: 4 + (this.tickN % 3) * 3 }],
 				buildOk: true, tests: { passed: 12, total: 12 },
@@ -168,9 +173,10 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 				blastRadius: [done.scope.split(' ')[0] || 'app'], rollbackPoint: 'Stable @ latest',
 				state: 'ready' as const, createdLabel: 'just now',
 			};
-			// A coworker's newest checkpoint supersedes their older unreviewed one,
-			// so the review queue stays honest instead of piling up.
-			const kept = this.state.checkpoints.filter((k) => !(k.coworkerId === done.id && k.state === 'ready'));
+			// A coworker's newest sim checkpoint supersedes their older unreviewed
+			// SIM one, so the demo queue stays honest — but REAL work (an actual
+			// model run) is never displaced by simulated momentum.
+			const kept = this.state.checkpoints.filter((k) => !(k.coworkerId === done.id && k.state === 'ready' && k.origin !== 'real'));
 			this.set({ coworkers, checkpoints: [checkpoint, ...kept].slice(0, 8) });
 			this.addEvent('checkpoint', `${done.name} landed “${done.action}” — ready to review.`, done.id);
 			notifyCheckpoint(`${done.name} · checkpoint ready`, done.action);
@@ -274,7 +280,10 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 	openMissionSheet(open: boolean): void { this.patchLayout({ missionSheetOpen: open }); }
 	openCommand(open: boolean): void { this.patchLayout({ commandOpen: open }); }
 	openRight(surface: WorkspaceState['layout']['rightSurface'], id?: string): void {
-		this.patchLayout({ rightSurface: surface, activeCheckpointId: surface === 'checkpoint' ? id ?? this.state.checkpoints[0]?.id ?? null : this.state.layout.activeCheckpointId, activeDecisionId: surface === 'decision' ? id ?? this.state.decisions[0]?.id ?? null : this.state.layout.activeDecisionId });
+		// Real model-run checkpoints outrank simulated momentum as the default.
+		const defaultCkp = this.state.checkpoints.find((k) => k.state === 'ready' && k.origin === 'real')?.id
+			?? this.state.checkpoints[0]?.id ?? null;
+		this.patchLayout({ rightSurface: surface, activeCheckpointId: surface === 'checkpoint' ? id ?? defaultCkp : this.state.layout.activeCheckpointId, activeDecisionId: surface === 'decision' ? id ?? this.state.decisions[0]?.id ?? null : this.state.layout.activeDecisionId });
 	}
 	closeRight(): void { this.patchLayout({ rightSurface: 'none' }); }
 	closeTopmost(): void {
@@ -380,6 +389,46 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 	}
 	notify(text: string): void { this.toast(text); }
 
+	// --- real work: a local model actually doing the job -------------------
+	realWorkStarted(commentId: string, model: string): void {
+		const comment = this.state.comments.find((c) => c.id === commentId);
+		const cw = comment && this.state.coworkers.find((c) => c.id === comment.assignedCoworkerId);
+		if (!comment || !cw) return;
+		this.mapCoworkers((c) => (c.id === cw.id ? { ...c, state: 'active', action: `Working on “${comment.text.slice(0, 36)}${comment.text.length > 36 ? '…' : ''}”`, model: `Local · ${model}` } : c));
+		this.addEvent('note', `${cw.name} started “${comment.text.slice(0, 40)}” with ${model} (local).`, cw.id);
+	}
+	realWorkTool(coworkerId: string, label: string): void {
+		this.mapCoworkers((c) => (c.id === coworkerId ? { ...c, action: label } : c));
+	}
+	realWorkDone(commentId: string, summary: string, files: { path: string; added: number; removed: number }[], model: string): void {
+		const comment = this.state.comments.find((c) => c.id === commentId);
+		const cw = comment && this.state.coworkers.find((c) => c.id === comment.assignedCoworkerId);
+		if (!comment || !cw) return;
+		const reply = summary || (files.length ? 'Done — see the checkpoint.' : 'Done.');
+		this.set({
+			comments: this.state.comments.map((c) => (c.id === commentId
+				? { ...c, replies: [...c.replies, { authorName: cw.name, authorColor: cw.color, text: reply.slice(0, 600), tsLabel: 'now', fromCoworker: true }] }
+				: c)),
+		});
+		if (files.length) {
+			const checkpoint = {
+				id: uid('k'), coworkerId: cw.id, missionId: this.state.mission?.id ?? null,
+				origin: 'real' as const,
+				outcome: comment.text.slice(0, 64), beforeLabel: 'Before', afterLabel: 'After',
+				diff: files, buildOk: true, tests: { passed: 0, total: 0 },
+				evidence: [{ kind: 'diff' as const, label: `${files.length} file${files.length > 1 ? 's' : ''} changed`, detail: `by ${model} (local)` }],
+				limitations: 'Produced by a local model — review the diff.', risk: 'low' as const,
+				blastRadius: files.map((f) => f.path.split('/')[0]).filter((v, i, a) => a.indexOf(v) === i),
+				rollbackPoint: 'Before this work item', state: 'ready' as const, createdLabel: 'just now',
+			};
+			this.set({ checkpoints: [checkpoint, ...this.state.checkpoints].slice(0, 8) });
+			notifyCheckpoint(`${cw.name} · real work done`, comment.text.slice(0, 60));
+		}
+		this.mapCoworkers((c) => (c.id === cw.id ? { ...c, action: files.length ? 'Landed real work — ready for review' : 'Replied on a work item' } : c));
+		this.addEvent(files.length ? 'checkpoint' : 'note', `${cw.name} finished “${comment.text.slice(0, 40)}”${files.length ? ` — ${files.length} file${files.length > 1 ? 's' : ''} changed.` : '.'}`, cw.id);
+		this.toast(`${cw.name} finished the work item.`);
+	}
+
 	// --- checkpoints ---
 	acceptCheckpoint(id: string): void {
 		this.set({ checkpoints: this.state.checkpoints.map((k) => (k.id === id ? { ...k, state: 'accepted' } : k)) });
@@ -484,6 +533,10 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 		const assignee = opts.assignee === undefined || opts.assignee === 'auto' ? this.pickCoworker(t, intent) : opts.assignee;
 		if (assignee) this.assignComment(id, assignee);
 		else this.toast('Work pinned — no coworker available yet.');
+		// The Local model means REAL work: run the Ollama tool loop on it.
+		if (assignee && (opts.model ?? 'auto') === 'local') {
+			void import('./realwork').then((m) => m.runRealWork(this, id));
+		}
 	}
 	openComment(id: string | null): void { this.patchLayout({ activeCommentId: id, commentMode: false }); }
 	assignComment(commentId: string, coworkerId: string): void {

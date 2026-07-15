@@ -478,7 +478,10 @@ const EVIDENCE_ICON: Record<EvidenceKind, typeof FlaskConical> = {
 
 function CheckpointPanel() {
 	const state = useWorkspace();
-	const k = state.checkpoints.find((c) => c.id === state.layout.activeCheckpointId) ?? state.checkpoints[0];
+	// Real model-run checkpoints outrank simulated momentum in the queue.
+	const k = state.checkpoints.find((c) => c.id === state.layout.activeCheckpointId)
+		?? state.checkpoints.find((c) => c.state === 'ready' && c.origin === 'real')
+		?? state.checkpoints[0];
 	if (!k) return <div className="vs-rail-body vs-empty-rail">No checkpoints yet.</div>;
 	const cw = state.coworkers.find((c) => c.id === k.coworkerId);
 	return (

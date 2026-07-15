@@ -37,6 +37,7 @@ to the Dropped section at the bottom with a reason.
 - [x] **workers-panel** — Monochrome divided-list Workers panel with subagents and live tools. _(shipped 2026-07-15)_
 - [x] **follow-mode** — Follow a coworker's work live. _(shipped 2026-07-14)_
 - [x] **collaboration** — Human teammates: invites, live cursors, presence. _(shipped 2026-07-14)_
+- [x] **local-coworker** — Real work, no API key: a work item created with the Local model runs the Ollama tool loop against the actual workspace — live action updates while tools run, the model's answer as a thread reply, and file changes landing as a checkpoint whose diff is computed from real before/after contents. _(shipped 2026-07-15)_
 - [ ] **real-coworker-runtime** — First provider-backed coworker: Claude Agent SDK in a Node sidecar, `cwd` = a worktree, hooks → checkpoints, `canUseTool` → decision sheets. _(planned · phase 4 — blocked: needs an Anthropic/Gateway API key + the Node sidecar go-ahead)_
 - [ ] **ai-gateway** — Vercel AI Gateway as the model layer: model strings, per-key budgets wired to the credits UI, BYOK. _(planned · phase 4 — blocked: needs an AI Gateway API key)_
 - [ ] **ai-sdk-runtime** — Second runtime on Vercel AI SDK `ToolLoopAgent` for non-Anthropic models via Gateway. _(planned · phase 5 — depends on ai-gateway)_
