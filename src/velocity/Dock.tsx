@@ -84,8 +84,8 @@ export function Dock() {
 			<button className={`vs-dock-btn${state.layout.commentMode ? ' accent' : ''}`} onClick={() => runtime.toggleCommentMode()} title="Comment — click the app to pin a note">
 				<MessageSquarePlus size={15} />
 			</button>
-			<button className="vs-dock-btn ship" onClick={() => runtime.openShip(true)} title="Ship — deploy (⌘⇧D)">
-				<Rocket size={15} />Ship
+			<button className="vs-dock-btn" onClick={() => runtime.openShip(true)} title="Ship — deploy (⌘⇧D)">
+				<Rocket size={15} />
 			</button>
 			<DockOverflow />
 		</div>

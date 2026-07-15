@@ -910,9 +910,7 @@
 .vs-profile-scenario select { height: 32px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--fg); padding: 0 10px; font: inherit; font-size: var(--text-12); cursor: pointer; }
 .vs-profile-menu { width: 300px; }
 
-/* --- Dock: ship, overflow, workers ------------------------------------- */
-.vs-dock-btn.ship { background: color-mix(in srgb, var(--good) 14%, var(--panel-2)); color: color-mix(in srgb, var(--good) 55%, var(--fg)); }
-.vs-dock-btn.ship:hover { background: color-mix(in srgb, var(--good) 22%, var(--panel-2)); }
+/* --- Dock: overflow, workers ------------------------------------------- */
 .vs-dock-more { position: relative; }
 .vs-dock-scrim { position: fixed; inset: 0; z-index: 41; }
 .vs-dockmenu { position: absolute; bottom: 42px; right: 0; z-index: 42; width: 208px; background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-md); box-shadow: var(--elev-2); padding: 5px; animation: vs-rise var(--dur) var(--ease); }
