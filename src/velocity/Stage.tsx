@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Play, Check, X, RotateCcw, Rocket, ShieldCheck, Sparkles, ArrowRight, Server, Database, Clock, Gauge, Circle, MessageSquare, Send, CheckCheck } from 'lucide-react';
 import { EditorMode } from '../modes/EditorMode';
 import { useWorkspace, runtime } from './useWorkspace';
+import { DEPLOY_TARGETS } from './model';
 import type { Collaborator, Comment, Coworker, Lens } from './model';
 
 const ARTIFACT_ACTIONS = ['Improve', 'Fix', 'Rebuild', 'Investigate', 'Explain', 'Assign', 'Compare', 'Test'] as const;
@@ -216,18 +217,50 @@ function VerifyLens() {
 }
 
 function ShipLens() {
+	const state = useWorkspace();
+	const dep = state.deployment ?? null;
 	return (
 		<div className="vs-ship">
 			<div className="vs-ship-card">
-				<Rocket size={22} />
-				<h2>Ready to ship</h2>
-				<p>All acceptance criteria verified · Candidate healthy · rollback point ready.</p>
+				<div className="vs-ship-top">
+					<Rocket size={20} />
+					<div><h2>Ready to ship</h2><p>All acceptance criteria verified · Candidate healthy · rollback ready.</p></div>
+				</div>
 				<div className="vs-ship-checks">
 					<span className="vs-tag good">Build ok</span><span className="vs-tag good">12/12 tests</span><span className="vs-tag good">a11y AA</span><span className="vs-tag">Rollback @ 09:41</span>
 				</div>
-				<div className="vs-ship-actions">
+
+				<div className="vs-deploy-head">Deploy to a host</div>
+				<div className="vs-deploy-grid">
+					{DEPLOY_TARGETS.map((t) => {
+						const on = dep?.provider === t.id;
+						const deploying = on && dep?.status === 'deploying';
+						const live = on && dep?.status === 'live';
+						return (
+							<div key={t.id} className={`vs-deploy${on ? ' on' : ''}${live ? ' live' : ''}`}>
+								<div className="vs-deploy-top">
+									<span className={`vs-deploy-mark ${t.id}`}>{t.label[0]}</span>
+									<b>{t.label}</b>
+									{live && <span className="vs-tag good">Live</span>}
+								</div>
+								<div className="vs-deploy-url">{t.domain}</div>
+								{deploying ? (
+									<button className="vs-deploy-btn" disabled><span className="vs-spin" />Deploying…</button>
+								) : live ? (
+									<div className="vs-deploy-live">
+										<a className="vs-deploy-visit" href={`https://${t.domain}`} target="_blank" rel="noreferrer">Visit ↗</a>
+										<button className="vs-deploy-btn ghost" onClick={() => runtime.deploy(t.id)}>Redeploy</button>
+									</div>
+								) : (
+									<button className="vs-deploy-btn" onClick={() => runtime.deploy(t.id)}><Rocket size={13} />Deploy</button>
+								)}
+							</div>
+						);
+					})}
+				</div>
+				<div className="vs-ship-foot">
 					<button className="vs-app-ghost" onClick={() => runtime.toggleCompare()}>Compare with Stable</button>
-					<button className="vs-app-primary" onClick={() => runtime.ship()}><Rocket size={15} />Ship to Preview</button>
+					{dep?.status === 'live' && <span className="vs-ship-livenote">Production · {dep.url}</span>}
 				</div>
 			</div>
 		</div>

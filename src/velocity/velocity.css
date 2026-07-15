@@ -152,6 +152,52 @@
 .vs-followbar b { font-weight: var(--fw-semibold); }
 .vs-followbar > span:nth-child(3) { color: var(--muted); }
 .vs-followbar-stop { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 10px; border-radius: 7px; border: 1px solid color-mix(in srgb, var(--id) 40%, var(--line)); background: var(--panel); color: color-mix(in srgb, var(--id) 55%, var(--fg)); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer; }
+.vs-followbar-view { height: 26px; padding: 0 10px; border-radius: 7px; border: 1px solid transparent; background: color-mix(in srgb, var(--id) 14%, transparent); color: color-mix(in srgb, var(--id) 55%, var(--fg)); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer; }
+.vs-followbar-view:hover { background: color-mix(in srgb, var(--id) 22%, transparent); }
+
+/* Follow panel — what a coworker is doing + has done. */
+.vs-follow-id { display: flex; flex-direction: column; line-height: 1.2; flex: 1; }
+.vs-follow-id b { font-size: var(--text-13); font-weight: var(--fw-semibold); }
+.vs-follow-id span { font-size: var(--text-11); color: var(--muted); }
+.vs-follow-now { display: flex; align-items: center; gap: 8px; }
+.vs-follow-act { font-size: var(--text-12); color: var(--fg); }
+.vs-follow-sec { font-size: var(--text-11); text-transform: uppercase; letter-spacing: 0.07em; color: var(--faint); font-weight: var(--fw-semibold); margin-top: 4px; }
+.vs-follow-live { display: flex; align-items: center; gap: 8px; font-size: var(--text-12); color: var(--muted); padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--panel-2); }
+.vs-follow-live b { color: var(--fg); font-weight: var(--fw-medium); }
+.vs-follow-pulse { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; box-shadow: 0 0 0 0 color-mix(in srgb, var(--id) 60%, transparent); animation: vs-ring 1.8s ease-out infinite; }
+@keyframes vs-ring { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--id) 55%, transparent); } 100% { box-shadow: 0 0 0 7px transparent; } }
+@media (prefers-reduced-motion: reduce) { .vs-follow-pulse { animation: none; } }
+.vs-follow-ckp { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--panel); font: inherit; font-size: var(--text-12); cursor: pointer; }
+.vs-follow-ckp:hover { border-color: var(--line-2); }
+.vs-follow-ckp > span:nth-child(2) { flex: 1; color: var(--fg); }
+.vs-follow-ckp svg { color: var(--muted); flex: 0 0 auto; }
+
+/* Deploy targets (Ship lens). */
+.vs-ship-top { display: flex; align-items: flex-start; gap: 10px; text-align: left; }
+.vs-ship-top svg { color: var(--good); margin-top: 2px; }
+.vs-ship-top h2 { font-size: var(--text-20); font-weight: var(--fw-semibold); }
+.vs-ship-top p { color: var(--muted); font-size: var(--text-13); margin-top: 2px; }
+.vs-deploy-head { font-size: var(--text-11); text-transform: uppercase; letter-spacing: 0.07em; color: var(--faint); font-weight: var(--fw-semibold); margin-top: 4px; }
+.vs-deploy-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.vs-deploy { border: 1px solid var(--line); border-radius: var(--r-lg); padding: 14px; display: flex; flex-direction: column; gap: 9px; text-align: left; background: var(--panel); }
+.vs-deploy.on { border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }
+.vs-deploy.live { border-color: color-mix(in srgb, var(--good) 42%, var(--line)); background: color-mix(in srgb, var(--good) 4%, var(--panel)); }
+.vs-deploy-top { display: flex; align-items: center; gap: 8px; }
+.vs-deploy-top b { flex: 1; font-size: var(--text-13); }
+.vs-deploy-mark { width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; color: #fff; font-weight: var(--fw-semibold); font-size: var(--text-12); flex: 0 0 auto; }
+.vs-deploy-mark.vercel { background: #000; }
+.vs-deploy-mark.netlify { background: #05bdba; }
+.vs-deploy-mark.cloudflare { background: #f38020; }
+.vs-deploy-url { font-family: var(--mono); font-size: var(--text-11); color: var(--faint); }
+.vs-deploy-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 34px; border-radius: 8px; border: 0; background: var(--fg); color: var(--shell); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer; }
+.vs-deploy-btn:hover { opacity: 0.9; }
+.vs-deploy-btn:disabled { opacity: 0.7; cursor: default; }
+.vs-deploy-btn.ghost { background: var(--panel); color: var(--fg); border: 1px solid var(--line); }
+.vs-deploy-live { display: flex; gap: 6px; }
+.vs-deploy-visit { flex: 1; display: inline-flex; align-items: center; justify-content: center; height: 34px; border-radius: 8px; background: var(--good); color: #fff; font-size: var(--text-12); font-weight: var(--fw-medium); text-decoration: none; }
+.vs-deploy-live .vs-deploy-btn.ghost { flex: 0 0 auto; padding: 0 12px; }
+.vs-ship-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 4px; }
+.vs-ship-livenote { font-size: var(--text-12); color: var(--good); font-family: var(--mono); }
 
 /* --- Main + stage ------------------------------------------------------- */
 .vs-main { flex: 1 1 auto; display: flex; min-height: 0; position: relative; }
@@ -164,24 +210,27 @@
 .vs-stage-inner { position: absolute; inset: 0; overflow: auto; }
 
 /* Presence flags — calm, Figma-style coworker presence (no pulsing dot). */
+/* Collapsed to an avatar chip by default; expands on hover / when followed —
+   this keeps the stage calm even with many coworkers present. */
 .vs-flag {
-	position: absolute; transform: translate(-8px, -8px); z-index: 13;
-	display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 3px 11px 3px 3px;
+	position: absolute; transform: translate(-50%, -50%); z-index: 13;
+	display: inline-flex; align-items: center; gap: 0; height: 34px; padding: 3px;
 	background: var(--panel); border: 1px solid var(--line); border-radius: 999px; cursor: pointer;
-	box-shadow: 0 0 0 1px color-mix(in srgb, var(--id) 22%, transparent), var(--elev-2);
-	transition: box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
+	box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--id) 30%, transparent), var(--elev-1);
+	transition: box-shadow var(--dur) var(--ease), gap var(--dur) var(--ease), padding var(--dur) var(--ease);
 }
-.vs-flag:hover { transform: translate(-8px, -8px) translateY(-1px); }
+.vs-flag:hover, .vs-flag.following { z-index: 16; gap: 7px; padding: 3px 12px 3px 3px; box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--id) 40%, transparent), var(--elev-2); }
 .vs-flag.following { box-shadow: 0 0 0 2px var(--id), var(--elev-2); }
 .vs-flag-avatar {
-	position: relative; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center;
+	position: relative; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
 	color: #fff; font-size: 10px; font-weight: var(--fw-semibold); flex: 0 0 auto;
 }
 .vs-flag-work { position: absolute; right: -1px; bottom: -1px; width: 8px; height: 8px; border-radius: 50%; background: var(--good); border: 2px solid var(--panel); }
 .vs-flag-work::after { content: ''; position: absolute; inset: -2px; border-radius: 50%; border: 1.5px solid var(--good); opacity: 0.55; animation: vs-breathe 2.6s ease-in-out infinite; }
 @keyframes vs-breathe { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.5); opacity: 0; } }
-.vs-flag-body { display: flex; flex-direction: column; line-height: 1.15; text-align: left; }
-.vs-flag-name { font-size: var(--text-12); font-weight: var(--fw-semibold); color: var(--fg); }
+.vs-flag-body { display: none; flex-direction: column; line-height: 1.15; text-align: left; }
+.vs-flag:hover .vs-flag-body, .vs-flag.following .vs-flag-body { display: flex; }
+.vs-flag-name { font-size: var(--text-12); font-weight: var(--fw-semibold); color: var(--fg); white-space: nowrap; }
 .vs-flag-act { font-size: 10px; color: var(--faint); white-space: nowrap; max-width: 140px; overflow: hidden; text-overflow: ellipsis; }
 @media (prefers-reduced-motion: reduce) { .vs-flag-work::after { animation: none; } }
 
@@ -391,13 +440,10 @@
 .vs-scenario-node { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--good) 18%, var(--panel)); color: var(--good); flex: 0 0 auto; }
 
 /* --- Ship lens ---------------------------------------------------------- */
-.vs-ship { position: absolute; inset: 0; display: grid; place-items: center; padding: 40px; }
-.vs-ship-card { text-align: center; max-width: 440px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
-.vs-ship-card > svg { color: var(--good); }
-.vs-ship-card h2 { font-size: var(--text-24); font-weight: var(--fw-semibold); }
-.vs-ship-card p { color: var(--muted); }
-.vs-ship-checks { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 8px 0; }
-.vs-ship-actions { display: flex; gap: 10px; margin-top: 8px; }
+.vs-ship { position: absolute; inset: 0; display: grid; place-items: center; padding: 40px; overflow: auto; }
+.vs-ship-card { width: 100%; max-width: 620px; display: flex; flex-direction: column; gap: 16px;
+	background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-xl); box-shadow: var(--elev-1); padding: 24px; }
+.vs-ship-checks { display: flex; flex-wrap: wrap; gap: 6px; }
 
 /* --- Empty state -------------------------------------------------------- */
 .vs-empty { display: grid; place-items: center; }
@@ -417,24 +463,24 @@
 
 /* --- Dock (floating) ---------------------------------------------------- */
 .vs-dock {
-	position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 40;
-	display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 16px;
+	position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 40;
+	display: flex; align-items: center; gap: 5px; padding: 5px; border-radius: 14px;
 	background: color-mix(in srgb, var(--panel) 92%, transparent); border: 1px solid var(--line-2);
 	box-shadow: var(--elev-2); backdrop-filter: saturate(1.2) blur(12px);
 }
-.vs-dock-sep { width: 1px; height: 24px; background: var(--line); }
-.vs-dock-btn { display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid transparent; background: transparent; color: var(--muted); font: inherit; font-size: var(--text-13); font-weight: var(--fw-medium); cursor: pointer; transition: background var(--dur) var(--ease), color var(--dur) var(--ease); }
+.vs-dock-sep { width: 1px; height: 20px; background: var(--line); margin: 0 1px; }
+.vs-dock-btn { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border-radius: 9px; border: 1px solid transparent; background: transparent; color: var(--muted); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer; transition: background var(--dur) var(--ease), color var(--dur) var(--ease); }
 .vs-dock-btn:hover { background: var(--panel-2); color: var(--fg); }
-.vs-dock-btn.primary { background: var(--fg); color: var(--shell); }
+.vs-dock-btn.primary { background: var(--fg); color: var(--shell); padding: 0 11px; }
 .vs-dock-btn.primary:hover { opacity: 0.9; }
 .vs-dock-btn.on { background: var(--panel-2); color: var(--fg); }
 .vs-dock-btn.warn { color: var(--warn); }
-.vs-dock-btn:not(.primary):not(.on) { width: 36px; padding: 0; justify-content: center; }
-.vs-dock-avatars { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 10px 0 6px; border-radius: 10px; border: 1px solid transparent; background: transparent; cursor: pointer; }
+.vs-dock-btn:not(.primary):not(.on):not(.accent) { width: 30px; padding: 0; justify-content: center; }
+.vs-dock-avatars { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 8px 0 5px; border-radius: 9px; border: 1px solid transparent; background: transparent; cursor: pointer; }
 .vs-dock-avatars:hover, .vs-dock-avatars.open { background: var(--panel-2); }
 .vs-dock-usericon { color: var(--faint); }
 .vs-avatar-stack { display: inline-flex; }
-.vs-avatar { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 10px; font-weight: var(--fw-semibold); box-shadow: 0 0 0 2px var(--panel); margin-left: -7px; position: relative; }
+.vs-avatar { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 9px; font-weight: var(--fw-semibold); box-shadow: 0 0 0 2px var(--panel); margin-left: -7px; position: relative; }
 .vs-avatar:first-child { margin-left: 0; }
 .vs-avatar.more { background: var(--panel-2); color: var(--muted); box-shadow: 0 0 0 2px var(--panel); }
 .vs-avatar.sm { width: 22px; height: 22px; font-size: 9px; margin: 0; }
@@ -448,7 +494,16 @@
 .vs-dock-follow { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 11px; border-radius: 9px; border: 1px solid color-mix(in srgb, var(--id) 40%, var(--line)); background: color-mix(in srgb, var(--id) 12%, var(--panel)); color: color-mix(in srgb, var(--id) 55%, var(--fg)); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer; }
 
 /* --- Right rail --------------------------------------------------------- */
-.vs-rail { width: 360px; flex: 0 0 360px; display: flex; flex-direction: column; border-left: 1px solid var(--line); background: var(--panel); margin: 14px 14px 14px 0; border-radius: var(--r-xl); border: 1px solid var(--line); box-shadow: var(--elev-2); overflow: hidden; }
+/* Panels now POP UP from the dock instead of a full-height side rail. */
+.vs-dockpanel {
+	position: fixed; left: 50%; bottom: 62px; transform: translateX(-50%); z-index: 39;
+	width: 384px; max-height: min(66vh, 580px); display: flex; flex-direction: column;
+	background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-xl);
+	box-shadow: var(--elev-2); overflow: hidden; animation: vs-rise var(--dur) var(--ease);
+}
+.vs-dockpanel.wide { width: 424px; }
+.vs-dockpanel-caret { position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%) rotate(45deg); width: 11px; height: 11px; background: var(--panel); border-right: 1px solid var(--line-2); border-bottom: 1px solid var(--line-2); }
+.vs-rail { display: flex; flex-direction: column; overflow: hidden; }
 .vs-rail-head { display: flex; align-items: center; gap: 8px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
 .vs-rail-head h3 { font-size: var(--text-14); font-weight: var(--fw-semibold); flex: 1; }
 .vs-rail-head svg { color: var(--muted); }
@@ -657,7 +712,7 @@
 .vs-collab-live { width: 8px; height: 8px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 22%, transparent); }
 
 @media (max-width: 1180px) {
-	.vs-rail { position: fixed; right: 0; top: 0; bottom: 0; margin: 0; border-radius: 0; z-index: 45; }
+	.vs-dockpanel { width: min(384px, calc(100vw - 24px)); }
 	.vs-lenses { display: none; }
 	.vs-facepile, .vs-scenario { display: none; }
 }

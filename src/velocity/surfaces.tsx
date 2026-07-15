@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
 	X, Plus, Check, RotateCcw, GitCompare, Eye, Pause, Play, Pencil, Trash2,
 	CornerUpLeft, ShieldQuestion, FlaskConical, Camera, Activity, FileDiff, Circle,
-	Users, ChevronRight, ArchiveRestore, Terminal as TermIcon, Folder, AlertTriangle, GitBranch, Flag,
+	Users, ChevronRight, ArchiveRestore, Terminal as TermIcon, Folder, AlertTriangle, GitBranch, Flag, EyeOff,
 } from 'lucide-react';
 import { Link2, UserPlus, Check as CheckIcon } from 'lucide-react';
 import { useWorkspace, runtime } from './useWorkspace';
@@ -160,17 +160,66 @@ export function ShareSheet() {
 // --------------------------------------------------------------------------
 // Right rail — Coworkers / Checkpoint / Decision.
 // --------------------------------------------------------------------------
+/** A floating panel that pops UP from the dock (replaces the old side rail). */
 export function RightRail() {
 	const state = useWorkspace();
 	const surface = state.layout.rightSurface;
-	if (surface === 'none') return null;
+	if (surface === 'none' || surface === 'inspector') return null;
+	const wide = surface === 'checkpoint' || surface === 'decision';
 	return (
-		<aside className="vs-rail" role="complementary">
+		<div className={`vs-dockpanel${wide ? ' wide' : ''}`} role="dialog">
 			{surface === 'coworkers' && <CoworkersPanel />}
 			{surface === 'checkpoint' && <CheckpointPanel />}
 			{surface === 'decision' && <DecisionPanel />}
 			{surface === 'activity' && <ActivityPanel />}
-		</aside>
+			{surface === 'follow' && <FollowPanel />}
+			<span className="vs-dockpanel-caret" />
+		</div>
+	);
+}
+
+function FollowPanel() {
+	const state = useWorkspace();
+	const cw = state.coworkers.find((c) => c.id === state.layout.followingId);
+	if (!cw) return <><header className="vs-rail-head"><Eye size={15} /><h3>Following</h3><button className="vs-icon" onClick={() => runtime.closeRight()}><X size={16} /></button></header><div className="vs-rail-body vs-empty-rail">Not following anyone. Click a coworker on the stage to follow.</div></>;
+	const feed = state.events.filter((e) => e.coworkerId === cw.id);
+	const checkpoint = state.checkpoints.find((k) => k.id === cw.latestCheckpointId);
+	return (
+		<>
+			<header className="vs-rail-head" style={{ ['--id' as string]: cw.color }}>
+				<span className="vs-avatar sm" style={{ background: cw.color }}>{cw.initials}</span>
+				<div className="vs-follow-id"><b>Following {cw.name}</b><span>{cw.role}</span></div>
+				<button className="vs-icon" onClick={() => runtime.follow(null)} title="Stop following"><EyeOff size={15} /></button>
+				<button className="vs-icon" onClick={() => runtime.closeRight()} aria-label="Close"><X size={16} /></button>
+			</header>
+			<div className="vs-rail-body">
+				<div className="vs-follow-now">
+					<span className={`vs-state tone-${STATE_TONE[cw.state]}`}>{STATE_LABEL[cw.state]}</span>
+					<span className="vs-follow-act">{cw.action}{cw.waitingOn ? ` · waiting on ${cw.waitingOn}` : ''}</span>
+				</div>
+				{cw.scope && <div className="vs-cw-scope"><GitBranch size={11} />{cw.scope}</div>}
+				<div className="vs-follow-sec">Doing now</div>
+				<div className="vs-follow-live"><span className="vs-follow-pulse" style={{ background: cw.color }} />Editing on the <b>{cw.marker?.lens ?? 'preview'}</b> lens — {cw.marker?.label ?? cw.action}</div>
+				{checkpoint && (
+					<>
+						<div className="vs-follow-sec">Latest checkpoint</div>
+						<button className="vs-follow-ckp" onClick={() => runtime.openRight('checkpoint', checkpoint.id)}>
+							<Flag size={13} /><span>{checkpoint.outcome}</span><span className="vs-tag good">{checkpoint.tests.passed}/{checkpoint.tests.total}</span>
+						</button>
+					</>
+				)}
+				<div className="vs-follow-sec">Activity</div>
+				<div className="vs-feed">
+					{feed.length === 0 && <div className="vs-empty-rail">No recent activity.</div>}
+					{feed.map((e) => (
+						<div key={e.id} className="vs-feed-row">
+							<span className={`vs-feed-rail tone-${EVENT_TONE[e.kind]}`} />
+							<div className="vs-feed-main"><div className="vs-feed-top"><span className={`vs-feed-kind tone-${EVENT_TONE[e.kind]}`}>{EVENT_VERB[e.kind]}</span><span className="vs-feed-ts">{e.tsLabel}</span></div><div className="vs-feed-text">{e.text}</div></div>
+						</div>
+					))}
+				</div>
+			</div>
+		</>
 	);
 }
 

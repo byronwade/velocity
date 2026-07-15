@@ -92,6 +92,7 @@ function FollowBanner() {
 			<span className="vs-avatar sm" style={{ background: followed.color }}>{followed.initials}</span>
 			<b>Following {followed.name}</b>
 			<span>· {followed.action}</span>
+			<button className="vs-followbar-view" onClick={() => runtime.openRight('follow')}>See activity</button>
 			<div className="vs-spacer" />
 			<button className="vs-followbar-stop" onClick={() => runtime.follow(null)}><EyeOff size={13} />Stop following</button>
 		</div>
@@ -129,9 +130,9 @@ export function VelocityApp() {
 				{!focusMode && <FollowBanner />}
 				<div className="vs-main">
 					<Stage />
-					<RightRail />
 				</div>
 				<ToolDrawer />
+				<RightRail />
 				<Dock />
 				<MissionSheet />
 				<ShareSheet />

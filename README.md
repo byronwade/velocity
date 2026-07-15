@@ -29,8 +29,12 @@ demo is fully repeatable.
   the stage and hand to a coworker to fix (comment mode in the dock → click the stage).
 - **Checkpoints, Evidence, and Decision Sheets** — review work with diffs, tests, traces, blast
   radius, and rollback; resolve conflicts and protected actions with a recommended option.
-- **Stable vs Candidate** compare, a resizable/closable tool drawer, light + dark themes, and a
-  command palette where every entry drives real state.
+- **Follow Mode** — following a coworker opens a panel showing what they're doing now, their latest
+  checkpoint, and their activity history. Presence flags collapse to avatars and expand on
+  hover/follow, so the stage stays calm with many coworkers.
+- **Ship** — deploy to **Vercel, Netlify, or Cloudflare** (deploying → live with a production URL).
+- Panels **pop up from the floating dock** (no side rail); **Stable vs Candidate** compare, a
+  resizable tool drawer, light + dark themes, and a command palette where every entry drives state.
 
 Run it, then switch scenarios from the top-bar picker or the URL:
 

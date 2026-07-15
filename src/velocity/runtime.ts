@@ -10,8 +10,9 @@
 // ---------------------------------------------------------------------------
 
 import { buildScenario } from './scenarios';
+import { DEPLOY_TARGETS } from './model';
 import type {
-	Autonomy, CollabRole, Coworker, Lens, MissionInput, ToolId, WorkspaceState,
+	Autonomy, CollabRole, Coworker, DeployTarget, Lens, MissionInput, ToolId, WorkspaceState,
 } from './model';
 
 export interface CoworkerRuntime {
@@ -51,6 +52,7 @@ export interface CoworkerRuntime {
 	decide(id: string, optionId: string): void;
 	assignArtifact(label: string, action: string): void;
 	ship(): void;
+	deploy(provider: DeployTarget): void;
 
 	// --- collaboration ---
 	toggleCommentMode(): void;
@@ -154,7 +156,9 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 		this.mapCoworkers((c) => ({ ...c, following: c.id === coworkerId }));
 		if (coworkerId) {
 			const cw = this.state.coworkers.find((c) => c.id === coworkerId);
-			if (cw?.marker) this.patchLayout({ lens: cw.marker.lens, followingId: coworkerId });
+			this.patchLayout({ lens: cw?.marker ? cw.marker.lens : this.state.layout.lens, followingId: coworkerId, rightSurface: 'follow' });
+		} else if (this.state.layout.rightSurface === 'follow') {
+			this.patchLayout({ rightSurface: 'none' });
 		}
 	}
 
@@ -255,11 +259,19 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 		this.addEvent('reserve', `${action} assigned on “${label}”.`, this.state.coworkers[0]?.id ?? null);
 		this.toast(`${action} · “${label}” assigned.`);
 	}
-	ship(): void {
-		this.set({ celebrate: true });
-		this.addEvent('merge', 'Shipped. Live link ready.', null);
-		this.toast('Shipped 🎉  aurora.app/p/onboarding · link copied');
-		setTimeout(() => this.set({ celebrate: false }), 1600);
+	ship(): void { this.deploy('vercel'); }
+
+	deploy(provider: DeployTarget): void {
+		const target = DEPLOY_TARGETS.find((t) => t.id === provider) ?? DEPLOY_TARGETS[0];
+		this.set({ deployment: { provider, status: 'deploying', url: target.domain, env: 'Production', startedLabel: 'now' } });
+		this.addEvent('note', `Deploying to ${target.label}…`, null);
+		this.toast(`Deploying to ${target.label}…`);
+		setTimeout(() => {
+			this.set({ celebrate: true, deployment: { provider, status: 'live', url: target.domain, env: 'Production', startedLabel: 'just now' } });
+			this.addEvent('merge', `Live on ${target.label}: ${target.domain}`, null);
+			this.toast(`Shipped to ${target.label} 🎉  ${target.domain} · link copied`);
+			setTimeout(() => this.set({ celebrate: false }), 1600);
+		}, 1100);
 	}
 
 	// --- collaboration ---

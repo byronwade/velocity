@@ -246,7 +246,7 @@ export interface LayoutState {
 	focusMode: boolean;
 	followingId: string | null;
 	compare: boolean;
-	rightSurface: 'none' | 'checkpoint' | 'coworkers' | 'decision' | 'inspector' | 'activity';
+	rightSurface: 'none' | 'checkpoint' | 'coworkers' | 'decision' | 'inspector' | 'activity' | 'follow';
 	activeCheckpointId: string | null;
 	activeDecisionId: string | null;
 	missionSheetOpen: boolean;
@@ -278,7 +278,25 @@ export interface WorkspaceState {
 	toast?: string | null;
 	/** Ephemeral — fire the ship celebration once. */
 	celebrate?: boolean;
+	/** Current deployment, if the project has been shipped to a host. */
+	deployment?: Deployment | null;
 }
+
+export type DeployTarget = 'vercel' | 'netlify' | 'cloudflare';
+
+export interface Deployment {
+	provider: DeployTarget;
+	status: 'deploying' | 'live';
+	url: string;
+	env: string;
+	startedLabel: string;
+}
+
+export const DEPLOY_TARGETS: { id: DeployTarget; label: string; domain: string }[] = [
+	{ id: 'vercel', label: 'Vercel', domain: 'aurora.vercel.app' },
+	{ id: 'netlify', label: 'Netlify', domain: 'aurora.netlify.app' },
+	{ id: 'cloudflare', label: 'Cloudflare', domain: 'aurora.pages.dev' },
+];
 
 export const LENS_META: Record<Lens, { label: string; hint: string }> = {
 	preview: { label: 'Preview', hint: 'The running application' },
