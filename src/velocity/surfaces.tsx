@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
 	X, Plus, Check, RotateCcw, GitCompare, Eye, Pause, Play, Pencil, Trash2,
 	CornerUpLeft, ShieldQuestion, FlaskConical, Camera, Activity, FileDiff, Circle,
-	Users, ChevronRight, ArchiveRestore, Terminal as TermIcon, Folder, AlertTriangle, GitBranch, Flag, EyeOff,
+	Users, ArchiveRestore, Terminal as TermIcon, Folder, AlertTriangle, GitBranch, Flag, EyeOff,
 } from 'lucide-react';
 import { Link2, UserPlus, Check as CheckIcon, Rocket } from 'lucide-react';
 import { MoreHorizontal } from 'lucide-react';
@@ -323,14 +323,14 @@ function ActivityPanel() {
 
 const CW_MODELS = ['Auto · frontier', 'Claude Opus 4.8', 'Claude Sonnet 5', 'Local · qwen2.5-coder'];
 
-function CoworkerCard({ c, manager }: { c: Coworker; manager?: boolean }) {
+function CoworkerCard({ c }: { c: Coworker }) {
 	const [renaming, setRenaming] = useState(false);
 	const [name, setName] = useState(c.name);
 	const ctx = useContextMenu();
-	const working = c.state === 'active' || c.state === 'verifying' || c.state === 'planning';
 	const budgetPct = Math.min(100, (c.budget.spent / c.budget.total) * 100);
 
 	const menu = () => [
+		{ label: c.following ? 'Unfollow' : 'Follow', icon: <Eye size={14} />, onClick: () => runtime.follow(c.following ? null : c.id) },
 		{ label: c.state === 'paused' ? 'Resume' : 'Pause', icon: c.state === 'paused' ? <Play size={14} /> : <Pause size={14} />, onClick: () => (c.state === 'paused' ? runtime.resumeCoworker(c.id) : runtime.pauseCoworker(c.id)) },
 		{ label: 'Rename', icon: <Pencil size={14} />, onClick: () => setRenaming(true) },
 		{ separator: true },
@@ -343,9 +343,9 @@ function CoworkerCard({ c, manager }: { c: Coworker; manager?: boolean }) {
 	];
 
 	return (
-		<div className={`vs-wk${manager ? ' manager' : ''}`} style={{ ['--id' as string]: c.color }}>
+		<div className="vs-wk">
 			<div className="vs-wk-top">
-				<span className="vs-wk-badge" style={{ background: c.color }}>{c.initials}{working && <span className="vs-wk-live" />}</span>
+				<span className="vs-wk-badge">{c.initials}</span>
 				<div className="vs-wk-id">
 					{renaming ? (
 						<input className="vs-rename" autoFocus value={name} onChange={(e) => setName(e.target.value)}
@@ -355,8 +355,10 @@ function CoworkerCard({ c, manager }: { c: Coworker; manager?: boolean }) {
 					<div className="vs-wk-role">{c.role}</div>
 				</div>
 				<span className={`vs-state tone-${STATE_TONE[c.state]}`}>{STATE_LABEL[c.state]}</span>
-				<button className={`vs-wk-follow${c.following ? ' on' : ''}`} title={c.following ? 'Following' : 'Follow'} onClick={() => runtime.follow(c.following ? null : c.id)}><Eye size={14} /></button>
-				<button className="vs-wk-more" title="More" onClick={ctx.onContextMenu} onContextMenu={ctx.onContextMenu}><MoreHorizontal size={15} /></button>
+				<div className="vs-wk-actions">
+					<button className={`vs-wk-follow${c.following ? ' on' : ''}`} title={c.following ? 'Following' : 'Follow'} onClick={() => runtime.follow(c.following ? null : c.id)}><Eye size={14} /></button>
+					<button className="vs-wk-more" title="More" onClick={ctx.onContextMenu} onContextMenu={ctx.onContextMenu}><MoreHorizontal size={15} /></button>
+				</div>
 			</div>
 
 			<div className="vs-wk-now">
@@ -380,10 +382,9 @@ function CoworkerCard({ c, manager }: { c: Coworker; manager?: boolean }) {
 
 			{c.specialists.length > 0 && (
 				<div className="vs-wk-subs">
-					<div className="vs-wk-subhead"><ChevronRight size={11} />{c.specialists.length} subagents</div>
+					<div className="vs-wk-subhead">{c.specialists.length} subagents</div>
 					{c.specialists.map((s) => (
 						<div key={s.id} className="vs-wk-sub">
-							<span className="vs-wk-sub-rail" />
 							<div className="vs-wk-sub-body"><div className="vs-wk-sub-name"><b>{s.name}</b><span>{s.role}</span></div><div className="vs-wk-sub-action">{s.action}</div></div>
 							<span className={`vs-state sm tone-${STATE_TONE[s.state]}`}>{STATE_LABEL[s.state]}</span>
 						</div>
@@ -411,7 +412,7 @@ function CoworkersPanel() {
 				<button className="vs-icon" onClick={() => runtime.closeRight()} aria-label="Close"><X size={16} /></button></header>
 			<div className="vs-rail-body">
 				<div className="vs-worker-sec">Coworkers · AI</div>
-				{state.coworkers.map((c) => <CoworkerCard key={c.id} c={c} manager={c.specialists.length > 0} />)}
+				{state.coworkers.map((c) => <CoworkerCard key={c.id} c={c} />)}
 				<div className="vs-addcw">
 					<input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" />
 					<input value={role} onChange={(e) => setRole(e.target.value)} placeholder="Role" />
@@ -421,7 +422,7 @@ function CoworkersPanel() {
 				<div className="vs-worker-sec">People</div>
 				{state.collaborators.map((c) => (
 					<div key={c.id} className="vs-person">
-						<span className="vs-avatar" style={{ background: c.color }}>{c.initials}</span>
+						<span className="vs-avatar neutral">{c.initials}</span>
 						<div className="vs-person-id"><b>{c.name}{c.id === 'you' && ' (you)'}</b><span>{c.email}</span></div>
 						{c.status === 'invited' ? <span className="vs-tag">invited</span> : c.id !== 'you' && <span className="vs-collab-live" title="Active now" />}
 						<span className="vs-person-role">{ROLE_LABEL2[c.role]}</span>
@@ -439,7 +440,7 @@ function CoworkersPanel() {
 						<div className="vs-archive-head">Archived</div>
 						{state.archived.map((c) => (
 							<div key={c.id} className="vs-archive-row">
-								<span className="vs-avatar sm" style={{ background: c.color }}>{c.initials}</span>
+								<span className="vs-avatar sm neutral">{c.initials}</span>
 								<span>{c.name} · {c.role}</span>
 								<button className="vs-mini" onClick={() => runtime.restoreCoworker(c.id)}><ArchiveRestore size={12} />Restore</button>
 							</div>
