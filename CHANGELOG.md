@@ -11,6 +11,7 @@ corrections get a new entry. Newest release first.
 ## 2026-07-15 · Native foundation
 
 ### Added
+- **mcp-tools** — The workspace speaks MCP. Velocity's real services are now a Model Context Protocol server — `read_file`, `write_file`, `list_files`, `run_command`, `navigate_browser` — running in-process. Settings → Integrations shows the live toolbelt via an actual MCP client handshake. This is the standard seam every coworker runtime (and any external agent) will consume.
 - **pty-terminal** — A true native terminal. The desktop build's terminal panel now runs real PTY sessions (ConPTY on Windows, openpty elsewhere) through your actual shell — bash, pwsh, cmd, node — rendered by xterm.js with live resize and session tabs. The browser preview keeps the sandboxed workspace shell.
 - **persistence** — Projects survive restarts. Every project tab's full workspace state (coworkers, missions, checkpoints, comments, layout) is snapshotted continuously and restored on the next launch. `?scenario=` still seeds a fresh deterministic demo. Verified: a placed work item survived a full reload.
 - **native-notifications** — Native desktop banners. The Tauri build now uses the OS notification system for "checkpoint ready" (proper installed-app identity); the browser preview keeps the web Notification fallback. Same Settings toggle governs both.

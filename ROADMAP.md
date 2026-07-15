@@ -41,7 +41,8 @@ to the Dropped section at the bottom with a reason.
 - [ ] **ai-gateway** — Vercel AI Gateway as the model layer: model strings, per-key budgets wired to the credits UI, BYOK. _(planned · phase 4 — blocked: needs an AI Gateway API key)_
 - [ ] **ai-sdk-runtime** — Second runtime on Vercel AI SDK `ToolLoopAgent` for non-Anthropic models via Gateway. _(planned · phase 5 — depends on ai-gateway)_
 - [ ] **worktree-per-coworker** — Real git worktree + branch per coworker (system git), shadow-git checkpoints for rollback. _(planned · phase 5 — depends on real-coworker-runtime)_
-- [ ] **mcp-tools** — Velocity's fs/shell/browser/preview exposed as MCP servers; third-party MCP servers pluggable into a coworker's toolbelt. _(planned · phase 6)_
+- [x] **mcp-tools** — The workspace as an MCP server: read_file / write_file / list_files / run_command / navigate_browser over the real services, in-process; Settings → Integrations lists the toolbelt via a live MCP client handshake. _(shipped 2026-07-15)_
+- [ ] **mcp-external** — Plug third-party MCP servers into a coworker's toolbelt alongside the workspace server. _(planned · phase 6 — depends on real-coworker-runtime)_
 - [ ] **acp-client** — Agent Client Protocol support so external agents (Claude Code, Codex, Gemini) can be hired as coworkers. _(planned · phase 6)_
 
 ## Review & shipping
