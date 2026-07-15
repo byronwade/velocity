@@ -93,13 +93,74 @@ const IDENTITY_COLORS = ['#6f74c9', '#4a8dd1', '#2f9e8f', '#5b7a99', '#8a6fb0', 
 let counter = 1000;
 const uid = (p: string) => `${p}${++counter}`;
 
+/** What a coworker moves to after landing a checkpoint — rotated per department
+ *  so the workspace keeps evolving believably (and deterministically). */
+const NEXT_TASKS: Record<string, string[]> = {
+	Design: ['Polishing empty states', 'Refining the responsive grid', 'Tightening the type scale'],
+	Engineering: ['Hardening error paths', 'Wiring optimistic updates', 'Refactoring the session store'],
+	Verification: ['Extending the regression suite', 'Recording checkout traces', 'Auditing a11y labels'],
+};
+
 export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 	private state: WorkspaceState;
 	private listeners = new Set<() => void>();
 	private toastTimer: ReturnType<typeof setTimeout> | null = null;
+	private beat: ReturnType<typeof setInterval> | null = null;
+	private tickN = 0;
 
 	constructor(scenario = 'calm') {
 		this.state = { ...buildScenario(scenario), toast: null, celebrate: false };
+		// The heartbeat: coworkers make real, deterministic forward progress.
+		this.beat = setInterval(() => this.tick(), 3000);
+	}
+
+	/** Stop timers when the project tab closes. */
+	dispose(): void {
+		if (this.beat) clearInterval(this.beat);
+		if (this.toastTimer) clearTimeout(this.toastTimer);
+	}
+
+	/** One heartbeat: advance working coworkers; at 100% they land a checkpoint
+	 *  and pick up the next task. Deterministic — steps derive from roster index
+	 *  and tick count, never from randomness. */
+	private tick(): void {
+		this.tickN++;
+		if (this.state.paused || this.state.celebrate) return;
+		let landed: Coworker | null = null;
+		const coworkers = this.state.coworkers.map((c, i) => {
+			if ((c.state !== 'active' && c.state !== 'verifying') || typeof c.progress !== 'number') return c;
+			const step = 2 + ((i + this.tickN) % 3); // 2–4% per beat
+			const next = Math.min(100, c.progress + step);
+			if (next >= 100 && !landed) {
+				landed = { ...c, progress: 100 };
+				const tasks = NEXT_TASKS[c.department] ?? NEXT_TASKS.Engineering;
+				return { ...c, progress: 6, action: tasks[this.tickN % tasks.length] };
+			}
+			return { ...c, progress: next };
+		});
+		if (landed) {
+			const done = landed as Coworker;
+			const checkpoint = {
+				id: uid('k'), coworkerId: done.id, missionId: this.state.mission?.id ?? null,
+				outcome: done.action, beforeLabel: 'Stable', afterLabel: 'Candidate',
+				diff: [{ path: `src/${done.scope.split(' ')[0] || 'app'}.tsx`, added: 18 + (this.tickN % 5) * 7, removed: 4 + (this.tickN % 3) * 3 }],
+				buildOk: true, tests: { passed: 12, total: 12 },
+				evidence: [
+					{ kind: 'screenshot' as const, label: `${done.name} · after`, detail: done.action },
+					{ kind: 'test' as const, label: '12/12 checks passed', detail: 'unit + integration' },
+				],
+				limitations: 'Awaiting your review.', risk: 'low' as const,
+				blastRadius: [done.scope.split(' ')[0] || 'app'], rollbackPoint: 'Stable @ latest',
+				state: 'ready' as const, createdLabel: 'just now',
+			};
+			// A coworker's newest checkpoint supersedes their older unreviewed one,
+			// so the review queue stays honest instead of piling up.
+			const kept = this.state.checkpoints.filter((k) => !(k.coworkerId === done.id && k.state === 'ready'));
+			this.set({ coworkers, checkpoints: [checkpoint, ...kept].slice(0, 8) });
+			this.addEvent('checkpoint', `${done.name} landed “${done.action}” — ready to review.`, done.id);
+		} else {
+			this.set({ coworkers });
+		}
 	}
 
 	getState(): WorkspaceState { return this.state; }

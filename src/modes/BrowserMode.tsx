@@ -17,7 +17,14 @@ import { BROWSER_HOME, isLocalUrl, normalizeUrl, titleFor } from '../services/br
 import { usePreview } from '../services/preview';
 import { startPage } from './browserStart';
 import { Icon } from '../lib/icons';
-import { Code2, X as XIcon } from 'lucide-react';
+import { Code2, X as XIcon, Monitor, Tablet, Smartphone } from 'lucide-react';
+
+type Device = 'desktop' | 'tablet' | 'mobile';
+const DEVICES: { id: Device; icon: typeof Monitor; label: string }[] = [
+	{ id: 'desktop', icon: Monitor, label: 'Desktop' },
+	{ id: 'tablet', icon: Tablet, label: 'Tablet · 768' },
+	{ id: 'mobile', icon: Smartphone, label: 'Mobile · 390' },
+];
 
 type LogEntry = { level: string; text: string };
 
@@ -127,6 +134,8 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 	const [devtools, setDevtools] = useState(false);
 	const [logs, setLogs] = useState<LogEntry[]>([]);
 	useEffect(() => { setLogs([]); }, [current, loadKey]);
+	// Responsive preview — constrain the page to a device width (v0-style).
+	const [device, setDevice] = useState<Device>('desktop');
 
 	// Dismiss the browser menu on outside click.
 	useEffect(() => {
@@ -243,6 +252,11 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 					{zoom !== 1 && (
 						<button className="cr-zoom" title="Reset zoom (⌘0)" aria-label="Reset zoom" onClick={() => setZoom(1)}>{Math.round(zoom * 100)}%</button>
 					)}
+					<div className="cr-devices" role="group" aria-label="Device preview">
+						{DEVICES.map((d) => (
+							<button key={d.id} className={`cr-dev${device === d.id ? ' on' : ''}`} title={d.label} aria-label={d.label} aria-pressed={device === d.id} onClick={() => setDevice(d.id)}><d.icon size={14} /></button>
+						))}
+					</div>
 					<button className="cr-icb" title="Home" aria-label="Home" onClick={() => navigate(BROWSER_HOME)}><Icon.home /></button>
 					<button className={`cr-icb${devtools ? ' on' : ''}`} title="DevTools (⌥⌘I)" aria-label="DevTools" aria-pressed={devtools} onClick={() => setDevtools((d) => !d)}><Code2 size={18} /></button>
 					{isExternal && <a className="cr-icb" title="Open in a new tab" aria-label="Open externally" href={current} target="_blank" rel="noreferrer noopener"><Icon.share /></a>}
@@ -283,7 +297,7 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 				))}
 			</div>
 
-			<div className="browser-view" style={{ zoom }}>
+			<div className={`browser-view dev-${device}`} style={{ zoom }}>
 				{loading && <div className="cr-progress" aria-hidden />}
 				{isStart && (
 					<iframe key={`start-${theme}-${loadKey}`} className="frame" title="New tab" srcDoc={startPage(theme)} sandbox="allow-scripts" onLoad={() => setLoading(false)} />

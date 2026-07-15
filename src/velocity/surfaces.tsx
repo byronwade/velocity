@@ -688,8 +688,8 @@ export function CommandBar() {
 					onKeyDown={(e) => { if (e.key === 'Enter') run(filtered[0]); if (e.key === 'Escape') runtime.openCommand(false); }} />
 				<div className="vs-cmd-list">
 					{filtered.length === 0 && <div className="vs-cmd-empty">No commands.</div>}
-					{filtered.map((c) => (
-						<button key={c.id} className="vs-cmd-row" onClick={() => run(c)}><span>{c.label}</span>{c.hint && <kbd>{c.hint}</kbd>}</button>
+					{filtered.map((c, i) => (
+						<button key={c.id} className={`vs-cmd-row${i === 0 ? ' sel' : ''}`} onClick={() => run(c)}><span>{c.label}</span>{c.hint && <kbd>{c.hint}</kbd>}</button>
 					))}
 				</div>
 			</div>

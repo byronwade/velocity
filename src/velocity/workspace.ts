@@ -192,6 +192,7 @@ export class WorkspaceManager {
 		const idx = this.projects.findIndex((p) => p.id === id);
 		if (idx === -1) return;
 		this.projects[idx].unsub();
+		this.projects[idx].runtime.dispose();
 		this.projects.splice(idx, 1);
 		if (this.activeId === id) this.activeId = this.projects[Math.max(0, idx - 1)].id;
 		this.emit();

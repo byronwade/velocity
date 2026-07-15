@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
-import { X } from 'lucide-react';
+import { X, FileCode } from 'lucide-react';
 import { useWorkspace, runtime } from './useWorkspace';
+import { useServices } from '../services/container';
+import { firstLeafOfView } from './panes';
 import type { Lens } from './model';
 import { TabBar } from './TabBar';
 import { Stage } from './Stage';
@@ -13,7 +15,7 @@ const LENS_ORDER: Lens[] = ['browser', 'code', 'system', 'data', 'tests', 'verif
 
 const SHORTCUTS: { group: string; keys: [string, string][] }[] = [
 	{ group: 'Views', keys: [['1 – 6', 'Switch the active pane\'s view'], ['C', 'Compare Candidate vs Stable'], ['F', 'Focus mode']] },
-	{ group: 'Panes', keys: [['⌘ \\', 'Split active pane right'], ['⌘ ⇧ \\', 'Split active pane down'], ['⌘ J', 'Toggle terminal']] },
+	{ group: 'Panes', keys: [['⌘ \\', 'Split active pane right'], ['⌘ ⇧ \\', 'Split active pane down'], ['⌘ J', 'Toggle terminal'], ['⌘ P', 'Go to file']] },
 	{ group: 'Work', keys: [['⌘ ⇧ N', 'New work'], ['⌘ ⇧ D', 'Ship'], ['. ', 'Pause / resume all'], ['⌘ K', 'Command palette']] },
 	{ group: 'General', keys: [['?', 'This shortcuts help'], ['Esc', 'Close the topmost surface']] },
 ];
@@ -41,6 +43,48 @@ function HelpOverlay({ onClose }: { onClose: () => void }) {
 	);
 }
 
+/** ⌘P — go to any workspace file; opens it in a Code pane (creating the view
+ *  on the active pane if none is showing code). */
+function QuickOpen({ onClose }: { onClose: () => void }) {
+	const { fs, editor } = useServices();
+	const [files, setFiles] = useState<string[]>([]);
+	const [q, setQ] = useState('');
+	const [sel, setSel] = useState(0);
+	useEffect(() => { void fs.list().then(setFiles); }, [fs]);
+	const matches = files.filter((f) => f.toLowerCase().includes(q.toLowerCase())).slice(0, 12);
+	const open = (path: string) => {
+		const st = runtime.getState();
+		const leaf = firstLeafOfView(st.layout.panes, 'code');
+		const paneId = leaf ? leaf.id : st.layout.activePaneId;
+		if (!leaf) runtime.setPaneView(paneId, 'code');
+		void editor.bindPane(`velocity:editor:${paneId}`, path);
+		onClose();
+	};
+	return (
+		<div className="vs-scrim top" onClick={onClose}>
+			<div className="vs-cmd" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Go to file">
+				<input autoFocus value={q} placeholder="Go to file…" spellCheck={false}
+					onChange={(e) => { setQ(e.target.value); setSel(0); }}
+					onKeyDown={(e) => {
+						if (e.key === 'Escape') onClose();
+						if (e.key === 'ArrowDown') { e.preventDefault(); setSel((s) => Math.min(s + 1, matches.length - 1)); }
+						if (e.key === 'ArrowUp') { e.preventDefault(); setSel((s) => Math.max(s - 1, 0)); }
+						if (e.key === 'Enter' && matches[sel]) open(matches[sel]);
+					}} />
+				<div className="vs-cmd-list">
+					{matches.length === 0 && <div className="vs-cmd-empty">No files match.</div>}
+					{matches.map((f, i) => (
+						<button key={f} className={`vs-cmd-row${i === sel ? ' sel' : ''}`} onMouseEnter={() => setSel(i)} onClick={() => open(f)}>
+							<FileCode size={14} /><span>{f.slice(f.lastIndexOf('/') + 1)}</span>
+							{f.includes('/') && <kbd>{f.slice(0, f.lastIndexOf('/'))}</kbd>}
+						</button>
+					))}
+				</div>
+			</div>
+		</div>
+	);
+}
+
 function Confetti() {
 	const state = useWorkspace();
 	if (!state.celebrate) return null;
@@ -61,6 +105,7 @@ function Toast() {
 
 export function VelocityApp() {
 	const [helpOpen, setHelpOpen] = useState(false);
+	const [quickOpen, setQuickOpen] = useState(false);
 	// Apply saved density / motion preferences on load.
 	useEffect(() => {
 		try {
@@ -77,6 +122,7 @@ export function VelocityApp() {
 			const typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
 			if (e.key === 'Escape') { runtime.closeTopmost(); return; }
 			if (mod && e.key.toLowerCase() === 'k') { e.preventDefault(); runtime.openCommand(true); return; }
+			if (mod && !e.shiftKey && e.key.toLowerCase() === 'p') { e.preventDefault(); setQuickOpen(true); return; }
 			if (mod && e.shiftKey && e.key.toLowerCase() === 'n') { e.preventDefault(); runtime.armWork(true); return; }
 			if (mod && e.shiftKey && e.key.toLowerCase() === 'd') { e.preventDefault(); runtime.openShip(true); return; }
 			if (mod && e.key === '\\') { e.preventDefault(); runtime.splitPane(runtime.getState().layout.activePaneId, e.shiftKey ? 'col' : 'row'); return; }
@@ -107,6 +153,7 @@ export function VelocityApp() {
 				<ShipSheet />
 				<SettingsSheet />
 				{helpOpen && <HelpOverlay onClose={() => setHelpOpen(false)} />}
+				{quickOpen && <QuickOpen onClose={() => setQuickOpen(false)} />}
 				<CommandBar />
 				<Toast />
 				<Confetti />

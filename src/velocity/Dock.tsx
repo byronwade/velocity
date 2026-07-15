@@ -1,10 +1,48 @@
 import { useState } from 'react';
 import {
 	Plus, Pause, Play, Command, PanelBottom, Eye, Activity, Maximize2,
-	Flag, ShieldQuestion, Rocket, MoreHorizontal, RotateCcw,
+	Flag, ShieldQuestion, Rocket, MoreHorizontal, RotateCcw, MessageSquare,
 } from 'lucide-react';
 import { useWorkspace, runtime } from './useWorkspace';
-import { STATE_TONE, STATE_LABEL } from './model';
+import { STATE_TONE, STATE_LABEL, WORK_INTENTS } from './model';
+
+/** Open work items (unresolved comments) — one place to see and jump to them. */
+function WorkItems() {
+	const state = useWorkspace();
+	const [open, setOpen] = useState(false);
+	const items = state.comments.filter((c) => !c.resolved);
+	if (!items.length) return null;
+	const go = (id: string, lens: typeof items[number]['lens']) => {
+		setOpen(false);
+		runtime.setLens(lens);
+		runtime.openComment(id);
+	};
+	return (
+		<div className="vs-dock-more">
+			<button className={`vs-dock-btn work${open ? ' on' : ''}`} onClick={() => setOpen((v) => !v)} title="Open work items">
+				<MessageSquare size={14} />{items.length}
+			</button>
+			{open && (
+				<>
+					<div className="vs-dock-scrim" onClick={() => setOpen(false)} />
+					<div className="vs-dockmenu wide" onClick={(e) => e.stopPropagation()}>
+						<div className="vs-dockmenu-head">Work items<span>{items.length}</span></div>
+						{items.map((c) => {
+							const cw = state.coworkers.find((w) => w.id === c.assignedCoworkerId);
+							return (
+								<button key={c.id} className="vs-workitem" onClick={() => go(c.id, c.lens)}>
+									<span className="vs-avatar xs neutral">{cw ? cw.initials : '—'}</span>
+									<span className="vs-workitem-text">{c.text}</span>
+									{c.intent && <span className="vs-workitem-tag">{WORK_INTENTS[c.intent].label}</span>}
+								</button>
+							);
+						})}
+					</div>
+				</>
+			)}
+		</div>
+	);
+}
 
 /** Overflow menu that pops up above the dock so it stays compact. */
 function DockOverflow() {
@@ -81,6 +119,7 @@ export function Dock() {
 
 			<div className="vs-dock-sep" />
 
+			<WorkItems />
 			<button className="vs-dock-btn" onClick={() => runtime.openShip(true)} title="Ship — deploy (⌘⇧D)">
 				<Rocket size={15} />
 			</button>

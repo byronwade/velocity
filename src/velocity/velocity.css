@@ -647,7 +647,8 @@
 .vs-dock-btn.primary:hover { opacity: 0.9; }
 .vs-dock-btn.on { background: var(--panel-2); color: var(--fg); }
 .vs-dock-btn.warn { color: var(--warn); }
-.vs-dock-btn:not(.primary):not(.on):not(.accent) { width: 30px; padding: 0; justify-content: center; }
+.vs-dock-btn:not(.primary):not(.on):not(.accent):not(.work) { width: 30px; padding: 0; justify-content: center; }
+.vs-dock-btn.work { padding: 0 10px; font-variant-numeric: tabular-nums; }
 .vs-dock-avatars { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 8px 0 5px; border-radius: var(--r-md); border: 1px solid transparent; background: transparent; cursor: pointer; }
 .vs-dock-avatars:hover, .vs-dock-avatars.open { background: var(--panel-2); }
 .vs-dock-usericon { color: var(--faint); }
@@ -905,9 +906,11 @@
 .vs-cmd { width: min(560px, 100%); background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-lg); box-shadow: var(--elev-2); overflow: hidden; animation: vs-rise var(--dur) var(--ease); }
 .vs-cmd > input { width: 100%; height: 48px; border: 0; border-bottom: 1px solid var(--line); background: transparent; color: var(--fg); padding: 0 18px; font: inherit; font-size: var(--text-14); outline: none; }
 .vs-cmd-list { max-height: 320px; overflow: auto; padding: 6px; }
-.vs-cmd-row { display: flex; align-items: center; width: 100%; padding: 9px 12px; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: var(--text-13); border-radius: 8px; cursor: pointer; text-align: left; }
+.vs-cmd-row { display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 12px; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: var(--text-13); border-radius: var(--r-md); cursor: pointer; text-align: left; }
+.vs-cmd-row svg { color: var(--muted); flex: 0 0 auto; }
+.vs-cmd-row.sel { background: var(--panel-2); }
 .vs-cmd-row span { flex: 1; }
-.vs-cmd-row:hover, .vs-cmd-row:first-child { background: var(--panel-2); }
+.vs-cmd-row:hover { background: var(--panel-2); }
 .vs-cmd-row kbd { font-family: var(--mono); font-size: 10px; color: var(--faint); background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 2px 5px; }
 .vs-cmd-empty { padding: 20px; text-align: center; color: var(--faint); }
 
@@ -996,6 +999,13 @@
 .vs-dock-more { position: relative; }
 .vs-dock-scrim { position: fixed; inset: 0; z-index: 41; }
 .vs-dockmenu { position: absolute; bottom: 42px; right: 0; z-index: 42; width: 208px; background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-lg); box-shadow: var(--elev-2); padding: 6px; animation: vs-rise var(--dur) var(--ease); }
+.vs-dockmenu.wide { width: 300px; max-height: 320px; overflow: auto; }
+.vs-dockmenu-head { display: flex; align-items: center; justify-content: space-between; padding: 7px 9px 5px; font-size: var(--text-12); font-weight: var(--fw-semibold); }
+.vs-dockmenu-head span { font-size: var(--text-11); color: var(--faint); font-weight: var(--fw-normal); }
+.vs-workitem { display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 8px; border: 0; background: transparent; border-radius: var(--r-sm); cursor: pointer; text-align: left; font: inherit; }
+.vs-workitem:hover { background: var(--panel-2); }
+.vs-workitem-text { flex: 1; min-width: 0; font-size: var(--text-12); color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vs-workitem-tag { flex: 0 0 auto; font-size: 10px; font-weight: var(--fw-semibold); text-transform: uppercase; letter-spacing: 0.05em; color: var(--faint); }
 .vs-dockmenu-item { display: flex; align-items: center; gap: 10px; width: 100%; height: 34px; padding: 0 10px; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: var(--text-13); border-radius: var(--r-sm); cursor: pointer; text-align: left; }
 .vs-dockmenu-item:hover { background: var(--panel-2); }
 .vs-dockmenu-item.on { color: var(--accent); }

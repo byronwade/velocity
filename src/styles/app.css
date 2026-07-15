@@ -512,6 +512,16 @@ svg { display: block; }
 .browser-view { flex: 1; min-height: 0; background: #fff; position: relative; }
 .browser-view .frame { width: 100%; height: 100%; border: 0; display: block; }
 
+/* Device preview — constrain the page to a device width (v0-style). */
+.cr-devices { display: flex; align-items: center; gap: 1px; margin: 0 2px; padding: 2px; border-radius: var(--r-md); background: var(--cr-omni); }
+.cr-dev { width: 26px; height: 24px; display: grid; place-items: center; border: 0; background: transparent; color: var(--cr-icon); border-radius: var(--r-sm); cursor: pointer; }
+.cr-dev:hover { background: var(--cr-hover); }
+.cr-dev.on { background: var(--cr-toolbar); color: var(--cr-text); box-shadow: var(--elev-1); }
+.browser-view.dev-tablet, .browser-view.dev-mobile { background: var(--sunk); }
+.browser-view.dev-tablet .frame, .browser-view.dev-mobile .frame { margin: 0 auto; border-inline: 1px solid var(--line); background: #fff; }
+.browser-view.dev-tablet .frame { width: 768px; max-width: 100%; }
+.browser-view.dev-mobile .frame { width: 390px; max-width: 100%; }
+
 /* DevTools — docked at the bottom of the browser pane. */
 .cr-icb.on { background: var(--cr-hover); color: var(--cr-ring); }
 .cr-devtools { flex: 0 0 40%; min-height: 140px; max-height: 60%; display: flex; flex-direction: column; border-top: 1px solid var(--line); background: var(--panel); color: var(--fg); font-family: var(--mono); font-size: var(--text-12); }
