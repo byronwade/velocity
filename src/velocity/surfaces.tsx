@@ -265,9 +265,10 @@ function ActivityPanel() {
 function CoworkerCard({ c, manager }: { c: Coworker; manager?: boolean }) {
 	const [renaming, setRenaming] = useState(false);
 	const [name, setName] = useState(c.name);
+	const budgetPct = Math.min(100, (c.budget.spent / c.budget.total) * 100);
 	return (
 		<div className={`vs-cw${manager ? ' manager' : ''}`} style={{ ['--id' as string]: c.color }}>
-			<div className="vs-cw-top">
+			<div className="vs-cw-head">
 				<span className="vs-cw-badge" style={{ background: c.color }}>{c.initials}</span>
 				<div className="vs-cw-id">
 					{renaming ? (
@@ -281,29 +282,40 @@ function CoworkerCard({ c, manager }: { c: Coworker; manager?: boolean }) {
 				</div>
 				<span className={`vs-state tone-${STATE_TONE[c.state]}`}>{STATE_LABEL[c.state]}</span>
 			</div>
-			<div className="vs-cw-action">{c.action}{c.waitingOn ? ` · waiting on ${c.waitingOn}` : ''}</div>
+			<p className="vs-cw-doing">{c.action}{c.waitingOn ? ` · waiting on ${c.waitingOn}` : ''}</p>
 			{c.scope && <div className="vs-cw-scope"><GitBranch size={11} />{c.scope}</div>}
-			<div className="vs-cw-infra">
-				<select value={`${c.staffing}:${c.model}`} onChange={(e) => { const [s, ...m] = e.target.value.split(':'); runtime.setModel(c.id, s as 'auto' | 'manual', m.join(':')); }}>
-					<option value={`${c.staffing}:${c.model}`}>{c.model}</option>
-					<option value="auto:Auto · frontier">Auto · frontier</option>
-					<option value="manual:Claude Opus 4.8">Claude Opus 4.8</option>
-					<option value="manual:Local · qwen2.5-coder">Local · qwen2.5-coder</option>
-				</select>
-				<select value={c.autonomy} onChange={(e) => runtime.setAutonomy(c.id, e.target.value as Autonomy)}>
-					{Object.entries(AUTONOMY_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-				</select>
+
+			<div className="vs-cw-config">
+				<div className="vs-cw-kv">
+					<span>Model</span>
+					<select className="vs-cw-select" value={`${c.staffing}:${c.model}`} onChange={(e) => { const [s, ...m] = e.target.value.split(':'); runtime.setModel(c.id, s as 'auto' | 'manual', m.join(':')); }}>
+						<option value={`${c.staffing}:${c.model}`}>{c.model}</option>
+						<option value="auto:Auto · frontier">Auto · frontier</option>
+						<option value="manual:Claude Opus 4.8">Claude Opus 4.8</option>
+						<option value="manual:Local · qwen2.5-coder">Local · qwen2.5-coder</option>
+					</select>
+				</div>
+				<div className="vs-cw-kv">
+					<span>Autonomy</span>
+					<select className="vs-cw-select" value={c.autonomy} onChange={(e) => runtime.setAutonomy(c.id, e.target.value as Autonomy)}>
+						{Object.entries(AUTONOMY_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+					</select>
+				</div>
+				<div className="vs-cw-kv">
+					<span>Budget</span>
+					<div className="vs-cw-budget" title={`${c.budget.unit}${c.budget.spent} of ${c.budget.unit}${c.budget.total}`}>
+						<div className="vs-cw-budget-bar"><span style={{ width: `${budgetPct}%` }} /></div>
+						<span className="vs-cw-budget-n">{c.budget.unit}{c.budget.spent} / {c.budget.unit}{c.budget.total}</span>
+					</div>
+				</div>
 			</div>
-			<div className="vs-cw-budget" title={`${c.budget.unit}${c.budget.spent} of ${c.budget.unit}${c.budget.total} budget`}>
-				<div className="vs-cw-budget-bar"><span style={{ width: `${Math.min(100, (c.budget.spent / c.budget.total) * 100)}%` }} /></div>
-				<span className="vs-cw-budget-n">{c.budget.unit}{c.budget.spent} / {c.budget.unit}{c.budget.total}</span>
-			</div>
+
 			<div className="vs-cw-actions">
-				<button className={`vs-mini${c.following ? ' on' : ''}`} onClick={() => runtime.follow(c.following ? null : c.id)}><Eye size={12} />Follow</button>
+				<button className={`vs-cw-follow${c.following ? ' on' : ''}`} onClick={() => runtime.follow(c.following ? null : c.id)}><Eye size={13} />{c.following ? 'Following' : 'Follow'}</button>
 				{c.state === 'paused'
-					? <button className="vs-mini" onClick={() => runtime.resumeCoworker(c.id)}><Play size={12} />Resume</button>
-					: <button className="vs-mini" onClick={() => runtime.pauseCoworker(c.id)}><Pause size={12} />Pause</button>}
-				<button className="vs-mini danger" onClick={() => runtime.dismissCoworker(c.id)}><Trash2 size={12} />Dismiss</button>
+					? <button className="vs-cw-act" title="Resume" onClick={() => runtime.resumeCoworker(c.id)}><Play size={14} /></button>
+					: <button className="vs-cw-act" title="Pause" onClick={() => runtime.pauseCoworker(c.id)}><Pause size={14} /></button>}
+				<button className="vs-cw-act danger" title="Dismiss" onClick={() => runtime.dismissCoworker(c.id)}><Trash2 size={14} /></button>
 			</div>
 			{c.specialists.length > 0 && (
 				<div className="vs-specialists">
@@ -311,7 +323,7 @@ function CoworkerCard({ c, manager }: { c: Coworker; manager?: boolean }) {
 					{c.specialists.map((s) => (
 						<div key={s.id} className="vs-spec">
 							<span className="vs-spec-dot" />
-							<div><b>{s.name}</b> · {s.role}<div className="vs-spec-action">{s.action}</div></div>
+							<div className="vs-spec-body"><div className="vs-spec-name"><b>{s.name}</b><span className="vs-spec-role">· {s.role}</span></div><div className="vs-spec-action">{s.action}</div></div>
 							<span className={`vs-state sm tone-${STATE_TONE[s.state]}`}>{STATE_LABEL[s.state]}</span>
 						</div>
 					))}
