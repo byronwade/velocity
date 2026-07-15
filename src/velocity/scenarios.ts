@@ -30,7 +30,7 @@ function baseLayout(lens: Lens = 'browser', leftCompare?: CompareSource) {
 		openTool: null, dockExpanded: false, focusMode: false, followingId: null,
 		shipOpen: false, rightSurface: 'none' as const, activeCheckpointId: null,
 		activeDecisionId: null, missionSheetOpen: false, commandOpen: false,
-		commentMode: false, activeCommentId: null, shareOpen: false, settingsOpen: false,
+		commentMode: false, activeCommentId: null, shareOpen: false, settingsOpen: false, chatOpen: false,
 	};
 }
 
@@ -145,9 +145,10 @@ const baseEvents = (): WorkspaceEvent[] => events([
 	['verify-pass', 'Iris: 12/12 checks passed on the checkout scenario.', 'iris', 'now'],
 ]);
 
-type BuilderState = Omit<WorkspaceState, 'collaborators' | 'comments'> & {
+type BuilderState = Omit<WorkspaceState, 'collaborators' | 'comments' | 'feed'> & {
 	collaborators?: Collaborator[];
 	comments?: Comment[];
+	feed?: WorkspaceState['feed'];
 };
 type Builder = () => BuilderState;
 
@@ -296,5 +297,6 @@ export function buildScenario(key: string): WorkspaceState {
 		...s,
 		collaborators: s.collaborators ?? (hasTeam ? defaultCollaborators() : [defaultCollaborators()[0]]),
 		comments: s.comments ?? (hasTeam ? baseComments() : []),
+		feed: s.feed ?? [],
 	};
 }

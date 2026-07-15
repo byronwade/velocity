@@ -12,7 +12,6 @@
 import { useEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore } from 'react';
 import { useServices } from '../services/container';
 import { useShell } from '../lib/store';
-import { leaves } from '../lib/tree';
 import { BROWSER_HOME, isLocalUrl, normalizeUrl, titleFor } from '../services/browser';
 import { usePreview } from '../services/preview';
 import { startPage } from './browserStart';
@@ -127,18 +126,37 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 	const { browser } = useServices();
 	const theme = useShell((s) => s.theme);
 	const previewHtml = usePreview();
-	const state = useMemo(() => browser.for(paneId), [browser, paneId]);
+	// In-pane browser tabs (like the IDE's file tabs) — each tab owns its own
+	// history via a derived pane id.
+	const [tabs, setTabs] = useState<number[]>([1]);
+	const [activeTab, setActiveTab] = useState(1);
+	const tabPaneId = `${paneId}#t${activeTab}`;
+	const state = useMemo(() => browser.for(tabPaneId), [browser, tabPaneId]);
 	const [, bump] = useReducer((x: number) => x + 1, 0);
 	const [loadKey, setLoadKey] = useState(0);
 	const [loading, setLoading] = useState(false);
-	const [menuOpen, setMenuOpen] = useState(false);
 	const [zoom, setZoom] = useState(1);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const zoomBy = (d: number) => setZoom((z) => Math.max(0.25, Math.min(3, Math.round((z + d) * 100) / 100)));
 	const current = state.history[state.index];
 	const [urlInput, setUrlInput] = useState(current === BROWSER_HOME ? '' : current);
 	useSyncExternalStore(browser.subscribe, browser.getSnapshot);
-	const bookmarks = browser.getBookmarks();
+	// Keep the omnibox in sync when switching tabs or after navigation.
+	useEffect(() => { setUrlInput(current === BROWSER_HOME ? '' : current); }, [tabPaneId, current]);
+
+	const newTab = () => {
+		const n = Math.max(...tabs) + 1;
+		setTabs((t) => [...t, n]);
+		setActiveTab(n);
+	};
+	const closeTab = (n: number) => {
+		browser.release(`${paneId}#t${n}`);
+		setTabs((t) => {
+			const next = t.filter((x) => x !== n);
+			if (n === activeTab && next.length) setActiveTab(next[Math.max(0, next.indexOf(n) - 1)] ?? next[next.length - 1]);
+			return next;
+		});
+	};
 	// Most real sites refuse to be embedded (X-Frame-Options / CSP). Rather than
 	// show the browser's ugly "refused to connect", offer a clean card; users can
 	// open the page in a real tab, or try embedding anyway.
@@ -151,33 +169,12 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 	// Responsive preview — constrain the page to a device width (v0-style).
 	const [device, setDevice] = useState<Device>('desktop');
 
-	// Dismiss the browser menu on outside click.
-	useEffect(() => {
-		if (!menuOpen) return;
-		const close = (e: MouseEvent) => { if (!(e.target as HTMLElement).closest('.cr-menu-wrap')) setMenuOpen(false); };
-		document.addEventListener('mousedown', close);
-		return () => document.removeEventListener('mousedown', close);
-	}, [menuOpen]);
-
 	// Show a loading bar until the frame reports load (or a short timeout).
 	useEffect(() => {
 		setLoading(true);
 		const t = window.setTimeout(() => setLoading(false), 1600);
 		return () => window.clearTimeout(t);
 	}, [current, loadKey]);
-
-	// Reflect the page into the workspace tab title — but only for a tab that is
-	// a single browser pane (don't hijack a split tab), and not the start page.
-	useEffect(() => {
-		if (current === BROWSER_HOME) {
-			return;
-		}
-		const s = useShell.getState();
-		const tab = s.tabs.find((t) => leaves(t.tree).some((l) => l.pane.id === paneId));
-		if (tab && leaves(tab.tree).length === 1) {
-			s.renameTab(tab.id, titleFor(current));
-		}
-	}, [current, paneId]);
 
 	function navigate(raw: string) {
 		const url = normalizeUrl(raw);
@@ -227,7 +224,6 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 	const isStart = current === BROWSER_HOME;
 	const isLocal = !isStart && isLocalUrl(current);
 	const isExternal = !isStart && !isLocal;
-	const bookmarked = browser.isBookmarked(current);
 
 	// Chrome-style keyboard shortcuts, scoped to the browser pane.
 	function onKeyDown(e: React.KeyboardEvent) {
@@ -256,9 +252,24 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 
 	return (
 		<div ref={rootRef} className="mode browser chrome" onKeyDown={onKeyDown}>
-			{/* Chrome toolbar: nav cluster · omnibox · actions. The page tab is the
-			    workspace tab above this pane. */}
-			<div className="cr-toolbar">
+			{/* Browser tabs — like the IDE's file tabs; each owns its history. */}
+			<div className="cr-tabstrip" role="tablist">
+				{tabs.map((n) => {
+					const st = browser.for(`${paneId}#t${n}`);
+					const cur = st.history[st.index];
+					return (
+						<div key={n} className={`cr-ttab${n === activeTab ? ' active' : ''}`} role="tab" aria-selected={n === activeTab} onClick={() => setActiveTab(n)}>
+							<Icon.browser />
+							<span className="cr-ttab-title">{cur === BROWSER_HOME ? 'New tab' : titleFor(cur)}</span>
+							{tabs.length > 1 && <button className="cr-ttab-x" aria-label="Close tab" onClick={(e) => { e.stopPropagation(); closeTab(n); }}><Icon.close /></button>}
+						</div>
+					);
+				})}
+				<button className="cr-ttab-new" title="New tab" aria-label="New tab" onClick={newTab}><Icon.plus /></button>
+			</div>
+
+			{/* Compact v0-style toolbar: nav · centered omnibox · view tools. */}
+			<div className="cr-toolbar compact">
 				<div className="cr-nav">
 					<button className="cr-icb" title="Back" aria-label="Back" disabled={state.index === 0} onClick={back}><Icon.back /></button>
 					<button className="cr-icb" title="Forward" aria-label="Forward" disabled={state.index >= state.history.length - 1} onClick={forward}><Icon.forward /></button>
@@ -268,7 +279,6 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 					<span className="cr-omni-lead">{isStart ? <Icon.search /> : <Icon.lock />}</span>
 					<input ref={inputRef} value={urlInput} spellCheck={false} placeholder="Search or type a URL — try localhost:3000" aria-label="Address and search bar" onChange={(e) => setUrlInput(e.target.value)} />
 					{isLocal && <span className="cr-live" title="Live workspace preview">● Live</span>}
-					<button type="button" className={`cr-star${bookmarked ? ' on' : ''}`} title={bookmarked ? 'Remove bookmark' : 'Bookmark this tab'} aria-label="Bookmark this tab" aria-pressed={bookmarked} onClick={() => browser.toggleBookmark(current)}><Icon.star /></button>
 				</form>
 				<div className="cr-actions">
 					{zoom !== 1 && (
@@ -279,44 +289,9 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 							<button key={d.id} className={`cr-dev${device === d.id ? ' on' : ''}`} title={d.label} aria-label={d.label} aria-pressed={device === d.id} onClick={() => setDevice(d.id)}><d.icon size={14} /></button>
 						))}
 					</div>
-					<button className="cr-icb" title="Home" aria-label="Home" onClick={() => navigate(BROWSER_HOME)}><Icon.home /></button>
-					<button className={`cr-icb${devtools ? ' on' : ''}`} title="DevTools (⌥⌘I)" aria-label="DevTools" aria-pressed={devtools} onClick={() => setDevtools((d) => !d)}><Code2 size={18} /></button>
+					<button className={`cr-icb${devtools ? ' on' : ''}`} title="DevTools (⌥⌘I)" aria-label="DevTools" aria-pressed={devtools} onClick={() => setDevtools((d) => !d)}><Code2 size={16} /></button>
 					{isExternal && <a className="cr-icb" title="Open in a new tab" aria-label="Open externally" href={current} target="_blank" rel="noreferrer noopener"><Icon.share /></a>}
-					<span className="cr-avatar" title="Profile" aria-hidden>B</span>
-					<div className="cr-menu-wrap">
-						<button className="cr-icb" title="Menu" aria-label="Menu" aria-expanded={menuOpen} onClick={() => setMenuOpen((o) => !o)}><Icon.dots /></button>
-						{menuOpen && (
-							<div className="cr-menu" role="menu">
-								<button onClick={() => { setLoadKey((k) => k + 1); setMenuOpen(false); }}><Icon.reload />Reload</button>
-								<button disabled={isStart} onClick={() => { void navigator.clipboard?.writeText(current); setMenuOpen(false); }}><Icon.share />Copy URL</button>
-								<button disabled={isStart} onClick={() => { browser.toggleBookmark(current); setMenuOpen(false); }}><Icon.star />{bookmarked ? 'Remove bookmark' : 'Bookmark'}</button>
-								{isExternal && <button onClick={() => { window.open(current, '_blank', 'noopener'); setMenuOpen(false); }}><Icon.share />Open in new tab</button>}
-								<div className="cr-menu-sep" />
-								<div className="cr-menu-zoom">
-									<span>Zoom</span>
-									<button title="Zoom out" onClick={() => zoomBy(-0.1)}><Icon.minus /></button>
-									<b>{Math.round(zoom * 100)}%</b>
-									<button title="Zoom in" onClick={() => zoomBy(0.1)}><Icon.plus /></button>
-								</div>
-								{state.history.length > 1 && <div className="cr-menu-sep" />}
-								{state.history.slice(0, state.index).reverse().slice(0, 5).map((h, i) => (
-									<button key={`h-${i}`} className="cr-menu-hist" title={h} onClick={() => { navigate(h); setMenuOpen(false); }}><Icon.back /><span>{h === BROWSER_HOME ? 'New tab' : titleFor(h)}</span></button>
-								))}
-								<div className="cr-menu-sep" />
-								<button onClick={() => { navigate(BROWSER_HOME); setMenuOpen(false); }}><Icon.home />New tab page</button>
-							</div>
-						)}
-					</div>
 				</div>
-			</div>
-
-			{/* Bookmarks bar (Chrome / Arc) */}
-			<div className="cr-bookmarks">
-				{bookmarks.map((b) => (
-					<button key={b.url} className="cr-bm" title={b.url} onClick={() => navigate(b.url)}>
-						<Icon.browser /><span>{b.title}</span>
-					</button>
-				))}
 			</div>
 
 			<div className={`browser-view dev-${device}`} style={{ zoom }}>

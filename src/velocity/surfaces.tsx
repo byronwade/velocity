@@ -605,8 +605,9 @@ const SHELLS = [
 	{ id: 'node', label: 'node' },
 ];
 
-/** Real terminal (executes against the in-memory FS) + a shell chooser. */
-function TerminalPanel() {
+/** Real terminal (executes against the in-memory FS) + a shell chooser.
+ *  Exported: it renders both in the docked tools panel and as a pane view. */
+export function TerminalPanel() {
 	const [kind, setKind] = useState('bash');
 	const [ids, setIds] = useState<Record<string, number>>({ bash: 1 });
 	const sessionId = `velocity:term:${kind}:${ids[kind] ?? 1}`;

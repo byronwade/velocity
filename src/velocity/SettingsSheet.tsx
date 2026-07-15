@@ -77,6 +77,12 @@ export function SettingsSheet() {
 	const [motion, setMotion] = useState(() => document.documentElement.dataset.motion ?? 'full');
 	const applyDensity = (v: string) => { setDensity(v); document.documentElement.dataset.density = v; try { localStorage.setItem('vs-density', v); } catch { /* ignore */ } };
 	const applyMotion = (v: string) => { setMotion(v); document.documentElement.dataset.motion = v; try { localStorage.setItem('vs-motion', v); } catch { /* ignore */ } };
+	const [tabLayout, setTabLayout] = useState(() => { try { return localStorage.getItem('vs-tablayout') ?? 'top'; } catch { return 'top'; } });
+	const applyTabLayout = (v: string) => {
+		setTabLayout(v);
+		try { localStorage.setItem('vs-tablayout', v); } catch { /* ignore */ }
+		window.dispatchEvent(new CustomEvent('velocity:tablayout', { detail: v }));
+	};
 
 	const [reviewProvider, setReviewProvider] = usePref('reviewProvider', 'github');
 	const [prDest, setPrDest] = usePref('prDest', 'browser');
@@ -148,6 +154,12 @@ export function SettingsSheet() {
 										<button className={theme === 'light' ? 'on' : ''} onClick={() => setTheme('light')}><Sun size={13} />Light</button>
 										<button className={theme === 'dark' ? 'on' : ''} onClick={() => setTheme('dark')}><Moon size={13} />Dark</button>
 										<button onClick={() => setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')}><Monitor size={13} />System</button>
+									</div>
+								</Row>
+								<Row title="Tab layout" desc="Project tabs across the top, or an Arc-style collapsible sidebar.">
+									<div className="vs-seg">
+										<button className={tabLayout === 'top' ? 'on' : ''} onClick={() => applyTabLayout('top')}>Top</button>
+										<button className={tabLayout === 'side' ? 'on' : ''} onClick={() => applyTabLayout('side')}>Vertical</button>
 									</div>
 								</Row>
 								<Row title="Density" desc="How compact the workspace chrome is.">

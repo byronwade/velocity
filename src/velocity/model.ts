@@ -8,7 +8,7 @@
 // ---------------------------------------------------------------------------
 
 /** The views a pane can show. The running app lives in Browser (no separate Preview). */
-export type Lens = 'browser' | 'code' | 'system' | 'data' | 'tests' | 'verify';
+export type Lens = 'browser' | 'code' | 'terminal' | 'system' | 'data' | 'tests' | 'verify';
 
 /** What a Preview pane compares the Candidate against. */
 export type CompareSource = 'none' | 'stable' | 'live' | 'preview' | 'branch';
@@ -224,6 +224,19 @@ export interface Collaborator {
 	cursor: { lens: Lens; x: number; y: number } | null;
 }
 
+/** One entry in the unified chat + activity feed (the left sidebar).
+ *  Messages come from humans AND coworkers; events mirror the activity
+ *  stream; work entries mirror pinned comments — one collaborative record. */
+export interface FeedEntry {
+	id: string;
+	kind: 'msg' | 'event' | 'work';
+	authorName: string;
+	fromCoworker?: boolean;
+	text: string;
+	tsLabel: string;
+	eventKind?: EventKind;
+}
+
 export interface CommentReply {
 	authorName: string;
 	authorColor: string;
@@ -314,6 +327,8 @@ export interface LayoutState {
 	shareOpen: boolean;
 	/** The full settings modal. */
 	settingsOpen: boolean;
+	/** The collaborative chat / activity sidebar (left of the workspace). */
+	chatOpen: boolean;
 }
 
 /** The whole prototype workspace at one moment — one deterministic snapshot. */
@@ -327,6 +342,7 @@ export interface WorkspaceState {
 	archived: Coworker[];
 	collaborators: Collaborator[];
 	comments: Comment[];
+	feed: FeedEntry[];
 	events: WorkspaceEvent[];
 	checkpoints: Checkpoint[];
 	decisions: Decision[];
@@ -360,6 +376,7 @@ export const DEPLOY_TARGETS: { id: DeployTarget; label: string; domain: string }
 export const LENS_META: Record<Lens, { label: string; hint: string }> = {
 	browser: { label: 'Browser', hint: 'Live preview of the app' },
 	code: { label: 'IDE', hint: 'Editor, files + diff' },
+	terminal: { label: 'Terminal', hint: 'Real shell over the workspace' },
 	system: { label: 'System', hint: 'Services, endpoints, request flow' },
 	data: { label: 'Data', hint: 'Schema + records' },
 	tests: { label: 'Tests', hint: 'Unit + integration runner' },

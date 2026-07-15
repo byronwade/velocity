@@ -18,6 +18,12 @@ to the Dropped section at the bottom with a reason.
 - [x] **cross-project-inbox** — Inbox. Everything that needs you, across all projects, in one bell. _(shipped 2026-07-14)_
 - [x] **keyboard-help** — Shortcut help overlay (?). _(shipped 2026-07-14)_
 - [x] **quick-open** — ⌘P go-to-file. _(shipped 2026-07-15)_
+- [x] **pane-drag-drop** — Drag a panel by its toolbar onto any other panel; a blue outline shows where it will land (left/right/top/bottom) and the layout restructures on drop. _(shipped 2026-07-15)_
+- [x] **terminal-lens** — Terminal is a pane view: pick it from any panel's view dropdown (key 3). _(shipped 2026-07-15)_
+- [x] **divider-grip** — Obvious split grab bars: generous hit area, a visible grip pill on hover, strong active state. _(shipped 2026-07-15)_
+- [x] **chat-sidebar** — Collaborative chat + activity sidebar (toggle left of the tabs): humans and coworkers in one thread, agents riff off each other, pinned work and progress/completion events land automatically. Not the core — comments stay primary. _(shipped 2026-07-15)_
+- [x] **vertical-tabs** — Arc-style collapsible vertical tab rail, togglable in Settings → Appearance. _(shipped 2026-07-15)_
+- [x] **comment-dismiss** — Click anywhere outside an open comment thread or composer to close it. _(shipped 2026-07-15)_
 - [x] **settings-modal** — Settings modal (plan, appearance, notifications, coworkers, integrations). _(shipped 2026-07-14)_
 - [x] **v0-design-system** — One v0/Geist token system across every control. _(shipped 2026-07-15)_
 - [x] **geist-design-system** — Geist type + v0 gray ramp foundation, light + dark. _(shipped 2026-07-12)_
@@ -58,6 +64,7 @@ to the Dropped section at the bottom with a reason.
 - [x] **real-browser** — Chrome-style in-app browser running the live workspace preview. _(shipped 2026-07-14)_
 - [x] **browser-devtools** — Elements / Console / Network DevTools docked in the pane. _(shipped 2026-07-15)_
 - [x] **device-preview** — Desktop / tablet / mobile viewport toggle. _(shipped 2026-07-15)_
+- [x] **browser-tabs** — In-pane browser tabs (like the IDE's), each with its own history; bookmarks bar and profile removed; compact v0-style toolbar with a centered omnibox. _(shipped 2026-07-15)_
 - [ ] **child-webview-browser** — Real WebView2/WKWebView child-webview pane: no iframe blocking, real cookies. _(planned · phase 6)_
 - [x] **devtools-console-input** — Evaluate JS in the live preview from the DevTools Console tab, with echoed input and results. _(shipped 2026-07-15)_
 

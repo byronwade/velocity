@@ -55,3 +55,32 @@ export function removeLeaf(node: PaneNode, id: string): PaneNode {
 	if (node.b.kind === 'leaf' && node.b.id === id) return node.a;
 	return { ...node, a: removeLeaf(node.a, id), b: removeLeaf(node.b, id) };
 }
+
+/** Which edge of a target pane a drop lands on. */
+export type DropEdge = 'left' | 'right' | 'top' | 'bottom';
+
+/** Replace the leaf `targetId` with a split of it and an existing leaf. */
+function insertBeside(node: PaneNode, targetId: string, leaf: PaneLeaf, edge: DropEdge): PaneNode {
+	if (node.kind === 'leaf') {
+		if (node.id !== targetId) return node;
+		const dir: SplitDir = edge === 'left' || edge === 'right' ? 'row' : 'col';
+		const first = edge === 'left' || edge === 'top';
+		return {
+			kind: 'split', id: `s-${leaf.id}-${targetId}`, dir, ratio: 0.5,
+			a: first ? leaf : node,
+			b: first ? node : leaf,
+		};
+	}
+	return { ...node, a: insertBeside(node.a, targetId, leaf, edge), b: insertBeside(node.b, targetId, leaf, edge) };
+}
+
+/** Move the leaf `srcId` next to `targetId` on the given edge (drag & drop).
+ *  Returns the tree unchanged when the move is a no-op or impossible. */
+export function movePane(node: PaneNode, srcId: string, targetId: string, edge: DropEdge): PaneNode {
+	if (srcId === targetId) return node;
+	const src = findLeaf(node, srcId);
+	if (!src || !findLeaf(node, targetId)) return node;
+	if (node.kind === 'leaf') return node; // a single pane has nowhere to go
+	const without = removeLeaf(node, srcId);
+	return insertBeside(without, targetId, src, edge);
+}

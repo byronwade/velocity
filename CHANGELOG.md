@@ -8,6 +8,22 @@ list item of the shape `- **slug** — Name. What changed and why it matters. (\
 **slug** is a stable kebab-case feature id shared with [ROADMAP.md](ROADMAP.md) — never rename one;
 corrections get a new entry. Newest release first.
 
+## 2026-07-15 · A workspace you can rearrange
+
+### Added
+- **pane-drag-drop** — Move panels anywhere. Drag a panel by its toolbar onto any other panel — a blue outline shows exactly where it will land (left / right / top / bottom half) and the layout restructures on drop.
+- **chat-sidebar** — Collaborative chat. A togglable sidebar (button left of the tabs, v0-style) where you, teammates, and coworkers share one thread — agents answer and riff off each other ("I'll take the design side once Iris lands theirs"), @Name directs a request, pinned work items appear inline, and the activity stream (started / landed / completed) flows through automatically, so it doubles as a live progress log. Deliberately not the core: directing work stays on the app via comments.
+- **terminal-lens** — Terminal as a panel view. The real terminal joins the view dropdown (key 3) — any panel can be a terminal.
+- **browser-tabs** — Browser tabs. The in-app browser gets IDE-style tabs, each with its own history; new-tab and close controls included.
+- **vertical-tabs** — Arc-style vertical tabs. Settings → Appearance can switch the project tabs from the top row to a collapsible left rail — tabs stacked with their status rings, inbox and profile at the bottom.
+
+### Changed
+- **browser-compact** — The browser header is compact and v0-styled: centered pill omnibox, tokenized icon buttons — bookmarks bar and the profile avatar are gone (not needed in this environment).
+- **divider-grip** — Panel grab bars are obvious now: a wider hit area, a visible grip pill on hover, and a strong active state; resizing stays smooth with live snap points.
+
+### Fixed
+- **comment-dismiss** — Comment windows close on click-away. Clicking anywhere outside an open thread or composer dismisses it (Esc still works).
+
 ## 2026-07-15 · The first real coworker
 
 ### Added
