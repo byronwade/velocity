@@ -10,6 +10,7 @@
 // ---------------------------------------------------------------------------
 
 import { buildScenario } from './scenarios';
+import { notifyCheckpoint } from './notify';
 import { DEPLOY_TARGETS, WORK_INTENTS, WORK_MODELS } from './model';
 import { findLeaf, firstLeafId, firstLeafOfView, leafIds, removeLeaf, setCompareSource, setRatio, setView, splitLeaf } from './panes';
 import type {
@@ -158,6 +159,7 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 			const kept = this.state.checkpoints.filter((k) => !(k.coworkerId === done.id && k.state === 'ready'));
 			this.set({ coworkers, checkpoints: [checkpoint, ...kept].slice(0, 8) });
 			this.addEvent('checkpoint', `${done.name} landed “${done.action}” — ready to review.`, done.id);
+			notifyCheckpoint(`${done.name} · checkpoint ready`, done.action);
 		} else {
 			this.set({ coworkers });
 		}
