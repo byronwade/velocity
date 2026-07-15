@@ -8,14 +8,38 @@ list item of the shape `- **slug** — Name. What changed and why it matters. (\
 **slug** is a stable kebab-case feature id shared with [ROADMAP.md](ROADMAP.md) — never rename one;
 corrections get a new entry. Newest release first.
 
-## 2026-07-15 · Platform research and roadmap
+## 2026-07-15 · A workspace you can rearrange
 
 ### Added
-- **platform-research-roadmap** — Production roadmap corpus. Velocity now carries the complete VS Code, Cursor, and Figma research in source control: repository audit, accepted architecture, source-of-truth and security models, phases P0–P8, work packages, acceptance gates, metrics, source registry, and a 457-record feature backlog for issue and implementation planning. (`documentation`)
+- **pane-drag-drop** — Move panels anywhere. Drag a panel by its toolbar onto any other panel — a blue outline shows exactly where it will land (left / right / top / bottom half) and the layout restructures on drop.
+- **chat-sidebar** — Collaborative chat. A togglable sidebar (button left of the tabs, v0-style) where you, teammates, and coworkers share one thread — agents answer and riff off each other ("I'll take the design side once Iris lands theirs"), @Name directs a request, pinned work items appear inline, and the activity stream (started / landed / completed) flows through automatically, so it doubles as a live progress log. Deliberately not the core: directing work stays on the app via comments.
+- **terminal-lens** — Terminal as a panel view. The real terminal joins the view dropdown (key 3) — any panel can be a terminal.
+- **browser-tabs** — Browser tabs. The in-app browser gets IDE-style tabs, each with its own history; new-tab and close controls included.
+- **vertical-tabs** — Arc-style vertical tabs. Settings → Appearance can switch the project tabs from the top row to a collapsible left rail — tabs stacked with their status rings, inbox and profile at the bottom.
 
 ### Changed
-- **integrations-research** — The focused runtime-stack memo now links into the larger platform roadmap and remains the implementation note for Vercel AI, Tauri-native capabilities, agent SDKs, MCP/ACP, worktrees, and native execution. (`documentation`)
-- **real-terminal** — The public roadmap now distinguishes the shipped workspace-filesystem shell from the planned production terminal built on native PTYs, xterm, profiles, shell integration, tasks, and remote authorities. Runtime behavior is unchanged. (`documentation`)
+- **browser-compact** — The browser header is compact and v0-styled: centered pill omnibox, tokenized icon buttons — bookmarks bar and the profile avatar are gone (not needed in this environment).
+- **divider-grip** — Panel grab bars are obvious now: a wider hit area, a visible grip pill on hover, and a strong active state; resizing stays smooth with live snap points.
+
+### Fixed
+- **comment-dismiss** — Comment windows close on click-away. Clicking anywhere outside an open thread or composer dismisses it (Esc still works).
+
+## 2026-07-15 · The first real coworker
+
+### Added
+- **local-coworker** — Real work, no API key. Create a work item with the **Local** model and the assigned coworker actually does it: the Ollama tool loop (read/write files, run commands, search) runs against the real workspace, the coworker's action updates live as tools execute, the model's answer lands as a thread reply, and file changes become a checkpoint whose diff is **computed from actual before/after contents**. Small models that narrate a tool call as JSON instead of invoking it get rescued — the call is parsed and executed for real. Verified end-to-end: `qwen2.5-coder:1.5b` created a file and its `+1 −0` diff landed in Review, credited "by qwen2.5-coder:1.5b (local)".
+- Real checkpoints outrank the demo heartbeat: simulated momentum can never supersede or bury a checkpoint produced by an actual model run.
+
+## 2026-07-15 · Native foundation
+
+### Added
+- **mcp-tools** — The workspace speaks MCP. Velocity's real services are now a Model Context Protocol server — `read_file`, `write_file`, `list_files`, `run_command`, `navigate_browser` — running in-process. Settings → Integrations shows the live toolbelt via an actual MCP client handshake. This is the standard seam every coworker runtime (and any external agent) will consume.
+- **pty-terminal** — A true native terminal. The desktop build's terminal panel now runs real PTY sessions (ConPTY on Windows, openpty elsewhere) through your actual shell — bash, pwsh, cmd, node — rendered by xterm.js with live resize and session tabs. The browser preview keeps the sandboxed workspace shell.
+- **persistence** — Projects survive restarts. Every project tab's full workspace state (coworkers, missions, checkpoints, comments, layout) is snapshotted continuously and restored on the next launch. `?scenario=` still seeds a fresh deterministic demo. Verified: a placed work item survived a full reload.
+- **native-notifications** — Native desktop banners. The Tauri build now uses the OS notification system for "checkpoint ready" (proper installed-app identity); the browser preview keeps the web Notification fallback. Same Settings toggle governs both.
+- **tray-badge** — System tray presence. Velocity gets a tray icon whose tooltip reflects the live cross-project inbox count ("Velocity — 3 need you"), with Open/Quit menu items.
+- **global-shortcut** — Summon from anywhere. Ctrl/⌘+Shift+V shows, unminimizes, and focuses Velocity system-wide.
+- **window-state** — The desktop window remembers its size and position across launches.
 
 ## 2026-07-15 · Agents as files
 
