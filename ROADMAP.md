@@ -37,10 +37,10 @@ to the Dropped section at the bottom with a reason.
 - [x] **workers-panel** — Monochrome divided-list Workers panel with subagents and live tools. _(shipped 2026-07-15)_
 - [x] **follow-mode** — Follow a coworker's work live. _(shipped 2026-07-14)_
 - [x] **collaboration** — Human teammates: invites, live cursors, presence. _(shipped 2026-07-14)_
-- [ ] **real-coworker-runtime** — First provider-backed coworker: Claude Agent SDK in a Node sidecar, `cwd` = a worktree, hooks → checkpoints, `canUseTool` → decision sheets. _(planned · phase 4)_
-- [ ] **ai-gateway** — Vercel AI Gateway as the model layer: model strings, per-key budgets wired to the credits UI, BYOK. _(planned · phase 4)_
-- [ ] **ai-sdk-runtime** — Second runtime on Vercel AI SDK `ToolLoopAgent` for non-Anthropic models via Gateway. _(planned · phase 5)_
-- [ ] **worktree-per-coworker** — Real git worktree + branch per coworker (system git), shadow-git checkpoints for rollback. _(planned · phase 5)_
+- [ ] **real-coworker-runtime** — First provider-backed coworker: Claude Agent SDK in a Node sidecar, `cwd` = a worktree, hooks → checkpoints, `canUseTool` → decision sheets. _(planned · phase 4 — blocked: needs an Anthropic/Gateway API key + the Node sidecar go-ahead)_
+- [ ] **ai-gateway** — Vercel AI Gateway as the model layer: model strings, per-key budgets wired to the credits UI, BYOK. _(planned · phase 4 — blocked: needs an AI Gateway API key)_
+- [ ] **ai-sdk-runtime** — Second runtime on Vercel AI SDK `ToolLoopAgent` for non-Anthropic models via Gateway. _(planned · phase 5 — depends on ai-gateway)_
+- [ ] **worktree-per-coworker** — Real git worktree + branch per coworker (system git), shadow-git checkpoints for rollback. _(planned · phase 5 — depends on real-coworker-runtime)_
 - [ ] **mcp-tools** — Velocity's fs/shell/browser/preview exposed as MCP servers; third-party MCP servers pluggable into a coworker's toolbelt. _(planned · phase 6)_
 - [ ] **acp-client** — Agent Client Protocol support so external agents (Claude Code, Codex, Gemini) can be hired as coworkers. _(planned · phase 6)_
 
@@ -49,7 +49,7 @@ to the Dropped section at the bottom with a reason.
 - [x] **deploy-targets** — Ship to Vercel / Netlify / Cloudflare. _(shipped 2026-07-14)_
 - [x] **compare-sources** — Compare candidate vs Stable / Live / Preview / Branch. _(shipped 2026-07-14)_
 - [x] **checkpoint-diff-to-ide** — Click a checkpoint's changed file to open it in the IDE; heartbeat checkpoints reference real workspace files. _(shipped 2026-07-15)_
-- [ ] **real-diffs** — Checkpoint diffs computed from real file changes (gix/git2 read-only). _(planned · phase 5)_
+- [ ] **real-diffs** — Checkpoint diffs computed from real file changes (gix/git2 read-only). _(planned · phase 5 — depends on real-coworker-runtime + worktrees)_
 
 ## Browser
 
