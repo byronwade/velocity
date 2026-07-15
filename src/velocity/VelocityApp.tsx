@@ -1,8 +1,6 @@
 import { useEffect } from 'react';
-import { Maximize2, Minimize2, GitCompare, Flag, ShieldQuestion, UserPlus } from 'lucide-react';
 import { useWorkspace, runtime } from './useWorkspace';
 import type { Lens } from './model';
-import { SCENARIOS as SCENARIO_LIST } from './scenarios';
 import { TabBar } from './TabBar';
 import { Stage } from './Stage';
 import { Dock } from './Dock';
@@ -10,53 +8,6 @@ import { MissionSheet, RightRail, ToolDrawer, CommandBar, ShareSheet } from './s
 import './velocity.css';
 
 const LENS_ORDER: Lens[] = ['preview', 'code', 'system', 'data', 'verify', 'ship'];
-
-function TopBar() {
-	const state = useWorkspace();
-	const { compare, focusMode } = state.layout;
-	const pendingCheckpoint = state.checkpoints.some((k) => k.state === 'ready');
-	const openDecision = state.decisions.some((d) => d.state === 'open');
-
-	return (
-		<header className="vs-top">
-			<div className="vs-top-left">
-				<span className="vs-logo" />
-				<div className="vs-proj"><b>{state.project.name}</b><span>{state.project.branch} · {state.scenarioLabel}</span></div>
-				{state.mission && (() => {
-					const done = state.mission.criteria.filter((c) => c.state === 'verified').length;
-					const total = state.mission.criteria.length;
-					return (
-						<button className="vs-mission-chip" onClick={() => runtime.setLens('verify')} title="Mission progress → Verify">
-							<span className="vs-mission-title">{state.mission.title}</span>
-							<span className="vs-mission-dots">
-								{state.mission.criteria.map((c) => <span key={c.id} className={`vs-mdot ${c.state}`} />)}
-							</span>
-							<span className="vs-mission-n">{done}/{total}</span>
-						</button>
-					);
-				})()}
-			</div>
-
-			<div className="vs-top-right">
-				<div className="vs-top-alerts">
-					{openDecision && <button className="vs-alert decision" onClick={() => runtime.openRight('decision')}><ShieldQuestion size={14} />Decision</button>}
-					{pendingCheckpoint && <button className="vs-alert" onClick={() => runtime.openRight('checkpoint')}><Flag size={14} />Review</button>}
-				</div>
-				<button className={`vs-ghosticon${compare ? ' on' : ''}`} onClick={() => runtime.toggleCompare()} title="Compare Stable vs Candidate"><GitCompare size={16} /></button>
-				<button className={`vs-ghosticon${focusMode ? ' on' : ''}`} onClick={() => runtime.toggleFocus()} title="Focus mode">{focusMode ? <Minimize2 size={16} /> : <Maximize2 size={16} />}</button>
-				<select className="vs-scenario" value={state.scenario} onChange={(e) => runtime.load(e.target.value)} title="Demo scenario" aria-label="Demo scenario">
-					{SCENARIO_LIST.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
-				</select>
-				<div className="vs-facepile">
-					{state.collaborators.filter((c) => c.status === 'active').slice(0, 4).map((c) => (
-						<span key={c.id} className="vs-face" style={{ background: c.color }} title={`${c.name} · ${c.role}`}>{c.initials}</span>
-					))}
-				</div>
-				<button className="vs-share-btn" onClick={() => runtime.openShare(true)} title="Share & invite"><UserPlus size={14} />Share</button>
-			</div>
-		</header>
-	);
-}
 
 function Confetti() {
 	const state = useWorkspace();
@@ -103,7 +54,6 @@ export function VelocityApp() {
 		<div className="vs-shell">
 			{!focusMode && <TabBar />}
 			<div className={`vs-root${focusMode ? ' focus' : ''}`}>
-				{!focusMode && <TopBar />}
 				<div className="vs-main">
 					<Stage />
 				</div>

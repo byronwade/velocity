@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { Plus, X, Flag, ShieldQuestion, Pause, Sun, Moon } from 'lucide-react';
+import { Plus, X, Flag, ShieldQuestion, Pause, Sun, Moon, UserPlus } from 'lucide-react';
 import { useShell } from '../lib/store';
-import { useProjects, manager } from './useWorkspace';
+import { useProjects, useWorkspace, manager, runtime } from './useWorkspace';
+import { SCENARIOS as SCENARIO_LIST } from './scenarios';
 import type { TabView } from './workspace';
 
 function Tab({ tab, active }: { tab: TabView; active: boolean }) {
 	const [renaming, setRenaming] = useState(false);
 	const [name, setName] = useState(tab.name);
-	const canClose = true;
 	return (
 		<div className={`vs-tab${active ? ' active' : ''}`} onClick={() => manager.switchProject(tab.id)}
 			onDoubleClick={() => { setName(tab.name); setRenaming(true); }} role="tab" aria-selected={active} title={`${tab.name} · ${tab.scenarioLabel}`}>
@@ -23,15 +23,39 @@ function Tab({ tab, active }: { tab: TabView; active: boolean }) {
 				<span className="vs-tab-name">{tab.name}</span>
 			)}
 			<span className="vs-tab-meta">{tab.coworkers}</span>
-			{canClose && (
-				<button className="vs-tab-close" onClick={(e) => { e.stopPropagation(); manager.closeProject(tab.id); }} aria-label={`Close ${tab.name}`}><X size={12} /></button>
-			)}
+			<button className="vs-tab-close" onClick={(e) => { e.stopPropagation(); manager.closeProject(tab.id); }} aria-label={`Close ${tab.name}`}><X size={12} /></button>
+		</div>
+	);
+}
+
+/** Compact mission progress — dots + N/M, click to jump to Verify. */
+function MissionMini() {
+	const state = useWorkspace();
+	if (!state.mission) return null;
+	const done = state.mission.criteria.filter((c) => c.state === 'verified').length;
+	const total = state.mission.criteria.length;
+	return (
+		<button className="vs-mission-chip" onClick={() => runtime.setLens('verify')} title={`${state.mission.title} — ${done}/${total} verified`}>
+			<span className="vs-mission-dots">{state.mission.criteria.map((c) => <span key={c.id} className={`vs-mdot ${c.state}`} />)}</span>
+			<span className="vs-mission-n">{done}/{total}</span>
+		</button>
+	);
+}
+
+function Facepile() {
+	const state = useWorkspace();
+	const here = state.collaborators.filter((c) => c.status === 'active').slice(0, 4);
+	if (here.length === 0) return null;
+	return (
+		<div className="vs-facepile" title="People on this project">
+			{here.map((c) => <span key={c.id} className="vs-face" style={{ background: c.color }} title={`${c.name} · ${c.role}`}>{c.initials}</span>)}
 		</div>
 	);
 }
 
 function Profile() {
 	const { account } = useProjects();
+	const state = useWorkspace();
 	const [open, setOpen] = useState(false);
 	const pct = Math.min(100, (account.credits.used / account.credits.total) * 100);
 	return (
@@ -53,6 +77,12 @@ function Profile() {
 							<div className="vs-pc-bar"><span style={{ width: `${pct}%` }} /></div>
 							<div className="vs-pc-usage">{account.usageLabel}</div>
 						</div>
+						<label className="vs-profile-scenario">
+							<span>Demo scenario</span>
+							<select value={state.scenario} onChange={(e) => runtime.load(e.target.value)}>
+								{SCENARIO_LIST.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+							</select>
+						</label>
 					</div>
 				</>
 			)}
@@ -72,25 +102,15 @@ export function TabBar() {
 				<button className="vs-tab-new" onClick={() => manager.newProject()} title="New project" aria-label="New project"><Plus size={15} /></button>
 			</div>
 			<div className="vs-tabbar-right">
-				<div className="vs-credits" title="Credits used this cycle">
-					<CreditsMeter />
-				</div>
+				<MissionMini />
+				<Facepile />
+				<button className="vs-share-btn" onClick={() => runtime.openShare(true)} title="Share & invite"><UserPlus size={14} />Share</button>
+				<div className="vs-tabbar-sep" />
 				<button className="vs-tabbar-icon" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} title="Toggle theme">
 					{theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
 				</button>
 				<Profile />
 			</div>
 		</div>
-	);
-}
-
-function CreditsMeter() {
-	const { account } = useProjects();
-	const pct = Math.min(100, (account.credits.used / account.credits.total) * 100);
-	return (
-		<>
-			<div className="vs-credits-bar"><span style={{ width: `${pct}%` }} /></div>
-			<span className="vs-credits-n">{(account.credits.used / 1000).toFixed(1)}k <em>/ {(account.credits.total / 1000).toFixed(0)}k</em></span>
-		</>
 	);
 }
