@@ -23,6 +23,7 @@ corrections get a new entry. Newest release first.
 
 ### Fixed
 - **comment-dismiss** — Comment windows close on click-away. Clicking anywhere outside an open thread or composer dismisses it (Esc still works).
+- **chat-sidebar** — The activity portion of the feed no longer repeats itself: cycling sim tasks are deduped against recent entries, so the chat stays readable while the full history remains in the Activity panel.
 
 ## 2026-07-15 · The first real coworker
 
@@ -72,7 +73,7 @@ corrections get a new entry. Newest release first.
 
 ### Added
 - **comments-as-work** — Place work on the app. "New work" (⌘⇧N) arms placement; click the app, describe the change, tap an intent (Fix / Redesign / Copy / Add / Test), and it auto-assigns the best-fit coworker. Who / model / how-many live behind one preset popover — no forms. Pins show the assigned coworker's face; right-click any pin for assign / model / agents / resolve / delete. (`7afd2b8`)
-- **auto-assign** — Auto-assignment. Requests route deterministically by department (design → Design, tests → QA, everything else → Engineering), picking the least-busy coworker; intent is inferred from the text when no chip is tapped. (`7afd2b8`)
+- **auto-assign** — Auto-assignment. Requests route deterministically by department (design → Design, tests → QA, everything else → Engineering), picking the least-busy coworker; intent is inferred from the text when no chip was tapped. (`7afd2b8`)
 
 ### Removed
 - **work-chat** — The New Work chat panel. Replaced by comments-as-work: describing work now happens on the app itself, not in a chat thread. The Mission Sheet remains for detailed briefs. (`7afd2b8`)
