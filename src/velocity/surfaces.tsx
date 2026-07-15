@@ -9,6 +9,21 @@ import { MoreHorizontal } from 'lucide-react';
 import { TerminalMode } from '../modes/TerminalMode';
 import { ContextMenu, useContextMenu } from './ContextMenu';
 import { useWorkspace, runtime } from './useWorkspace';
+import { getServices } from '../services/container';
+import { firstLeafOfView } from './panes';
+
+/** Jump from a changed-file row to the file in a Code pane. Seeded fixture
+ *  paths may not exist in the workspace — say so instead of opening a blank. */
+async function openInIDE(path: string): Promise<void> {
+	const { fs, editor } = getServices();
+	if (!(await fs.exists(path))) { runtime.notify(`${path} isn't in this workspace (seeded example).`); return; }
+	const st = runtime.getState();
+	const leaf = firstLeafOfView(st.layout.panes, 'code');
+	const paneId = leaf ? leaf.id : st.layout.activePaneId;
+	if (!leaf) runtime.setPaneView(paneId, 'code');
+	await editor.bindPane(`velocity:editor:${paneId}`, path);
+	runtime.closeRight();
+}
 import { AUTONOMY_LABEL, STATE_TONE, STATE_LABEL, LENS_META, EVENT_TONE, DEPLOY_TARGETS } from './model';
 import type { Autonomy, CollabRole, Coworker, EvidenceKind, Lens, Risk, ToolId, WorkspaceEvent } from './model';
 
@@ -474,7 +489,7 @@ function CheckpointPanel() {
 				</div>
 				<div className="vs-ckp-sec">Changes
 					<div className="vs-diff">{k.diff.map((d) => (
-						<div key={d.path} className="vs-diff-row"><code>{d.path}</code><span className="vs-add-n">+{d.added}</span><span className="vs-rem-n">−{d.removed}</span></div>
+						<button key={d.path} className="vs-diff-row" title="Open in the IDE" onClick={() => void openInIDE(d.path)}><code>{d.path}</code><span className="vs-add-n">+{d.added}</span><span className="vs-rem-n">−{d.removed}</span></button>
 					))}</div>
 				</div>
 				<div className="vs-ckp-sec">Evidence

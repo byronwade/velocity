@@ -35,6 +35,11 @@ const CONSOLE_PROBE = `<script>(function(){
 	var send=function(l,a){try{parent.postMessage({type:'velocity-console',level:l,text:Array.prototype.map.call(a,function(x){try{return typeof x==='object'?JSON.stringify(x):String(x)}catch(e){return String(x)}}).join(' ')},'*')}catch(e){}};
 	['log','info','warn','error','debug'].forEach(function(m){var o=console[m];console[m]=function(){send(m,arguments);try{o.apply(console,arguments)}catch(e){}}});
 	window.addEventListener('error',function(e){send('error',[e.message]);});
+	/* eval is the feature here: this is the DevTools Console executing what the
+	   user typed, and it runs INSIDE the sandboxed preview iframe (allow-scripts
+	   only, opaque origin — no cookies, storage, or parent access), same as
+	   Chrome DevTools evaluating in a page. */
+	window.addEventListener('message',function(e){var d=e.data;if(d&&d.type==='velocity-eval'&&typeof d.code==='string'){var r;try{r=eval(d.code);}catch(err){send('error',[String(err)]);return;}send('result',[r]);}});
 })();<\/script>`;
 
 function withConsoleProbe(html: string): string {
@@ -76,8 +81,9 @@ function ElNode({ el, depth }: { el: Element; depth: number }) {
 
 /** DevTools docked at the bottom of the browser: Elements · Console · Network.
  *  Elements + Network are parsed from the real served HTML; Console is live. */
-function DevToolsPanel({ html, url, logs, onClose }: { html: string; url: string; logs: LogEntry[]; onClose: () => void }) {
+function DevToolsPanel({ html, url, logs, onClose, onEval }: { html: string; url: string; logs: LogEntry[]; onClose: () => void; onEval?: (code: string) => void }) {
 	const [tab, setTab] = useState<'elements' | 'console' | 'network'>('console');
+	const [code, setCode] = useState('');
 	const body = useMemo(() => (html ? new DOMParser().parseFromString(html, 'text/html') : null), [html]);
 	const network = useMemo(() => {
 		const rows: { name: string; type: string }[] = [{ name: url || 'document', type: 'document' }];
@@ -105,6 +111,14 @@ function DevToolsPanel({ html, url, logs, onClose }: { html: string; url: string
 						<tbody>{network.map((r, i) => <tr key={i}><td title={r.name}>{r.name}</td><td>{r.type}</td><td className="ok">200</td></tr>)}</tbody></table>
 				)}
 			</div>
+			{tab === 'console' && onEval && (
+				<div className="cr-dt-evalrow">
+					<span className="cr-dt-caret-in">›</span>
+					<input value={code} placeholder="Evaluate in the page…" spellCheck={false}
+						onChange={(e) => setCode(e.target.value)}
+						onKeyDown={(e) => { if (e.key === 'Enter' && code.trim()) { onEval(code); setCode(''); } }} />
+				</div>
+			)}
 		</div>
 	);
 }
@@ -232,8 +246,16 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 	// The HTML currently framed — Elements + Network inspect this real markup.
 	const frameHtml = isLocal ? previewHtml : isStart ? startPage(theme) : '';
 
+	// Console input → eval inside the live preview (the probe answers back).
+	const rootRef = useRef<HTMLDivElement>(null);
+	const evalInPage = (codeStr: string) => {
+		setLogs((l) => [...l.slice(-199), { level: 'input', text: `› ${codeStr}` }]);
+		const frame = rootRef.current?.querySelector<HTMLIFrameElement>('iframe.frame');
+		frame?.contentWindow?.postMessage({ type: 'velocity-eval', code: codeStr }, '*');
+	};
+
 	return (
-		<div className="mode browser chrome" onKeyDown={onKeyDown}>
+		<div ref={rootRef} className="mode browser chrome" onKeyDown={onKeyDown}>
 			{/* Chrome toolbar: nav cluster · omnibox · actions. The page tab is the
 			    workspace tab above this pane. */}
 			<div className="cr-toolbar">
@@ -328,7 +350,7 @@ export function BrowserMode({ paneId }: { paneId: string }) {
 					/>
 				)}
 			</div>
-			{devtools && <DevToolsPanel html={frameHtml} url={isStart ? 'about:newtab' : current} logs={logs} onClose={() => setDevtools(false)} />}
+			{devtools && <DevToolsPanel html={frameHtml} url={isStart ? 'about:newtab' : current} logs={logs} onClose={() => setDevtools(false)} onEval={isLocal ? evalInPage : undefined} />}
 		</div>
 	);
 }

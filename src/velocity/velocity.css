@@ -800,9 +800,11 @@
 .vs-ckp-metrics { display: flex; gap: 6px; }
 .vs-ckp-sec { font-size: var(--text-11); text-transform: uppercase; letter-spacing: 0.07em; color: var(--faint); font-weight: var(--fw-semibold); display: flex; flex-direction: column; gap: 8px; }
 .vs-diff, .vs-ev, .vs-blast { text-transform: none; letter-spacing: 0; font-weight: var(--fw-normal); }
-.vs-diff { display: flex; flex-direction: column; gap: 4px; }
-.vs-diff-row { display: flex; align-items: center; gap: 8px; font-size: var(--text-12); }
-.vs-diff-row code { flex: 1; font-family: var(--mono); color: var(--fg); }
+.vs-diff { display: flex; flex-direction: column; gap: 2px; }
+.vs-diff-row { display: flex; align-items: center; gap: 8px; font-size: var(--text-12); width: 100%; padding: 3px 6px; margin: 0 -6px; border: 0; background: transparent; border-radius: var(--r-sm); cursor: pointer; text-align: left; font: inherit; }
+.vs-diff-row:hover { background: var(--panel-2); }
+.vs-diff-row:hover code { text-decoration: underline; }
+.vs-diff-row code { flex: 1; font-family: var(--mono); font-size: var(--text-12); color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .vs-add-n { color: var(--good); font-family: var(--mono); font-size: var(--text-11); }
 .vs-rem-n { color: var(--danger); font-family: var(--mono); font-size: var(--text-11); }
 .vs-ev { display: flex; flex-direction: column; gap: 6px; }

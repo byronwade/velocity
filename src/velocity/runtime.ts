@@ -11,6 +11,7 @@
 
 import { buildScenario } from './scenarios';
 import { notifyCheckpoint } from './notify';
+import { getServices } from '../services/container';
 import { DEPLOY_TARGETS, WORK_INTENTS, WORK_MODELS } from './model';
 import { findLeaf, firstLeafId, firstLeafOfView, leafIds, removeLeaf, setCompareSource, setRatio, setView, splitLeaf } from './panes';
 import type {
@@ -56,6 +57,8 @@ export interface CoworkerRuntime {
 	setAutonomy(id: string, autonomy: Autonomy): void;
 	/** Apply an edited `.velocity/coworkers/<id>.md` definition (agents-as-files). */
 	updateCoworkerFromFile(id: string, patch: { name?: string; role?: string; department?: string; model?: string; autonomy?: Autonomy; scope?: string }): void;
+	/** Show a transient toast (for UI helpers outside the runtime). */
+	notify(text: string): void;
 
 	acceptCheckpoint(id: string): void;
 	rejectCheckpoint(id: string): void;
@@ -110,11 +113,16 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 	private toastTimer: ReturnType<typeof setTimeout> | null = null;
 	private beat: ReturnType<typeof setInterval> | null = null;
 	private tickN = 0;
+	/** Real source files, so heartbeat checkpoints diff files that exist. */
+	private filePool: string[] = [];
 
 	constructor(scenario = 'calm') {
 		this.state = { ...buildScenario(scenario), toast: null, celebrate: false };
 		// The heartbeat: coworkers make real, deterministic forward progress.
 		this.beat = setInterval(() => this.tick(), 3000);
+		void getServices().fs.list().then((files) => {
+			this.filePool = files.filter((f) => /\.(tsx?|css|html)$/.test(f) && !f.startsWith('.velocity/'));
+		}).catch(() => { /* fs unavailable — keep the fallback path */ });
 	}
 
 	/** Stop timers when the project tab closes. */
@@ -146,7 +154,7 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 			const checkpoint = {
 				id: uid('k'), coworkerId: done.id, missionId: this.state.mission?.id ?? null,
 				outcome: done.action, beforeLabel: 'Stable', afterLabel: 'Candidate',
-				diff: [{ path: `src/${done.scope.split(' ')[0] || 'app'}.tsx`, added: 18 + (this.tickN % 5) * 7, removed: 4 + (this.tickN % 3) * 3 }],
+				diff: [{ path: this.filePool[this.tickN % Math.max(1, this.filePool.length)] ?? 'src/App.tsx', added: 18 + (this.tickN % 5) * 7, removed: 4 + (this.tickN % 3) * 3 }],
 				buildOk: true, tests: { passed: 12, total: 12 },
 				evidence: [
 					{ kind: 'screenshot' as const, label: `${done.name} · after`, detail: done.action },
@@ -366,6 +374,7 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 		this.mapCoworkers((c) => (c.id === id ? next : c));
 		this.addEvent('note', `${next.name}'s definition updated from ${id}.md.`, id);
 	}
+	notify(text: string): void { this.toast(text); }
 
 	// --- checkpoints ---
 	acceptCheckpoint(id: string): void {

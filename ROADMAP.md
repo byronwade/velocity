@@ -48,7 +48,7 @@ to the Dropped section at the bottom with a reason.
 
 - [x] **deploy-targets** — Ship to Vercel / Netlify / Cloudflare. _(shipped 2026-07-14)_
 - [x] **compare-sources** — Compare candidate vs Stable / Live / Preview / Branch. _(shipped 2026-07-14)_
-- [ ] **checkpoint-diff-to-ide** — Click a checkpoint diff file to open it in the IDE. _(planned)_
+- [x] **checkpoint-diff-to-ide** — Click a checkpoint's changed file to open it in the IDE; heartbeat checkpoints reference real workspace files. _(shipped 2026-07-15)_
 - [ ] **real-diffs** — Checkpoint diffs computed from real file changes (gix/git2 read-only). _(planned · phase 5)_
 
 ## Browser
@@ -57,7 +57,7 @@ to the Dropped section at the bottom with a reason.
 - [x] **browser-devtools** — Elements / Console / Network DevTools docked in the pane. _(shipped 2026-07-15)_
 - [x] **device-preview** — Desktop / tablet / mobile viewport toggle. _(shipped 2026-07-15)_
 - [ ] **child-webview-browser** — Real WebView2/WKWebView child-webview pane: no iframe blocking, real cookies. _(planned · phase 6)_
-- [ ] **devtools-console-input** — Evaluate JS in the preview from the Console tab. _(planned)_
+- [x] **devtools-console-input** — Evaluate JS in the live preview from the DevTools Console tab, with echoed input and results. _(shipped 2026-07-15)_
 
 ## IDE & tools
 
