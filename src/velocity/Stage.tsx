@@ -3,11 +3,14 @@ import {
 	Play, Check, X, ShieldCheck, Sparkles, ArrowRight, Server, Database, Clock, Gauge, Circle,
 	MessageSquare, CheckCheck, Code2, CheckCircle2, ChevronDown, ChevronRight, SplitSquareHorizontal, SplitSquareVertical,
 	Globe, FlaskConical, GitCompare, Wand2, Trash2, MoreHorizontal, Folder, FolderOpen, FileCode,
+	PanelLeft, Search, Replace,
 } from 'lucide-react';
+import { openSearchPanel } from '@codemirror/search';
 import { EditorMode } from '../modes/EditorMode';
 import { BrowserMode } from '../modes/BrowserMode';
 import { useServices } from '../services/container';
 import { usePanePath } from '../services/editorService';
+import { getActiveEditor } from '../editor/activeView';
 import { useWorkspace, runtime } from './useWorkspace';
 import { LENS_META, COMPARE_LABEL, WORK_INTENTS, WORK_MODELS } from './model';
 import { leafIds } from './panes';
@@ -273,8 +276,9 @@ function FileRow({ node, depth, openPath, collapsed, onToggle, onOpen }: { node:
 	);
 }
 
-/** File tree bound to the editor pane — clicking a file opens it live. */
-function FileTree({ paneId }: { paneId: string }) {
+/** File tree bound to the editor pane — clicking a file opens it live.
+ *  A filter box makes it searchable (flat results while filtering). */
+function FileTree({ paneId, filter, setFilter, filterRef }: { paneId: string; filter: string; setFilter: (v: string) => void; filterRef: React.RefObject<HTMLInputElement> }) {
 	const { fs, editor } = useServices();
 	const [files, setFiles] = useState<string[]>([]);
 	const [dirs, setDirs] = useState<string[]>([]);
@@ -288,24 +292,61 @@ function FileTree({ paneId }: { paneId: string }) {
 		return () => { alive = false; off(); };
 	}, [fs]);
 	const tree = useMemo(() => buildFileTree(files, dirs), [files, dirs]);
+	const matches = useMemo(() => {
+		const q = filter.trim().toLowerCase();
+		return q ? files.filter((f) => f.toLowerCase().includes(q)).slice(0, 200) : null;
+	}, [files, filter]);
 	const toggle = (p: string) => setCollapsed((cur) => { const n = new Set(cur); if (n.has(p)) n.delete(p); else n.add(p); return n; });
 	const open = (p: string) => void editor.bindPane(paneId, p);
 	return (
 		<div className="vs-ide-files">
 			<div className="vs-ide-fhead">Files</div>
+			<div className="vs-ide-filter">
+				<Search size={13} />
+				<input ref={filterRef} value={filter} placeholder="Search files" spellCheck={false} onChange={(e) => setFilter(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setFilter(''); }} />
+				{filter && <button className="vs-ide-filter-x" onClick={() => setFilter('')} aria-label="Clear"><X size={12} /></button>}
+			</div>
 			<div className="vs-ide-ftree">
-				{tree.map((n) => <FileRow key={n.path} node={n} depth={0} openPath={openPath} collapsed={collapsed} onToggle={toggle} onOpen={open} />)}
+				{matches
+					? (matches.length
+						? matches.map((p) => (
+							<button key={p} className={`vs-ide-row file${openPath === p ? ' active' : ''}`} style={{ paddingLeft: 10 }} onClick={() => open(p)} title={p}>
+								<FileCode size={13} /><span className="vs-ide-name">{p.slice(p.lastIndexOf('/') + 1)}</span><span className="vs-ide-dir">{p.includes('/') ? p.slice(0, p.lastIndexOf('/')) : ''}</span>
+							</button>
+						))
+						: <div className="vs-ide-noresults">No files match “{filter}”.</div>)
+					: tree.map((n) => <FileRow key={n.path} node={n} depth={0} openPath={openPath} collapsed={collapsed} onToggle={toggle} onOpen={open} />)}
 			</div>
 		</div>
 	);
 }
 
-/** The Code lens — file tree on the left, live CodeMirror editor on the right. */
+/** Fire an IDE action at a specific editor pane (toolbar → IDELens). */
+function ideDispatch(pane: string, action: string) {
+	window.dispatchEvent(new CustomEvent('velocity:ide', { detail: { pane, action } }));
+}
+
+/** The Code lens — a toggleable file tree on the left, live editor on the right.
+ *  Driven by contextual toolbar buttons via the `velocity:ide` event. */
 function IDELens({ paneKey }: { paneKey: string }) {
 	const paneId = `velocity:editor:${paneKey}`;
+	const [treeOpen, setTreeOpen] = useState(true);
+	const [filter, setFilter] = useState('');
+	const filterRef = useRef<HTMLInputElement>(null);
+	useEffect(() => {
+		const onIde = (e: Event) => {
+			const d = (e as CustomEvent<{ pane?: string; action?: string }>).detail;
+			if (d?.pane !== paneKey) return;
+			if (d.action === 'toggle-tree') setTreeOpen((v) => !v);
+			else if (d.action === 'focus-filter') { setTreeOpen(true); setTimeout(() => filterRef.current?.focus(), 0); }
+			else if (d.action === 'find') { const a = getActiveEditor(); if (a) { openSearchPanel(a.view); a.view.focus(); } }
+		};
+		window.addEventListener('velocity:ide', onIde);
+		return () => window.removeEventListener('velocity:ide', onIde);
+	}, [paneKey]);
 	return (
 		<div className="vs-ide">
-			<FileTree paneId={paneId} />
+			{treeOpen && <FileTree paneId={paneId} filter={filter} setFilter={setFilter} filterRef={filterRef} />}
 			<div className="vs-ide-editor"><EditorMode paneId={paneId} /></div>
 		</div>
 	);
@@ -691,6 +732,13 @@ function PaneToolbar({ leaf, single }: { leaf: PaneLeaf; single: boolean }) {
 					)}
 				</div>
 				{leaf.view === 'browser' && <CompareMenu leaf={leaf} />}
+				{leaf.view === 'code' && (
+					<div className="vs-pane-ctx">
+						<button className="vs-pane-tool" title="Toggle file tree" onClick={(e) => { e.stopPropagation(); ideDispatch(leaf.id, 'toggle-tree'); }}><PanelLeft size={14} /></button>
+						<button className="vs-pane-tool" title="Search files" onClick={(e) => { e.stopPropagation(); ideDispatch(leaf.id, 'focus-filter'); }}><Search size={14} /></button>
+						<button className="vs-pane-tool" title="Find & Replace (⌘F)" onClick={(e) => { e.stopPropagation(); ideDispatch(leaf.id, 'find'); }}><Replace size={14} /></button>
+					</div>
+				)}
 			</div>
 			<div className="vs-pane-mid" />
 			<div className="vs-pane-tools">
