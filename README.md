@@ -8,12 +8,28 @@ what's shipped and what's next live in the [**Roadmap**](ROADMAP.md) and the
 
 ![Velocity — a project on the Browser lens beside the IDE, with coworker presence markers and the floating dock](docs/screenshots/prototype/velocity-calm-light.png)
 
+## Platform roadmap
+
+Velocity's production target is the existing [`byronwade/Velocity-IDE`](https://github.com/byronwade/Velocity-IDE)
+Code-OSS fork. This repository remains the authoritative product specification, interaction laboratory,
+local-first prototype, and deterministic scenario harness while Velocity's differentiated primitives are
+ported into native workbench services and contributions.
+
+- The accepted decision is recorded in [ADR 0001 — Platform convergence](docs/architecture/0001-platform-convergence.md).
+- The full VS Code, Cursor, Figma, and Velocity research lives in the
+  [Platform Research & Integration Roadmap](docs/research/platform-roadmap/README.md).
+- The public [Roadmap](ROADMAP.md) is the curated epic layer; the implementation-ready 457-record
+  catalog is produced by the [feature-backlog package](docs/research/platform-roadmap/feature-backlog/README.md).
+
+The core rule is source authority: files, Git revisions, worktrees, environment manifests, and typed
+evidence are durable truth. Humans direct semantic outcomes and constraints; agents make source-level
+changes across code, components, tokens, routes, tests, schemas, and supporting artifacts.
+
 ## The prototype (Phase 1)
 
-A polished, deterministic, design-first prototype of the workspace lives in
-[`src/velocity/`](src/velocity/). It renders as the default app. Nothing there talks to a provider
-or the network — a `CoworkerRuntime` produces every state transition deterministically, so the
-demo is fully repeatable.
+A polished, design-first prototype of the workspace lives in [`src/velocity/`](src/velocity/) and
+renders as the default app. Seeded scenarios remain deterministic and repeatable; local-model and
+native-desktop paths can also perform real work through the repository's service seams.
 
 - **Project tabs** — a tab per project; each is a fully isolated workspace (its own coworkers,
   missions, lens, terminals, and rails) with live status rings and drag-to-reorder. Settings can
@@ -119,8 +135,8 @@ branch, worktree, budget, model, and evidence are progressive details instead of
 
 ## Current prototype
 
-This phase focuses on making the desktop product flow tangible before building orchestration and
-persistence behind it.
+This phase focuses on making the desktop product flow tangible before building the complete
+production orchestration and evidence architecture.
 
 Implemented now:
 
@@ -137,12 +153,10 @@ Implemented now:
 - A real Ollama model picker and streaming agent transport.
 - A Tauri 2 desktop scaffold with local Ollama access restricted to port `11434`.
 
-Prototype seams that are intentionally still local or seeded:
-
-- Workstream metadata, criteria, evidence, and activity examples are in-memory design fixtures.
-- New workstreams live for the current app session; durable project/worktree orchestration comes
-  next.
-- The browser build's filesystem and shell remain the existing in-memory implementations.
+Prototype seams that still need production replacements are tracked explicitly in the roadmap,
+including Code-OSS workbench convergence, native source control and language services, isolated
+worktrees and processes, integrated Chromium automation, typed evidence, policy enforcement, and
+networked collaboration.
 
 ## Ollama
 
@@ -167,19 +181,18 @@ OLLAMA_ORIGINS='http://localhost:5199' ollama serve
 
 ## Architecture
 
-- **React 18 + TypeScript + Vite** for the workbench UI.
-- **Tauri 2** for the desktop shell and native local HTTP transport.
+- **React 18 + TypeScript + Vite** for the current workbench UI and prototype.
+- **Tauri 2** for the current desktop shell and native local transport.
 - **Zustand** for existing editor and shell state.
 - A service container in `src/services/container.tsx` for filesystem, editor, terminal, browser,
   agent, graph, preview, and design services.
 - The product shell in `src/workbench/VelocityWorkbench.tsx`, with its workstream model in
   `src/workbench/model.ts` and the Code-surface file tree in `src/workbench/WorkFiles.tsx`. Every
-  surface (the four core tabs and the nine studios) is the existing `src/modes/*` component, mounted
-  per-workstream through a `SURFACES` registry; a studio is surfaced by dispatching a
-  `velocity:open-tool` event — from a ⌘K command today, and from the agent later.
-- The reusable services and tools underneath (editor, terminal, browser, design, graph, keybindings,
-  live preview) are documented in [`CLAUDE.md`](CLAUDE.md).
-- Desktop configuration and capabilities in `src-tauri/`.
+  surface is mounted through the shared mode registry and can be surfaced by commands or agents.
+- The reusable services and tools underneath are documented in [`CLAUDE.md`](CLAUDE.md).
+- Desktop configuration and capabilities live in `src-tauri/`.
+- The production convergence architecture is defined in
+  [`docs/architecture/0001-platform-convergence.md`](docs/architecture/0001-platform-convergence.md).
 
 ## Develop
 
