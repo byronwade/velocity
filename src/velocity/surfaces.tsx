@@ -553,6 +553,11 @@ export function ToolDrawer() {
 		window.addEventListener('mousemove', move); window.addEventListener('mouseup', up);
 		return () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
 	}, []);
+	// Publish the docked panel height so the Dock + right rail sit above it.
+	useEffect(() => {
+		document.documentElement.style.setProperty('--vs-tools-h', open ? `${h}px` : '0px');
+		return () => document.documentElement.style.setProperty('--vs-tools-h', '0px');
+	}, [open, h]);
 	if (!open) return null;
 	return (
 		<div className="vs-drawer" style={{ height: h }}>

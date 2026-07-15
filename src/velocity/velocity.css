@@ -634,7 +634,8 @@
 
 /* --- Dock (floating) ---------------------------------------------------- */
 .vs-dock {
-	position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 40;
+	position: fixed; left: 50%; bottom: calc(18px + var(--vs-tools-h, 0px)); transform: translateX(-50%); z-index: 40;
+	transition: bottom var(--dur) var(--ease);
 	display: flex; align-items: center; gap: 5px; padding: 5px; border-radius: 14px;
 	background: color-mix(in srgb, var(--panel) 92%, transparent); border: 1px solid var(--line-2);
 	box-shadow: var(--elev-2); backdrop-filter: saturate(1.2) blur(12px);
@@ -668,7 +669,7 @@
 /* Full-height panel docked flush to the right edge — squared, no outer inset,
    overlays the stage (so it never reflows the layout). */
 .vs-dockpanel {
-	position: absolute; top: 0; right: 0; bottom: 0; z-index: 39;
+	position: absolute; top: 0; right: 0; bottom: var(--vs-tools-h, 0px); z-index: 39;
 	width: 384px; display: flex; flex-direction: column;
 	background: var(--panel); border-left: 1px solid var(--line);
 	box-shadow: var(--elev-2); overflow: hidden; animation: vs-slide-r var(--dur) var(--ease);
@@ -828,15 +829,17 @@
 /* --- Tool drawer -------------------------------------------------------- */
 /* Full-width panel docked flush to the bottom — squared, overlays the stage
    (never resizes it, so no layout shift). */
-.vs-drawer { position: absolute; left: 0; right: 0; bottom: 0; z-index: 38; border-top: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; box-shadow: 0 -8px 24px -12px rgba(0,0,0,0.18); overflow: hidden; animation: vs-slide-up var(--dur) var(--ease); }
-@keyframes vs-slide-up { from { transform: translateY(12px); opacity: 0; } }
-.vs-drawer-grip { position: absolute; top: -3px; left: 0; right: 0; height: 6px; cursor: ns-resize; z-index: 5; }
+/* Docked bottom panel — an in-flow region that pushes the workspace up
+   (a real panel, not a floating sheet). Resizable via the top grip. */
+.vs-drawer { position: relative; flex: 0 0 auto; z-index: 38; border-top: 1px solid var(--line-2); background: var(--panel); display: flex; flex-direction: column; overflow: hidden; }
+.vs-drawer-grip { position: absolute; top: 0; left: 0; right: 0; height: 5px; cursor: ns-resize; z-index: 5; }
+.vs-drawer-grip:hover { background: color-mix(in srgb, var(--accent) 40%, transparent); }
 .vs-drawer-tabs { display: flex; align-items: center; gap: 2px; padding: 6px 10px; border-bottom: 1px solid var(--line); }
 .vs-dtab { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: var(--r-sm); border: 0; background: transparent; color: var(--muted); font: inherit; font-size: var(--text-12); cursor: pointer; }
 .vs-dtab:hover { background: var(--panel-2); color: var(--fg); }
 .vs-dtab.on { background: var(--panel-2); color: var(--fg); font-weight: var(--fw-medium); }
-.vs-drawer-body { flex: 1; overflow: auto; padding: 12px 14px 60px; font-family: var(--mono); font-size: var(--text-12); }
-.vs-drawer-body.term { display: flex; flex-direction: column; padding: 0 0 50px; overflow: hidden; }
+.vs-drawer-body { flex: 1; overflow: auto; padding: 12px 14px; font-family: var(--mono); font-size: var(--text-12); }
+.vs-drawer-body.term { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
 .vs-termpanel { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 .vs-term-bar { display: flex; align-items: center; gap: 2px; padding: 5px 8px; border-bottom: 1px solid var(--line); background: var(--panel-2); flex: 0 0 auto; }
 .vs-term-tab { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 10px; border-radius: var(--r-sm); border: 0; background: transparent; color: var(--muted); font: inherit; font-size: var(--text-12); font-family: var(--mono); cursor: pointer; }
