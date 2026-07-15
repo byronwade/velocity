@@ -41,20 +41,20 @@ function defaultCollaborators(): Collaborator[] {
 	return [
 		{ id: 'you', name: 'You', initials: 'BW', color: CO.you, email: 'byron@aurora.dev', role: 'owner', status: 'active', cursor: null },
 		{ id: 'nadia', name: 'Nadia Rao', initials: 'NR', color: CO.nadia, email: 'nadia@aurora.dev', role: 'editor', status: 'active', cursor: { lens: 'browser', x: 68, y: 34 } },
-		{ id: 'devon', name: 'Devon Hale', initials: 'DH', color: CO.dev, email: 'devon@aurora.dev', role: 'viewer', status: 'active', cursor: { lens: 'code', x: 40, y: 30 } },
+		{ id: 'devon', name: 'Devon Hale', initials: 'DH', color: CO.dev, email: 'devon@aurora.dev', role: 'viewer', status: 'active', cursor: { lens: 'code', x: 72, y: 16 } },
 	];
 }
 
 function baseComments(): Comment[] {
 	return [
 		{
-			id: 'cm1', lens: 'browser', x: 40, y: 66, authorName: 'Nadia Rao', authorColor: CO.nadia,
+			id: 'cm1', lens: 'browser', x: 22, y: 60, authorName: 'Nadia Rao', authorColor: CO.nadia,
 			text: 'The passkey button should read “Continue with a passkey” — and can we soften the border?',
 			createdLabel: '4m', resolved: false, assignedCoworkerId: 'theo',
 			replies: [{ authorName: 'Theo', authorColor: '#4a8dd1', text: 'On it — adjusting the label and border weight now.', tsLabel: '3m', fromCoworker: true }],
 		},
 		{
-			id: 'cm2', lens: 'browser', x: 12, y: 30, authorName: 'You', authorColor: CO.you,
+			id: 'cm2', lens: 'browser', x: 14, y: 22, authorName: 'You', authorColor: CO.you,
 			text: 'Hero headline could be one line on mobile. Worth a pass?',
 			createdLabel: '2m', resolved: false, assignedCoworkerId: null, replies: [],
 		},

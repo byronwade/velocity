@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
 	Play, Check, X, ShieldCheck, Sparkles, ArrowRight, Server, Database, Clock, Gauge, Circle,
 	MessageSquare, Send, CheckCheck, Code2, CheckCircle2, ChevronDown, SplitSquareHorizontal, SplitSquareVertical,
-	Globe, FlaskConical, ChevronLeft, ChevronRight, RotateCw, Lock, GitCompare,
+	Globe, FlaskConical, RotateCw, Lock, GitCompare,
 } from 'lucide-react';
 import { EditorMode } from '../modes/EditorMode';
 import { useWorkspace, runtime } from './useWorkspace';
@@ -223,17 +223,7 @@ function VerifyLens() {
 }
 
 function BrowserLens() {
-	return (
-		<div className="vs-browser">
-			<div className="vs-browser-bar">
-				<button className="vs-browser-nav" title="Back"><ChevronLeft size={15} /></button>
-				<button className="vs-browser-nav" title="Forward"><ChevronRight size={15} /></button>
-				<button className="vs-browser-nav" title="Reload"><RotateCw size={13} /></button>
-				<div className="vs-browser-url"><Lock size={11} />aurora.app <span>· candidate.aurora.app</span></div>
-			</div>
-			<div className="vs-browser-view"><PreviewLens candidate /></div>
-		</div>
-	);
+	return <div className="vs-browser-view"><PreviewLens candidate /></div>;
 }
 
 const TEST_SUITES = [
@@ -503,6 +493,11 @@ function PaneToolbar({ leaf, single }: { leaf: PaneLeaf; single: boolean }) {
 					)}
 				</div>
 				{leaf.view === 'browser' && <CompareMenu leaf={leaf} />}
+			</div>
+			<div className="vs-pane-mid">
+				{leaf.view === 'browser' && (!leaf.compareSource || leaf.compareSource === 'none') && (
+					<div className="vs-pane-url" title="Live preview URL"><Lock size={11} />candidate.aurora.app<button className="vs-url-reload" title="Reload"><RotateCw size={11} /></button></div>
+				)}
 			</div>
 			<div className="vs-pane-tools">
 				<button className="vs-pane-tool" title="Split right" onClick={(e) => { e.stopPropagation(); runtime.splitPane(leaf.id, 'row'); }}><SplitSquareHorizontal size={14} /></button>
