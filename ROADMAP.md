@@ -63,6 +63,8 @@ dependencies, and P0–P8 exit gates live in the
 - [x] **workers-panel** — Monochrome Workers panel with status, progress, subagents, and live tools. _(shipped 2026-07-15)_
 - [x] **follow-mode** — Follow a coworker's work live. _(shipped 2026-07-14)_
 - [x] **collaboration** — Human teammates with invites, roles, cursors, and presence. _(shipped 2026-07-14)_
+- [x] **fluid-presence** — Presence moves like people: coworker markers and human cursors glide between deterministic waypoints on long eases while work happens — never jagged, never teleporting; reduced-motion respected. _(shipped 2026-07-15)_
+- [x] **quiet-chrome** — Minimalism pass: pane tools reveal on hover/focus, softened cursor labels, calmer resting frames — the content owns the screen. _(shipped 2026-07-15)_
 - [x] **local-coworker** — A Local-model work item runs the Ollama tool loop against the real workspace and lands actual file changes as a checkpoint. _(shipped 2026-07-15)_
 - [x] **mcp-tools** — Expose workspace file, shell, and browser services as an in-process MCP server and show the live toolbelt in Settings. _(shipped 2026-07-15)_
 - [ ] **real-coworker-runtime** — First provider-backed coworker using the Claude Agent SDK in a Node sidecar, with worktree cwd, checkpoint hooks, and approval-driven protected actions. _(planned · phase 4 — blocked: needs an Anthropic/Gateway API key and Node-sidecar approval)_

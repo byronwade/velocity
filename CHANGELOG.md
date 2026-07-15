@@ -25,6 +25,10 @@ corrections get a new entry. Newest release first.
 - **browser-tabs** — Browser tabs. The in-app browser gets IDE-style tabs, each with its own history; new-tab and close controls included.
 - **vertical-tabs** — Arc-style vertical tabs. Settings → Appearance can switch the project tabs from the top row to a collapsible left rail — tabs stacked with their status rings, inbox and profile at the bottom.
 
+### Added
+- **fluid-presence** — Presence moves like people. While coworkers work, their markers drift around what they're working on — the heartbeat sets deterministic waypoints and 2.9-second eased glides carry them there, so motion is continuous and organic, never jagged or teleporting. Human collaborators' cursors glide the same way. Reduced-motion turns it all off.
+- **quiet-chrome** — Minimalism pass. Pane toolbar controls (split, close, IDE tools) stay invisible until you hover or focus the pane; cursor name labels are softer; the resting frame belongs to the content.
+
 ### Changed
 - **chat-sidebar** — The chat is a real AI surface now: wider by default (380px) and drag-resizable like every panel, restyled on the AI SDK Elements patterns — user messages as right-aligned bubbles, coworker replies plain-left with identity, a proper PromptInput (auto-growing, embedded send), one-tap Suggestions before the first message, and hover copy Actions on every message.
 - **real-terminal** — VS Code-style terminal sessions: a tab per terminal (`bash · 1`, `pwsh · 2`, …) with per-tab kill, a **+** dropdown that opens any shell type (bash / zsh / pwsh / node), and a kill-active control — in both the docked panel and the Terminal pane view.

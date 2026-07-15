@@ -151,6 +151,18 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 		if (this.toastTimer) clearTimeout(this.toastTimer);
 	}
 
+	/** Smooth, bounded, deterministic wander around an anchor — presence
+	 *  gliding across the surface a coworker is working on, never jumping. */
+	private drift(x: number, y: number, ax: number | undefined, ay: number | undefined, phase: number): { x: number; y: number; ax: number; ay: number } {
+		const a = { x: ax ?? x, y: ay ?? y };
+		const t = this.tickN;
+		return {
+			ax: a.x, ay: a.y,
+			x: Math.min(92, Math.max(6, a.x + Math.sin((t + phase * 7) / 3.1) * 7 + Math.sin((t + phase * 3) / 7.3) * 4)),
+			y: Math.min(88, Math.max(8, a.y + Math.cos((t + phase * 5) / 3.7) * 5 + Math.cos((t + phase * 2) / 8.1) * 3)),
+		};
+	}
+
 	/** One heartbeat: advance working coworkers; at 100% they land a checkpoint
 	 *  and pick up the next task. Deterministic — steps derive from roster index
 	 *  and tick count, never from randomness. */
@@ -159,16 +171,26 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 		if (this.state.paused || this.state.celebrate) return;
 		let landed: Coworker | null = null;
 		const coworkers = this.state.coworkers.map((c, i) => {
-			if ((c.state !== 'active' && c.state !== 'verifying') || typeof c.progress !== 'number') return c;
+			// Presence glides while a coworker works (CSS eases between beats).
+			const working = c.state === 'active' || c.state === 'verifying' || c.state === 'planning';
+			const marker = c.marker && working
+				? { ...c.marker, ...this.drift(c.marker.x, c.marker.y, c.marker.ax, c.marker.ay, i + 1) }
+				: c.marker;
+			if ((c.state !== 'active' && c.state !== 'verifying') || typeof c.progress !== 'number') return marker === c.marker ? c : { ...c, marker };
 			const step = 2 + ((i + this.tickN) % 3); // 2–4% per beat
 			const next = Math.min(100, c.progress + step);
 			if (next >= 100 && !landed) {
 				landed = { ...c, progress: 100 };
 				const tasks = NEXT_TASKS[c.department] ?? NEXT_TASKS.Engineering;
-				return { ...c, progress: 6, action: tasks[this.tickN % tasks.length] };
+				return { ...c, marker, progress: 6, action: tasks[this.tickN % tasks.length] };
 			}
-			return { ...c, progress: next };
+			return { ...c, marker, progress: next };
 		});
+		// Human collaborators' cursors glide too.
+		const collaborators = this.state.collaborators.map((c, i) => (c.cursor && c.status === 'active' && c.id !== 'you'
+			? { ...c, cursor: { ...c.cursor, ...this.drift(c.cursor.x, c.cursor.y, c.cursor.ax, c.cursor.ay, i + 11) } }
+			: c));
+		this.set({ collaborators });
 		if (landed) {
 			const done = landed as Coworker;
 			const checkpoint = {

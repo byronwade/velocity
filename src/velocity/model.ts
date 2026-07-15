@@ -54,6 +54,10 @@ export interface Marker {
 	x: number;
 	y: number;
 	label: string;
+	/** Wander anchor — the point the marker drifts around while its coworker
+	 *  works (set lazily by the heartbeat; never rendered directly). */
+	ax?: number;
+	ay?: number;
 }
 
 export interface WorkOrder {
@@ -220,8 +224,9 @@ export interface Collaborator {
 	email: string;
 	role: CollabRole;
 	status: CollabStatus;
-	/** Live cursor position on the stage, or null when not viewing. */
-	cursor: { lens: Lens; x: number; y: number } | null;
+	/** Live cursor position on the stage, or null when not viewing.
+	 *  ax/ay = wander anchor (heartbeat drift; never rendered directly). */
+	cursor: { lens: Lens; x: number; y: number; ax?: number; ay?: number } | null;
 }
 
 /** One entry in the unified chat + activity feed (the left sidebar).

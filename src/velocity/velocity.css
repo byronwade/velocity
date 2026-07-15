@@ -351,8 +351,12 @@
 .vs-pane-menuitem.on > svg { color: var(--accent); }
 .vs-pane-menuitem > span { flex: 1; }
 .vs-pane-menuitem em { font-style: normal; font-size: 10px; color: var(--faint); }
-.vs-pane-tools { display: flex; align-items: center; gap: 1px; flex: 0 0 auto; }
-.vs-pane-tool { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 6px; border: 0; background: transparent; color: var(--faint); cursor: pointer; }
+/* Pane tools stay out of the way until the pane is engaged — hover or
+   keyboard focus reveals them (minimalism: the content owns the frame). */
+.vs-pane-tools, .vs-pane-ctx { display: flex; align-items: center; gap: 1px; flex: 0 0 auto; opacity: 0; transition: opacity var(--dur) var(--ease); }
+.vs-pane:hover .vs-pane-tools, .vs-pane:hover .vs-pane-ctx,
+.vs-pane:focus-within .vs-pane-tools, .vs-pane:focus-within .vs-pane-ctx { opacity: 1; }
+.vs-pane-tool { width: 26px; height: 26px; display: grid; place-items: center; border-radius: var(--r-sm); border: 0; background: transparent; color: var(--faint); cursor: pointer; }
 .vs-pane-tool:hover { background: var(--panel-2); color: var(--fg); }
 
 /* Browser URL pill lives in the pane toolbar (one bar, not two). */
@@ -424,12 +428,17 @@
 /* Presence flags — calm, Figma-style coworker presence (no pulsing dot). */
 /* Collapsed to an avatar chip by default; expands on hover / when followed —
    this keeps the stage calm even with many coworkers present. */
+/* Presence glides: the heartbeat moves markers every 3s and these long,
+   gentle eases carry them between waypoints — continuous, never jagged. */
 .vs-flag {
 	position: absolute; transform: translate(-16px, -17px); z-index: 13;
 	display: inline-flex; align-items: center; gap: 0; height: 34px; padding: 3px;
 	background: var(--panel); border: 1px solid var(--line); border-radius: 999px; cursor: pointer;
 	box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--id) 30%, transparent), var(--elev-1);
-	transition: box-shadow var(--dur) var(--ease);
+	transition:
+		box-shadow var(--dur) var(--ease),
+		left 2.9s cubic-bezier(0.45, 0.05, 0.55, 0.95),
+		top 2.9s cubic-bezier(0.45, 0.05, 0.55, 0.95);
 }
 .vs-flag:hover, .vs-flag.following { z-index: 16; gap: 7px; padding: 3px 12px 3px 3px; box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--id) 40%, transparent), var(--elev-2); }
 .vs-flag.following { box-shadow: 0 0 0 2px var(--id), var(--elev-2); }
@@ -447,9 +456,12 @@
 @media (prefers-reduced-motion: reduce) { .vs-flag-work::after { animation: none; } }
 
 /* Human collaborator cursors — a pointer + name tag. */
-.vs-cursor { position: absolute; z-index: 14; pointer-events: none; transition: left 0.6s var(--ease), top 0.6s var(--ease); }
+.vs-cursor { position: absolute; z-index: 14; pointer-events: none; transition: left 2.9s cubic-bezier(0.45, 0.05, 0.55, 0.95), top 2.9s cubic-bezier(0.45, 0.05, 0.55, 0.95); }
 .vs-cursor svg { display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.25)); }
-.vs-cursor-name { position: absolute; left: 12px; top: 12px; white-space: nowrap; color: #fff; font-size: 10px; font-weight: var(--fw-semibold); padding: 2px 7px; border-radius: 6px; box-shadow: var(--elev-1); }
+.vs-cursor-name { position: absolute; left: 12px; top: 12px; white-space: nowrap; color: #fff; font-size: 10px; font-weight: var(--fw-medium); padding: 2px 7px; border-radius: var(--r-sm); box-shadow: var(--elev-1); opacity: 0.92; }
+@media (prefers-reduced-motion: reduce) {
+	.vs-flag, .vs-cursor { transition: none; }
+}
 
 /* Comment pins + threads + composer. */
 .vs-comment-catcher { position: absolute; inset: 0; z-index: 18; cursor: crosshair; }
@@ -603,7 +615,7 @@
 .vs-ide-ftree { flex: 1; overflow: auto; padding: 4px 0; }
 .vs-ide-dir { margin-left: auto; color: var(--faint); font-size: 10px; overflow: hidden; text-overflow: ellipsis; }
 .vs-ide-noresults { padding: 16px 12px; color: var(--faint); font-size: var(--text-12); }
-.vs-pane-ctx { display: flex; align-items: center; gap: 1px; margin-left: 4px; padding-left: 6px; border-left: 1px solid var(--line); }
+.vs-pane-ctx { margin-left: 4px; padding-left: 6px; border-left: 1px solid var(--line); }
 .vs-ide-row { display: flex; align-items: center; gap: 6px; width: 100%; height: 26px; padding: 0 10px 0 8px; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: var(--text-12); cursor: pointer; text-align: left; white-space: nowrap; }
 .vs-ide-row:hover { background: var(--panel-2); }
 .vs-ide-row.dir { color: var(--fg); font-weight: var(--fw-medium); }
