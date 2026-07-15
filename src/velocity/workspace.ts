@@ -48,8 +48,18 @@ export interface Account {
 	usageLabel: string;
 }
 
+export interface InboxItem {
+	id: string;
+	projectId: string;
+	projectName: string;
+	kind: 'review' | 'decision' | 'waiting' | 'shipped';
+	text: string;
+	tone: string;
+}
+
 export interface ManagerSnapshot {
 	tabs: TabView[];
+	inbox: InboxItem[];
 	activeId: string;
 	account: Account;
 }
@@ -102,9 +112,18 @@ export class WorkspaceManager {
 	}
 
 	private build(): ManagerSnapshot {
+		const inbox: InboxItem[] = [];
+		for (const p of this.projects) {
+			const s = p.runtime.getState();
+			const name = s.project.name;
+			for (const d of s.decisions.filter((d) => d.state === 'open')) inbox.push({ id: `${p.id}:d:${d.id}`, projectId: p.id, projectName: name, kind: 'decision', text: d.title, tone: 'work' });
+			for (const k of s.checkpoints.filter((k) => k.state === 'ready')) inbox.push({ id: `${p.id}:k:${k.id}`, projectId: p.id, projectName: name, kind: 'review', text: k.outcome, tone: 'warn' });
+			for (const c of s.coworkers.filter((c) => c.state === 'waiting')) inbox.push({ id: `${p.id}:w:${c.id}`, projectId: p.id, projectName: name, kind: 'waiting', text: `${c.name} · ${c.action}`, tone: 'warn' });
+		}
 		return {
 			activeId: this.activeId,
 			account: this.account,
+			inbox,
 			tabs: this.projects.map((p): TabView => {
 				const s = p.runtime.getState();
 				const live = s.coworkers.filter((c) => c.state !== 'archived' && c.state !== 'dismissed');

@@ -1029,6 +1029,36 @@
 .vs-profile-item:hover { background: var(--panel-2); }
 .vs-profile-item svg { color: var(--muted); flex: 0 0 auto; }
 
+/* --- Inbox (cross-project "needs you") --------------------------------- */
+.vs-inbox-wrap { position: relative; }
+.vs-inbox-badge { position: absolute; top: 0; right: 0; min-width: 15px; height: 15px; padding: 0 4px; border-radius: 8px; background: var(--danger); color: #fff; font-size: 9px; font-weight: var(--fw-semibold); display: grid; place-items: center; box-shadow: 0 0 0 2px var(--sunk); }
+.vs-inbox-menu { position: absolute; top: 38px; right: 0; z-index: 49; width: 344px; max-height: 62vh; overflow: auto; background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-lg); box-shadow: var(--elev-2); padding: 6px; animation: vs-rise var(--dur) var(--ease); }
+.vs-inbox-head { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px 6px; font-size: var(--text-13); font-weight: var(--fw-semibold); }
+.vs-inbox-head span { font-size: var(--text-11); color: var(--faint); }
+.vs-inbox-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 28px; color: var(--faint); font-size: var(--text-13); }
+.vs-inbox-empty svg { color: var(--good); }
+.vs-inbox-item { display: flex; align-items: flex-start; gap: 10px; width: 100%; padding: 10px; border: 0; background: transparent; border-radius: 9px; cursor: pointer; text-align: left; }
+.vs-inbox-item:hover { background: var(--panel-2); }
+.vs-inbox-icon { width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; flex: 0 0 auto; }
+.vs-inbox-icon.tone-warn { background: color-mix(in srgb, var(--warn) 16%, var(--panel)); color: color-mix(in srgb, var(--warn) 62%, var(--fg)); }
+.vs-inbox-icon.tone-work { background: color-mix(in srgb, var(--accent) 14%, var(--panel)); color: color-mix(in srgb, var(--accent) 60%, var(--fg)); }
+.vs-inbox-icon.tone-good { background: color-mix(in srgb, var(--good) 16%, var(--panel)); color: color-mix(in srgb, var(--good) 55%, var(--fg)); }
+.vs-inbox-body { flex: 1; min-width: 0; }
+.vs-inbox-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: var(--text-12); font-weight: var(--fw-medium); }
+.vs-inbox-proj { font-size: 10px; color: var(--faint); background: var(--panel-2); border-radius: 5px; padding: 1px 6px; flex: 0 0 auto; }
+.vs-inbox-text { font-size: var(--text-12); color: var(--muted); line-height: 1.4; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+
+/* --- Keyboard help overlay --------------------------------------------- */
+.vs-help { width: min(480px, 100%); background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-xl); box-shadow: var(--elev-2); overflow: hidden; animation: vs-rise var(--dur) var(--ease); }
+.vs-help-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 12px; border-bottom: 1px solid var(--line); }
+.vs-help-head h2 { font-size: var(--text-16); font-weight: var(--fw-semibold); }
+.vs-help-body { padding: 6px 20px 20px; max-height: 66vh; overflow: auto; }
+.vs-help-group { margin-top: 14px; }
+.vs-help-grouphead { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--faint); font-weight: var(--fw-semibold); margin-bottom: 6px; }
+.vs-help-row { display: flex; align-items: center; gap: 12px; padding: 5px 0; }
+.vs-help-row kbd { flex: 0 0 auto; min-width: 66px; text-align: center; font-family: var(--mono); font-size: var(--text-11); color: var(--fg); background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; }
+.vs-help-row span { font-size: var(--text-13); color: var(--muted); }
+
 @media (max-width: 1180px) {
 	.vs-dockpanel { width: min(384px, calc(100vw - 24px)); }
 }

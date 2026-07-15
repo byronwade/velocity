@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { X } from 'lucide-react';
 import { useWorkspace, runtime } from './useWorkspace';
 import type { Lens } from './model';
 import { TabBar } from './TabBar';
@@ -9,6 +10,36 @@ import { SettingsSheet } from './SettingsSheet';
 import './velocity.css';
 
 const LENS_ORDER: Lens[] = ['browser', 'code', 'system', 'data', 'tests', 'verify'];
+
+const SHORTCUTS: { group: string; keys: [string, string][] }[] = [
+	{ group: 'Views', keys: [['1 – 6', 'Switch the active pane\'s view'], ['C', 'Compare Candidate vs Stable'], ['F', 'Focus mode']] },
+	{ group: 'Panes', keys: [['⌘ \\', 'Split active pane right'], ['⌘ ⇧ \\', 'Split active pane down'], ['⌘ J', 'Toggle terminal']] },
+	{ group: 'Work', keys: [['⌘ ⇧ N', 'New work'], ['⌘ ⇧ D', 'Ship'], ['. ', 'Pause / resume all'], ['⌘ K', 'Command palette']] },
+	{ group: 'General', keys: [['?', 'This shortcuts help'], ['Esc', 'Close the topmost surface']] },
+];
+
+function HelpOverlay({ onClose }: { onClose: () => void }) {
+	useEffect(() => {
+		const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+		window.addEventListener('keydown', onKey);
+		return () => window.removeEventListener('keydown', onKey);
+	}, [onClose]);
+	return (
+		<div className="vs-scrim" onClick={onClose}>
+			<div className="vs-help" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Keyboard shortcuts">
+				<header className="vs-help-head"><h2>Keyboard shortcuts</h2><button className="vs-icon" onClick={onClose} aria-label="Close"><X size={16} /></button></header>
+				<div className="vs-help-body">
+					{SHORTCUTS.map((g) => (
+						<div key={g.group} className="vs-help-group">
+							<div className="vs-help-grouphead">{g.group}</div>
+							{g.keys.map(([k, d]) => <div key={k} className="vs-help-row"><kbd>{k}</kbd><span>{d}</span></div>)}
+						</div>
+					))}
+				</div>
+			</div>
+		</div>
+	);
+}
 
 function Confetti() {
 	const state = useWorkspace();
@@ -29,6 +60,7 @@ function Toast() {
 }
 
 export function VelocityApp() {
+	const [helpOpen, setHelpOpen] = useState(false);
 	// Apply saved density / motion preferences on load.
 	useEffect(() => {
 		try {
@@ -50,7 +82,8 @@ export function VelocityApp() {
 			if (mod && e.key === '\\') { e.preventDefault(); runtime.splitPane(runtime.getState().layout.activePaneId, e.shiftKey ? 'col' : 'row'); return; }
 			if (mod && e.key.toLowerCase() === 'j') { e.preventDefault(); runtime.openTool(runtime.getState().layout.openTool ? null : 'terminal'); return; }
 			if (typing || mod) return;
-			if (e.key >= '1' && e.key <= '7') { runtime.setLens(LENS_ORDER[Number(e.key) - 1]); return; }
+			if (e.key === '?') { e.preventDefault(); setHelpOpen(true); return; }
+			if (e.key >= '1' && e.key <= '6') { runtime.setLens(LENS_ORDER[Number(e.key) - 1]); return; }
 			if (e.key.toLowerCase() === 'c') runtime.comparePreview('stable');
 			if (e.key.toLowerCase() === 'f') runtime.toggleFocus();
 			if (e.key === '.') runtime.togglePause();
@@ -74,6 +107,7 @@ export function VelocityApp() {
 				<WorkChat />
 				<ShipSheet />
 				<SettingsSheet />
+				{helpOpen && <HelpOverlay onClose={() => setHelpOpen(false)} />}
 				<CommandBar />
 				<Toast />
 				<Confetti />

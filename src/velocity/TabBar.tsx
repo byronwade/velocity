@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, X, Flag, ShieldQuestion, Pause, Sun, Moon, Settings, CheckCircle2, Clock, Pencil } from 'lucide-react';
+import { Plus, X, Flag, ShieldQuestion, Pause, Sun, Moon, Settings, CheckCircle2, Clock, Pencil, Bell } from 'lucide-react';
 import { useShell } from '../lib/store';
 import { useProjects, useWorkspace, manager, runtime } from './useWorkspace';
 import { SCENARIOS as SCENARIO_LIST } from './scenarios';
@@ -88,6 +88,53 @@ function Tab({ tab, active }: { tab: TabView; active: boolean }) {
 	);
 }
 
+const INBOX_META: Record<string, { icon: typeof Flag; label: string }> = {
+	review: { icon: Flag, label: 'Ready to review' },
+	decision: { icon: ShieldQuestion, label: 'Decision needed' },
+	waiting: { icon: Clock, label: 'Waiting on a dependency' },
+	shipped: { icon: CheckCircle2, label: 'Shipped' },
+};
+
+/** Cross-project inbox — everything that needs you, in one place. */
+function Inbox() {
+	const { inbox } = useProjects();
+	const [open, setOpen] = useState(false);
+	const go = (projectId: string, kind: string) => {
+		setOpen(false);
+		manager.switchProject(projectId);
+		runtime.openRight(kind === 'decision' ? 'decision' : kind === 'review' ? 'checkpoint' : 'coworkers');
+	};
+	return (
+		<div className="vs-inbox-wrap">
+			<button className="vs-tabbar-icon vs-inbox-btn" onClick={() => setOpen((v) => !v)} title="Inbox — what needs you" aria-label="Inbox">
+				<Bell size={15} />{inbox.length > 0 && <span className="vs-inbox-badge">{inbox.length}</span>}
+			</button>
+			{open && (
+				<>
+					<div className="vs-profile-scrim" onClick={() => setOpen(false)} />
+					<div className="vs-inbox-menu" role="dialog" aria-label="Inbox">
+						<div className="vs-inbox-head">Inbox<span>{inbox.length}</span></div>
+						{inbox.length === 0 ? (
+							<div className="vs-inbox-empty"><CheckCircle2 size={22} />You're all caught up.</div>
+						) : inbox.map((it) => {
+							const M = INBOX_META[it.kind];
+							return (
+								<button key={it.id} className="vs-inbox-item" onClick={() => go(it.projectId, it.kind)}>
+									<span className={`vs-inbox-icon tone-${it.tone}`}><M.icon size={13} /></span>
+									<div className="vs-inbox-body">
+										<div className="vs-inbox-title">{M.label}<span className="vs-inbox-proj">{it.projectName}</span></div>
+										<div className="vs-inbox-text">{it.text}</div>
+									</div>
+								</button>
+							);
+						})}
+					</div>
+				</>
+			)}
+		</div>
+	);
+}
+
 /** Account / settings — everything that used to live in the header lives here. */
 function Profile() {
 	const { account } = useProjects();
@@ -143,6 +190,7 @@ export function TabBar() {
 				<button className="vs-tab-new" onClick={() => manager.newProject()} title="New project" aria-label="New project"><Plus size={15} /></button>
 			</div>
 			<div className="vs-tabbar-right">
+				<Inbox />
 				<Profile />
 			</div>
 		</div>
