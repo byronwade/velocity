@@ -2,9 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import {
 	Play, Check, X, ShieldCheck, Sparkles, ArrowRight, Server, Database, Clock, Gauge, Circle,
 	MessageSquare, Send, CheckCheck, Code2, CheckCircle2, ChevronDown, SplitSquareHorizontal, SplitSquareVertical,
-	Globe, FlaskConical, RotateCw, Lock, GitCompare,
+	Globe, FlaskConical, GitCompare,
 } from 'lucide-react';
 import { EditorMode } from '../modes/EditorMode';
+import { BrowserMode } from '../modes/BrowserMode';
+import { useServices } from '../services/container';
 import { useWorkspace, runtime } from './useWorkspace';
 import { LENS_META, COMPARE_LABEL } from './model';
 import { leafIds } from './panes';
@@ -222,8 +224,12 @@ function VerifyLens() {
 	);
 }
 
-function BrowserLens() {
-	return <div className="vs-browser-view"><PreviewLens candidate /></div>;
+/** The real, working in-app browser (address bar, history, live preview). */
+function BrowserLens({ paneId }: { paneId: string }) {
+	const { browser } = useServices();
+	// The first time this pane mounts, start it on the live app preview.
+	useState(() => { browser.requestPreview('http://localhost:3000'); return null; });
+	return <div className="vs-browserhost"><BrowserMode paneId={paneId} /></div>;
 }
 
 const TEST_SUITES = [
@@ -260,10 +266,10 @@ function TestsLens() {
 	);
 }
 
-function renderLens(lens: Lens) {
+function renderLens(lens: Lens, paneKey: string) {
 	switch (lens) {
-		case 'code': return <div className="vs-code"><EditorMode paneId="velocity:stage:editor" /></div>;
-		case 'browser': return <BrowserLens />;
+		case 'browser': return <BrowserLens paneId={`vel:${paneKey}`} />;
+		case 'code': return <div className="vs-code"><EditorMode paneId={`velocity:editor:${paneKey}`} /></div>;
 		case 'system': return <SystemLens />;
 		case 'data': return <DataLens />;
 		case 'tests': return <TestsLens />;
@@ -494,11 +500,7 @@ function PaneToolbar({ leaf, single }: { leaf: PaneLeaf; single: boolean }) {
 				</div>
 				{leaf.view === 'browser' && <CompareMenu leaf={leaf} />}
 			</div>
-			<div className="vs-pane-mid">
-				{leaf.view === 'browser' && (!leaf.compareSource || leaf.compareSource === 'none') && (
-					<div className="vs-pane-url" title="Live preview URL"><Lock size={11} />candidate.aurora.app<button className="vs-url-reload" title="Reload"><RotateCw size={11} /></button></div>
-				)}
-			</div>
+			<div className="vs-pane-mid" />
 			<div className="vs-pane-tools">
 				<button className="vs-pane-tool" title="Split right" onClick={(e) => { e.stopPropagation(); runtime.splitPane(leaf.id, 'row'); }}><SplitSquareHorizontal size={14} /></button>
 				<button className="vs-pane-tool" title="Split down" onClick={(e) => { e.stopPropagation(); runtime.splitPane(leaf.id, 'col'); }}><SplitSquareVertical size={14} /></button>
@@ -516,7 +518,7 @@ function Pane({ leaf, single }: { leaf: PaneLeaf; single: boolean }) {
 		<section className={`vs-pane${active ? ' active' : ''}${state.layout.commentMode ? ' commenting' : ''}`} onMouseDown={() => runtime.focusPane(leaf.id)}>
 			<PaneToolbar leaf={leaf} single={single} />
 			<div className="vs-pane-body">
-				{comparing ? <PreviewCompare source={leaf.compareSource!} /> : renderLens(leaf.view)}
+				{comparing ? <PreviewCompare source={leaf.compareSource!} /> : renderLens(leaf.view, leaf.id)}
 				{!comparing && <StageOverlay lens={leaf.view} />}
 			</div>
 		</section>
