@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, X, Flag, ShieldQuestion, Pause, Sun, Moon, Settings, CheckCircle2, Clock, Pencil, Bell } from 'lucide-react';
+import { Plus, X, Flag, ShieldQuestion, Pause, Sun, Moon, Settings, CheckCircle2, Clock, Pencil, Bell, MessageSquare, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useShell } from '../lib/store';
 import { useProjects, useWorkspace, manager, runtime } from './useWorkspace';
 import { SCENARIOS as SCENARIO_LIST } from './scenarios';
@@ -180,15 +180,50 @@ function Profile() {
 	);
 }
 
-export function TabBar() {
+export function TabBar({ vertical = false }: { vertical?: boolean }) {
 	const { tabs, activeId } = useProjects();
+	const chatOpen = useWorkspace().layout.chatOpen;
+	const [collapsed, setCollapsed] = useState(() => { try { return localStorage.getItem('vs-tabcollapsed') === '1'; } catch { return false; } });
+	const toggleCollapse = () => setCollapsed((c) => { try { localStorage.setItem('vs-tabcollapsed', c ? '0' : '1'); } catch { /* ignore */ } return !c; });
+
+	const chatToggle = (
+		<button className={`vs-tabbar-icon${chatOpen ? ' on' : ''}`} onClick={() => runtime.openChat(!chatOpen)} title="Chat & activity" aria-label="Chat & activity" aria-pressed={chatOpen}>
+			<MessageSquare size={15} />
+		</button>
+	);
+	const tabList = (
+		<>
+			{tabs.map((t) => <Tab key={t.id} tab={t} active={t.id === activeId} />)}
+			<button className="vs-tab-new" onClick={() => manager.newProject()} title="New project" aria-label="New project"><Plus size={15} /></button>
+		</>
+	);
+
+	// Arc-style vertical rail — same pieces, stacked, collapsible.
+	if (vertical) {
+		return (
+			<div className={`vs-tabbar vertical${collapsed ? ' collapsed' : ''}`} role="tablist">
+				<div className="vs-vt-top">
+					<span className="vs-tabbar-logo" />
+					{!collapsed && <span className="vs-vt-title">Velocity</span>}
+					<button className="vs-tabbar-icon" onClick={toggleCollapse} title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} aria-label="Toggle sidebar">
+						{collapsed ? <PanelLeftOpen size={15} /> : <PanelLeftClose size={15} />}
+					</button>
+				</div>
+				{chatToggle}
+				<div className="vs-tabs">{tabList}</div>
+				<div className="vs-tabbar-right">
+					<Inbox />
+					<Profile />
+				</div>
+			</div>
+		);
+	}
+
 	return (
 		<div className="vs-tabbar" role="tablist">
 			<span className="vs-tabbar-logo" />
-			<div className="vs-tabs">
-				{tabs.map((t) => <Tab key={t.id} tab={t} active={t.id === activeId} />)}
-				<button className="vs-tab-new" onClick={() => manager.newProject()} title="New project" aria-label="New project"><Plus size={15} /></button>
-			</div>
+			{chatToggle}
+			<div className="vs-tabs">{tabList}</div>
 			<div className="vs-tabbar-right">
 				<Inbox />
 				<Profile />

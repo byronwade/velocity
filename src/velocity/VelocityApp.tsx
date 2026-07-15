@@ -9,12 +9,13 @@ import { Stage } from './Stage';
 import { Dock } from './Dock';
 import { MissionSheet, RightRail, ToolDrawer, CommandBar, ShipSheet } from './surfaces';
 import { SettingsSheet } from './SettingsSheet';
+import { ChatSidebar } from './ChatSidebar';
 import './velocity.css';
 
-const LENS_ORDER: Lens[] = ['browser', 'code', 'system', 'data', 'tests', 'verify'];
+const LENS_ORDER: Lens[] = ['browser', 'code', 'terminal', 'system', 'data', 'tests', 'verify'];
 
 const SHORTCUTS: { group: string; keys: [string, string][] }[] = [
-	{ group: 'Views', keys: [['1 – 6', 'Switch the active pane\'s view'], ['C', 'Compare Candidate vs Stable'], ['F', 'Focus mode']] },
+	{ group: 'Views', keys: [['1 – 7', 'Switch the active pane\'s view'], ['C', 'Compare Candidate vs Stable'], ['F', 'Focus mode']] },
 	{ group: 'Panes', keys: [['⌘ \\', 'Split active pane right'], ['⌘ ⇧ \\', 'Split active pane down'], ['⌘ J', 'Toggle terminal'], ['⌘ P', 'Go to file']] },
 	{ group: 'Work', keys: [['⌘ ⇧ N', 'New work'], ['⌘ ⇧ D', 'Ship'], ['. ', 'Pause / resume all'], ['⌘ K', 'Command palette']] },
 	{ group: 'General', keys: [['?', 'This shortcuts help'], ['Esc', 'Close the topmost surface']] },
@@ -106,6 +107,14 @@ function Toast() {
 export function VelocityApp() {
 	const [helpOpen, setHelpOpen] = useState(false);
 	const [quickOpen, setQuickOpen] = useState(false);
+	// Tab layout: classic top row or an Arc-style vertical rail (Settings →
+	// Appearance). Settings dispatches velocity:tablayout when it changes.
+	const [tabLayout, setTabLayout] = useState(() => { try { return localStorage.getItem('vs-tablayout') ?? 'top'; } catch { return 'top'; } });
+	useEffect(() => {
+		const onLayout = (e: Event) => setTabLayout((e as CustomEvent<string>).detail || 'top');
+		window.addEventListener('velocity:tablayout', onLayout);
+		return () => window.removeEventListener('velocity:tablayout', onLayout);
+	}, []);
 	// Apply saved density / motion preferences on load.
 	useEffect(() => {
 		try {
@@ -129,7 +138,7 @@ export function VelocityApp() {
 			if (mod && e.key.toLowerCase() === 'j') { e.preventDefault(); runtime.openTool(runtime.getState().layout.openTool ? null : 'terminal'); return; }
 			if (typing || mod) return;
 			if (e.key === '?') { e.preventDefault(); setHelpOpen(true); return; }
-			if (e.key >= '1' && e.key <= '6') { runtime.setLens(LENS_ORDER[Number(e.key) - 1]); return; }
+			if (e.key >= '1' && e.key <= '7') { runtime.setLens(LENS_ORDER[Number(e.key) - 1]); return; }
 			if (e.key.toLowerCase() === 'c') runtime.comparePreview('stable');
 			if (e.key.toLowerCase() === 'f') runtime.toggleFocus();
 			if (e.key === '.') runtime.togglePause();
@@ -139,10 +148,13 @@ export function VelocityApp() {
 	}, []);
 
 	const focusMode = useWorkspace().layout.focusMode;
+	const sideTabs = tabLayout === 'side';
 	return (
-		<div className="vs-shell">
-			{!focusMode && <TabBar />}
-			<div className={`vs-root${focusMode ? ' focus' : ''}`}>
+		<div className={`vs-shell${sideTabs ? ' side-tabs' : ''}`}>
+			{!focusMode && <TabBar vertical={sideTabs} />}
+			<div className="vs-hbody">
+				{!focusMode && <ChatSidebar />}
+				<div className={`vs-root${focusMode ? ' focus' : ''}`}>
 				<div className="vs-main">
 					<Stage />
 				</div>
@@ -157,6 +169,7 @@ export function VelocityApp() {
 				<CommandBar />
 				<Toast />
 				<Confetti />
+				</div>
 			</div>
 		</div>
 	);

@@ -512,6 +512,31 @@ svg { display: block; }
 .browser-view { flex: 1; min-height: 0; background: #fff; position: relative; }
 .browser-view .frame { width: 100%; height: 100%; border: 0; display: block; }
 
+/* In-pane browser tabs (IDE-style, replaces bookmarks). */
+.cr-tabstrip { display: flex; align-items: center; gap: 2px; height: 32px; flex: none; padding: 0 6px; background: var(--panel); border-bottom: 1px solid var(--line); overflow-x: auto; }
+.cr-ttab { display: flex; align-items: center; gap: 6px; height: 25px; max-width: 180px; min-width: 0; padding: 0 8px; border-radius: var(--r-sm); color: var(--muted); font-size: var(--text-12); cursor: pointer; }
+.cr-ttab > svg:first-child { width: 13px; height: 13px; flex: none; }
+.cr-ttab:hover { background: var(--panel-2); }
+.cr-ttab.active { background: var(--panel-2); color: var(--fg); font-weight: var(--fw-medium); }
+.cr-ttab-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cr-ttab-x { width: 16px; height: 16px; display: grid; place-items: center; border: 0; background: transparent; color: var(--faint); border-radius: 4px; cursor: pointer; flex: none; }
+.cr-ttab-x:hover { background: var(--line); color: var(--fg); }
+.cr-ttab-x svg { width: 12px; height: 12px; }
+.cr-ttab-new { width: 24px; height: 24px; display: grid; place-items: center; border: 0; background: transparent; color: var(--muted); border-radius: var(--r-sm); cursor: pointer; flex: none; }
+.cr-ttab-new:hover { background: var(--panel-2); color: var(--fg); }
+.cr-ttab-new svg { width: 14px; height: 14px; }
+
+/* Compact v0-style toolbar — quiet, tokenized, no Chrome cosplay. */
+.cr-toolbar.compact { height: 38px; padding: 0 6px; background: var(--panel); border-bottom: 1px solid var(--line); }
+.cr-toolbar.compact .cr-icb { width: 26px; height: 26px; border-radius: var(--r-sm); color: var(--muted); }
+.cr-toolbar.compact .cr-icb:hover { background: var(--panel-2); color: var(--fg); }
+.cr-toolbar.compact .cr-icb svg { width: 15px; height: 15px; }
+.cr-toolbar.compact .cr-omni { height: 27px; max-width: 520px; margin: 0 auto; padding: 0 10px; border-radius: var(--r-md); background: var(--sunk); border: 1px solid transparent; }
+.cr-toolbar.compact .cr-omni:focus-within { background: var(--panel); border-color: var(--line-2); box-shadow: none; }
+.cr-toolbar.compact .cr-omni input { font-size: var(--text-12); color: var(--fg); }
+.cr-toolbar.compact .cr-omni-lead svg { width: 13px; height: 13px; }
+.cr-toolbar.compact .cr-devices { background: var(--sunk); }
+
 /* Device preview — constrain the page to a device width (v0-style). */
 .cr-devices { display: flex; align-items: center; gap: 1px; margin: 0 2px; padding: 2px; border-radius: var(--r-md); background: var(--cr-omni); }
 .cr-dev { width: 26px; height: 24px; display: grid; place-items: center; border: 0; background: transparent; color: var(--cr-icon); border-radius: var(--r-sm); cursor: pointer; }

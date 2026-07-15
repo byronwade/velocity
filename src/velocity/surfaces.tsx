@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import {
 	X, Plus, Check, RotateCcw, GitCompare, Eye, Pause, Play, Pencil, Trash2,
 	CornerUpLeft, ShieldQuestion, FlaskConical, Camera, Activity, FileDiff, Circle,
@@ -11,6 +11,11 @@ import { ContextMenu, useContextMenu } from './ContextMenu';
 import { useWorkspace, runtime } from './useWorkspace';
 import { getServices } from '../services/container';
 import { firstLeafOfView } from './panes';
+import { isTauri } from './native';
+
+// The real PTY terminal (xterm.js) — desktop only, loaded lazily so the
+// browser bundle never carries it.
+const NativeTerminal = lazy(() => import('./NativeTerminal'));
 
 /** Jump from a changed-file row to the file in a Code pane. Seeded fixture
  *  paths may not exist in the workspace — say so instead of opening a blank. */
@@ -473,7 +478,10 @@ const EVIDENCE_ICON: Record<EvidenceKind, typeof FlaskConical> = {
 
 function CheckpointPanel() {
 	const state = useWorkspace();
-	const k = state.checkpoints.find((c) => c.id === state.layout.activeCheckpointId) ?? state.checkpoints[0];
+	// Real model-run checkpoints outrank simulated momentum in the queue.
+	const k = state.checkpoints.find((c) => c.id === state.layout.activeCheckpointId)
+		?? state.checkpoints.find((c) => c.state === 'ready' && c.origin === 'real')
+		?? state.checkpoints[0];
 	if (!k) return <div className="vs-rail-body vs-empty-rail">No checkpoints yet.</div>;
 	const cw = state.coworkers.find((c) => c.id === k.coworkerId);
 	return (
@@ -597,8 +605,9 @@ const SHELLS = [
 	{ id: 'node', label: 'node' },
 ];
 
-/** Real terminal (executes against the in-memory FS) + a shell chooser. */
-function TerminalPanel() {
+/** Real terminal (executes against the in-memory FS) + a shell chooser.
+ *  Exported: it renders both in the docked tools panel and as a pane view. */
+export function TerminalPanel() {
 	const [kind, setKind] = useState('bash');
 	const [ids, setIds] = useState<Record<string, number>>({ bash: 1 });
 	const sessionId = `velocity:term:${kind}:${ids[kind] ?? 1}`;
@@ -613,7 +622,11 @@ function TerminalPanel() {
 				<div className="vs-spacer" />
 				<button className="vs-icon sm" title="New terminal session" onClick={() => setIds((m) => ({ ...m, [kind]: (m[kind] ?? 1) + 1 }))}><Plus size={13} /></button>
 			</div>
-			<div className="vs-term-host"><TerminalMode key={sessionId} paneId={sessionId} /></div>
+			<div className="vs-term-host">
+				{isTauri
+					? <Suspense fallback={<div className="vs-term-loading">starting shell…</div>}><NativeTerminal key={sessionId} sessionId={sessionId} shell={kind} /></Suspense>
+					: <TerminalMode key={sessionId} paneId={sessionId} />}
+			</div>
 		</div>
 	);
 }

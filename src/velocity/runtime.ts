@@ -13,7 +13,8 @@ import { buildScenario } from './scenarios';
 import { notifyCheckpoint } from './notify';
 import { getServices } from '../services/container';
 import { DEPLOY_TARGETS, WORK_INTENTS, WORK_MODELS } from './model';
-import { findLeaf, firstLeafId, firstLeafOfView, leafIds, removeLeaf, setCompareSource, setRatio, setView, splitLeaf } from './panes';
+import { findLeaf, firstLeafId, firstLeafOfView, leafIds, movePane, removeLeaf, setCompareSource, setRatio, setView, splitLeaf } from './panes';
+import type { DropEdge } from './panes';
 import type {
 	Autonomy, CollabRole, CompareSource, Coworker, DeployTarget, Lens, MissionInput, SplitDir, ToolId, WorkIntent, WorkspaceState,
 } from './model';
@@ -27,6 +28,8 @@ export interface CoworkerRuntime {
 	setLens(lens: Lens): void;
 	splitPane(id: string, dir: SplitDir): void;
 	closePane(id: string): void;
+	/** Drag & drop: move pane `srcId` beside `targetId` on the given edge. */
+	movePane(srcId: string, targetId: string, edge: DropEdge): void;
 	setPaneView(id: string, view: Lens): void;
 	focusPane(id: string): void;
 	setPaneRatio(splitId: string, ratio: number): void;
@@ -59,6 +62,10 @@ export interface CoworkerRuntime {
 	updateCoworkerFromFile(id: string, patch: { name?: string; role?: string; department?: string; model?: string; autonomy?: Autonomy; scope?: string }): void;
 	/** Show a transient toast (for UI helpers outside the runtime). */
 	notify(text: string): void;
+	// --- real work (local Ollama loop — see realwork.ts) ---
+	realWorkStarted(commentId: string, model: string): void;
+	realWorkTool(coworkerId: string, label: string): void;
+	realWorkDone(commentId: string, summary: string, files: { path: string; added: number; removed: number }[], model: string): void;
 
 	acceptCheckpoint(id: string): void;
 	rejectCheckpoint(id: string): void;
@@ -68,6 +75,10 @@ export interface CoworkerRuntime {
 	assignArtifact(label: string, action: string): void;
 	ship(): void;
 	deploy(provider: DeployTarget): void;
+
+	// --- chat (the collaborative sidebar: humans + coworkers + activity) ---
+	openChat(open: boolean): void;
+	sendChat(text: string): void;
 
 	// --- work / comments ---
 	armWork(on: boolean): void;
@@ -116,8 +127,17 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 	/** Real source files, so heartbeat checkpoints diff files that exist. */
 	private filePool: string[] = [];
 
-	constructor(scenario = 'calm') {
-		this.state = { ...buildScenario(scenario), toast: null, celebrate: false };
+	constructor(scenario = 'calm', restored?: WorkspaceState) {
+		// A restored snapshot (persistence) wins over the scenario seed; its
+		// transient bits (toast, celebration) never survive a reload.
+		this.state = restored
+			? {
+				...restored, toast: null, celebrate: false,
+				// Fields newer than the snapshot get safe defaults.
+				feed: restored.feed ?? [],
+				layout: { ...restored.layout, chatOpen: restored.layout.chatOpen ?? false },
+			}
+			: { ...buildScenario(scenario), toast: null, celebrate: false };
 		// The heartbeat: coworkers make real, deterministic forward progress.
 		this.beat = setInterval(() => this.tick(), 3000);
 		void getServices().fs.list().then((files) => {
@@ -153,6 +173,7 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 			const done = landed as Coworker;
 			const checkpoint = {
 				id: uid('k'), coworkerId: done.id, missionId: this.state.mission?.id ?? null,
+				origin: 'sim' as const,
 				outcome: done.action, beforeLabel: 'Stable', afterLabel: 'Candidate',
 				diff: [{ path: this.filePool[this.tickN % Math.max(1, this.filePool.length)] ?? 'src/App.tsx', added: 18 + (this.tickN % 5) * 7, removed: 4 + (this.tickN % 3) * 3 }],
 				buildOk: true, tests: { passed: 12, total: 12 },
@@ -164,9 +185,10 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 				blastRadius: [done.scope.split(' ')[0] || 'app'], rollbackPoint: 'Stable @ latest',
 				state: 'ready' as const, createdLabel: 'just now',
 			};
-			// A coworker's newest checkpoint supersedes their older unreviewed one,
-			// so the review queue stays honest instead of piling up.
-			const kept = this.state.checkpoints.filter((k) => !(k.coworkerId === done.id && k.state === 'ready'));
+			// A coworker's newest sim checkpoint supersedes their older unreviewed
+			// SIM one, so the demo queue stays honest — but REAL work (an actual
+			// model run) is never displaced by simulated momentum.
+			const kept = this.state.checkpoints.filter((k) => !(k.coworkerId === done.id && k.state === 'ready' && k.origin !== 'real'));
 			this.set({ coworkers, checkpoints: [checkpoint, ...kept].slice(0, 8) });
 			this.addEvent('checkpoint', `${done.name} landed “${done.action}” — ready to review.`, done.id);
 			notifyCheckpoint(`${done.name} · checkpoint ready`, done.action);
@@ -197,7 +219,20 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 		this.toastTimer = setTimeout(() => this.set({ toast: null }), 2600);
 	}
 	private addEvent(kind: WorkspaceState['events'][number]['kind'], text: string, coworkerId: string | null): void {
-		this.set({ events: [{ id: uid('e'), kind, text, coworkerId, tsLabel: 'now' }, ...this.state.events].slice(0, 24) });
+		const cw = coworkerId ? this.state.coworkers.find((c) => c.id === coworkerId) : null;
+		// Every activity event also lands in the chat feed — the sidebar doubles
+		// as the live record of what's in progress and completed. The sim
+		// heartbeat cycles the same tasks, so drop a repeat the feed already
+		// shows among its recent entries (the activity list keeps everything).
+		const recent = this.state.feed.slice(-8);
+		const dupe = recent.some((f) => f.kind === 'event' && f.text === text);
+		this.set({
+			events: [{ id: uid('e'), kind, text, coworkerId, tsLabel: 'now' }, ...this.state.events].slice(0, 24),
+			feed: dupe ? this.state.feed : [...this.state.feed, { id: uid('f'), kind: 'event' as const, authorName: cw?.name ?? 'System', text, tsLabel: 'now', eventKind: kind }].slice(-120),
+		});
+	}
+	private addFeed(entry: Omit<WorkspaceState['feed'][number], 'id' | 'tsLabel'>): void {
+		this.set({ feed: [...this.state.feed, { ...entry, id: uid('f'), tsLabel: 'now' }].slice(-120) });
 	}
 
 	load(scenario: string): void {
@@ -232,6 +267,9 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 	}
 	setPaneView(id: string, view: Lens): void {
 		this.patchLayout({ panes: setView(this.state.layout.panes, id, view), activePaneId: id, lens: view });
+	}
+	movePane(srcId: string, targetId: string, edge: DropEdge): void {
+		this.patchLayout({ panes: movePane(this.state.layout.panes, srcId, targetId, edge), activePaneId: srcId });
 	}
 	focusPane(id: string): void {
 		const view = findLeaf(this.state.layout.panes, id)?.view ?? this.state.layout.lens;
@@ -270,7 +308,10 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 	openMissionSheet(open: boolean): void { this.patchLayout({ missionSheetOpen: open }); }
 	openCommand(open: boolean): void { this.patchLayout({ commandOpen: open }); }
 	openRight(surface: WorkspaceState['layout']['rightSurface'], id?: string): void {
-		this.patchLayout({ rightSurface: surface, activeCheckpointId: surface === 'checkpoint' ? id ?? this.state.checkpoints[0]?.id ?? null : this.state.layout.activeCheckpointId, activeDecisionId: surface === 'decision' ? id ?? this.state.decisions[0]?.id ?? null : this.state.layout.activeDecisionId });
+		// Real model-run checkpoints outrank simulated momentum as the default.
+		const defaultCkp = this.state.checkpoints.find((k) => k.state === 'ready' && k.origin === 'real')?.id
+			?? this.state.checkpoints[0]?.id ?? null;
+		this.patchLayout({ rightSurface: surface, activeCheckpointId: surface === 'checkpoint' ? id ?? defaultCkp : this.state.layout.activeCheckpointId, activeDecisionId: surface === 'decision' ? id ?? this.state.decisions[0]?.id ?? null : this.state.layout.activeDecisionId });
 	}
 	closeRight(): void { this.patchLayout({ rightSurface: 'none' }); }
 	closeTopmost(): void {
@@ -376,6 +417,74 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 	}
 	notify(text: string): void { this.toast(text); }
 
+	// --- chat: fully collaborative — humans, coworkers, and activity --------
+	openChat(open: boolean): void { this.patchLayout({ chatOpen: open }); }
+	sendChat(text: string): void {
+		const t = text.trim();
+		if (!t) return;
+		const me = this.state.collaborators.find((c) => c.id === 'you') ?? this.state.collaborators[0];
+		this.addFeed({ kind: 'msg', authorName: me?.name ?? 'You', text: t });
+		const live = this.state.coworkers.filter((c) => c.state !== 'archived' && c.state !== 'dismissed');
+		if (!live.length) return;
+		// @Name routes directly; otherwise the best-fit coworker answers.
+		const at = /@(\w+)/.exec(t);
+		const primary = (at && live.find((c) => c.name.toLowerCase() === at[1].toLowerCase()))
+			?? live.find((c) => c.id === this.pickCoworker(t, null))
+			?? live[0];
+		this.addFeed({ kind: 'msg', authorName: primary.name, fromCoworker: true, text: `On it — I'll fold “${t.slice(0, 48)}${t.length > 48 ? '…' : ''}” into my current pass (${primary.action.toLowerCase()}).` });
+		// A second coworker riffs when the request also touches their turf —
+		// agents working off each other, deterministically.
+		const wantsTests = /\b(test|tests|qa|coverage|regression|e2e)\b/i.test(t);
+		const wantsDesign = /\b(design|layout|ui|style|responsive|mobile|spacing)\b/i.test(t);
+		const second = live.find((c) => c.id !== primary.id && (
+			(wantsTests && c.department === 'Verification') || (wantsDesign && c.department === 'Design')
+		));
+		if (second) {
+			this.addFeed({ kind: 'msg', authorName: second.name, fromCoworker: true, text: `I'll take the ${second.department.toLowerCase()} side once ${primary.name} lands theirs — flag me on the checkpoint.` });
+		}
+	}
+
+	// --- real work: a local model actually doing the job -------------------
+	realWorkStarted(commentId: string, model: string): void {
+		const comment = this.state.comments.find((c) => c.id === commentId);
+		const cw = comment && this.state.coworkers.find((c) => c.id === comment.assignedCoworkerId);
+		if (!comment || !cw) return;
+		this.mapCoworkers((c) => (c.id === cw.id ? { ...c, state: 'active', action: `Working on “${comment.text.slice(0, 36)}${comment.text.length > 36 ? '…' : ''}”`, model: `Local · ${model}` } : c));
+		this.addEvent('note', `${cw.name} started “${comment.text.slice(0, 40)}” with ${model} (local).`, cw.id);
+	}
+	realWorkTool(coworkerId: string, label: string): void {
+		this.mapCoworkers((c) => (c.id === coworkerId ? { ...c, action: label } : c));
+	}
+	realWorkDone(commentId: string, summary: string, files: { path: string; added: number; removed: number }[], model: string): void {
+		const comment = this.state.comments.find((c) => c.id === commentId);
+		const cw = comment && this.state.coworkers.find((c) => c.id === comment.assignedCoworkerId);
+		if (!comment || !cw) return;
+		const reply = summary || (files.length ? 'Done — see the checkpoint.' : 'Done.');
+		this.set({
+			comments: this.state.comments.map((c) => (c.id === commentId
+				? { ...c, replies: [...c.replies, { authorName: cw.name, authorColor: cw.color, text: reply.slice(0, 600), tsLabel: 'now', fromCoworker: true }] }
+				: c)),
+		});
+		if (files.length) {
+			const checkpoint = {
+				id: uid('k'), coworkerId: cw.id, missionId: this.state.mission?.id ?? null,
+				origin: 'real' as const,
+				outcome: comment.text.slice(0, 64), beforeLabel: 'Before', afterLabel: 'After',
+				diff: files, buildOk: true, tests: { passed: 0, total: 0 },
+				evidence: [{ kind: 'diff' as const, label: `${files.length} file${files.length > 1 ? 's' : ''} changed`, detail: `by ${model} (local)` }],
+				limitations: 'Produced by a local model — review the diff.', risk: 'low' as const,
+				blastRadius: files.map((f) => f.path.split('/')[0]).filter((v, i, a) => a.indexOf(v) === i),
+				rollbackPoint: 'Before this work item', state: 'ready' as const, createdLabel: 'just now',
+			};
+			this.set({ checkpoints: [checkpoint, ...this.state.checkpoints].slice(0, 8) });
+			notifyCheckpoint(`${cw.name} · real work done`, comment.text.slice(0, 60));
+		}
+		this.mapCoworkers((c) => (c.id === cw.id ? { ...c, action: files.length ? 'Landed real work — ready for review' : 'Replied on a work item' } : c));
+		this.addFeed({ kind: 'msg', authorName: cw.name, fromCoworker: true, text: reply.slice(0, 300) });
+		this.addEvent(files.length ? 'checkpoint' : 'note', `${cw.name} finished “${comment.text.slice(0, 40)}”${files.length ? ` — ${files.length} file${files.length > 1 ? 's' : ''} changed.` : '.'}`, cw.id);
+		this.toast(`${cw.name} finished the work item.`);
+	}
+
 	// --- checkpoints ---
 	acceptCheckpoint(id: string): void {
 		this.set({ checkpoints: this.state.checkpoints.map((k) => (k.id === id ? { ...k, state: 'accepted' } : k)) });
@@ -475,11 +584,15 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 			intent, model: opts.model ?? 'auto', agents: opts.agents ?? 1, replies: [],
 		};
 		this.set({ comments: [comment, ...this.state.comments], layout: { ...this.state.layout, commentMode: false, activeCommentId: id } });
-		this.addEvent('note', `Work pinned on ${lens}.`, null);
+		this.addFeed({ kind: 'work', authorName: comment.authorName, text: t });
 		// Auto-assign unless the caller explicitly passed a coworker (or null).
 		const assignee = opts.assignee === undefined || opts.assignee === 'auto' ? this.pickCoworker(t, intent) : opts.assignee;
 		if (assignee) this.assignComment(id, assignee);
 		else this.toast('Work pinned — no coworker available yet.');
+		// The Local model means REAL work: run the Ollama tool loop on it.
+		if (assignee && (opts.model ?? 'auto') === 'local') {
+			void import('./realwork').then((m) => m.runRealWork(this, id));
+		}
 	}
 	openComment(id: string | null): void { this.patchLayout({ activeCommentId: id, commentMode: false }); }
 	assignComment(commentId: string, coworkerId: string): void {
@@ -493,6 +606,7 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 		});
 		if (cw) this.mapCoworkers((c) => (c.id === coworkerId ? { ...c, state: 'active', action } : c));
 		this.addEvent('reassign', `${cw?.name ?? 'A coworker'} is on “${(target?.text ?? 'a comment').slice(0, 32)}”.`, coworkerId);
+		if (cw) this.addFeed({ kind: 'msg', authorName: cw.name, fromCoworker: true, text: `Picking up “${(target?.text ?? '').slice(0, 48)}” — checkpoint to follow.` });
 		this.toast(`Assigned to ${cw?.name ?? 'coworker'}.`);
 	}
 	setCommentModel(id: string, model: string): void {

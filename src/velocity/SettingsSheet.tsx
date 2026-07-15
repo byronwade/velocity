@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
+import { getWorkspaceMcp, type McpToolInfo } from '../services/mcp';
 import { X, SlidersHorizontal, Palette, Bell, Users, Plug, CreditCard, Sun, Moon, Monitor } from 'lucide-react';
 import { useShell } from '../lib/store';
 import { useWorkspace, useProjects, runtime } from './useWorkspace';
@@ -22,6 +23,31 @@ function Row({ title, desc, children }: { title: string; desc?: string; children
 		<div className="vs-set-r">
 			<div className="vs-set-r-txt"><b>{title}</b>{desc && <span>{desc}</span>}</div>
 			<div className="vs-set-r-ctl">{children}</div>
+		</div>
+	);
+}
+
+/** The workspace MCP server's live toolbelt — enumerated via a real MCP
+ *  client handshake over the in-process transport, never hardcoded. */
+function McpTools() {
+	const [tools, setTools] = useState<McpToolInfo[] | null>(null);
+	const [failed, setFailed] = useState(false);
+	useEffect(() => {
+		let alive = true;
+		getWorkspaceMcp().then((mcp) => { if (alive) setTools(mcp.tools); }).catch(() => { if (alive) setFailed(true); });
+		return () => { alive = false; };
+	}, []);
+	return (
+		<div className="vs-mcp">
+			<div className="vs-mcp-head">
+				<span className={`vs-mcp-dot${tools ? ' on' : ''}`} />
+				<b>Workspace MCP server</b>
+				<span className="vs-mcp-sub">{failed ? 'failed to start' : tools ? `${tools.length} tools · in-process` : 'starting…'}</span>
+			</div>
+			<p className="vs-mcp-desc">Coworkers use the workspace through these Model Context Protocol tools — the same seam external agents will plug into.</p>
+			{tools?.map((t) => (
+				<div key={t.name} className="vs-mcp-tool"><code>{t.name}</code><span>{t.description}</span></div>
+			))}
 		</div>
 	);
 }
@@ -51,6 +77,12 @@ export function SettingsSheet() {
 	const [motion, setMotion] = useState(() => document.documentElement.dataset.motion ?? 'full');
 	const applyDensity = (v: string) => { setDensity(v); document.documentElement.dataset.density = v; try { localStorage.setItem('vs-density', v); } catch { /* ignore */ } };
 	const applyMotion = (v: string) => { setMotion(v); document.documentElement.dataset.motion = v; try { localStorage.setItem('vs-motion', v); } catch { /* ignore */ } };
+	const [tabLayout, setTabLayout] = useState(() => { try { return localStorage.getItem('vs-tablayout') ?? 'top'; } catch { return 'top'; } });
+	const applyTabLayout = (v: string) => {
+		setTabLayout(v);
+		try { localStorage.setItem('vs-tablayout', v); } catch { /* ignore */ }
+		window.dispatchEvent(new CustomEvent('velocity:tablayout', { detail: v }));
+	};
 
 	const [reviewProvider, setReviewProvider] = usePref('reviewProvider', 'github');
 	const [prDest, setPrDest] = usePref('prDest', 'browser');
@@ -124,6 +156,12 @@ export function SettingsSheet() {
 										<button onClick={() => setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')}><Monitor size={13} />System</button>
 									</div>
 								</Row>
+								<Row title="Tab layout" desc="Project tabs across the top, or an Arc-style collapsible sidebar.">
+									<div className="vs-seg">
+										<button className={tabLayout === 'top' ? 'on' : ''} onClick={() => applyTabLayout('top')}>Top</button>
+										<button className={tabLayout === 'side' ? 'on' : ''} onClick={() => applyTabLayout('side')}>Vertical</button>
+									</div>
+								</Row>
 								<Row title="Density" desc="How compact the workspace chrome is.">
 									<div className="vs-seg"><button className={density === 'comfortable' ? 'on' : ''} onClick={() => applyDensity('comfortable')}>Cozy</button><button className={density === 'compact' ? 'on' : ''} onClick={() => applyDensity('compact')}>Compact</button></div>
 								</Row>
@@ -149,6 +187,7 @@ export function SettingsSheet() {
 						)}
 						{section === 'integrations' && (
 							<>
+								<McpTools />
 								<Row title="Review provider" desc="Connect where reviews and PRs live."><Select value={reviewProvider} onChange={setReviewProvider} options={[['github', 'GitHub'], ['gitlab', 'GitLab'], ['bitbucket', 'Bitbucket']]} /></Row>
 								<Row title="Default deploy target" desc="Where Ship deploys by default."><Select value={deployTarget} onChange={setDeployTarget} options={[['vercel', 'Vercel'], ['netlify', 'Netlify'], ['cloudflare', 'Cloudflare']]} /></Row>
 							</>

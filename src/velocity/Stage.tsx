@@ -3,7 +3,7 @@ import {
 	Play, Check, X, ShieldCheck, Sparkles, ArrowRight, Server, Database, Clock, Gauge, Circle,
 	MessageSquare, CheckCheck, Code2, CheckCircle2, ChevronDown, ChevronRight, SplitSquareHorizontal, SplitSquareVertical,
 	Globe, FlaskConical, GitCompare, Wand2, Trash2, MoreHorizontal, Folder, FolderOpen, FileCode,
-	PanelLeft, Search, Replace,
+	PanelLeft, Search, Replace, TerminalSquare,
 } from 'lucide-react';
 import { openSearchPanel } from '@codemirror/search';
 import { EditorMode } from '../modes/EditorMode';
@@ -14,7 +14,9 @@ import { getActiveEditor } from '../editor/activeView';
 import { useWorkspace, runtime } from './useWorkspace';
 import { LENS_META, COMPARE_LABEL, WORK_INTENTS, WORK_MODELS } from './model';
 import { leafIds } from './panes';
+import type { DropEdge } from './panes';
 import { ContextMenu, useContextMenu } from './ContextMenu';
+import { TerminalPanel } from './surfaces';
 import type { MenuItem } from './ContextMenu';
 import type { Collaborator, Comment, CompareSource, Coworker, Lens, PaneLeaf, PaneNode, PaneSplit, WorkIntent } from './model';
 
@@ -431,6 +433,7 @@ function renderLens(lens: Lens, paneKey: string) {
 	switch (lens) {
 		case 'browser': return <BrowserLens paneId={`vel:${paneKey}`} />;
 		case 'code': return <IDELens paneKey={paneKey} />;
+		case 'terminal': return <div className="vs-termlens"><TerminalPanel /></div>;
 		case 'system': return <SystemLens />;
 		case 'data': return <DataLens />;
 		case 'tests': return <TestsLens />;
@@ -675,8 +678,18 @@ function CommentLayer({ lens }: { lens: Lens }) {
 		<>
 			{commentMode && !draft && <div className="vs-comment-catcher" onClick={onPlace} />}
 			{comments.map((c) => <Pin key={c.id} comment={c} />)}
-			{active && !draft && <CommentThread comment={active} />}
-			{draft && <WorkComposer lens={lens} x={draft.x} y={draft.y} onClose={closeDraft} />}
+			{active && !draft && (
+				<>
+					<div className="vs-thread-scrim" onClick={() => runtime.openComment(null)} />
+					<CommentThread comment={active} />
+				</>
+			)}
+			{draft && (
+				<>
+					<div className="vs-thread-scrim" onClick={() => closeDraft()} />
+					<WorkComposer lens={lens} x={draft.x} y={draft.y} onClose={closeDraft} />
+				</>
+			)}
 		</>
 	);
 }
@@ -698,7 +711,7 @@ function StageOverlay({ lens }: { lens: Lens }) {
 // --------------------------------------------------------------------------
 const LENS_ORDER: Lens[] = ['browser', 'code', 'system', 'data', 'tests', 'verify'];
 const LENS_ICON: Record<Lens, typeof Globe> = {
-	browser: Globe, code: Code2, system: Server, data: Database, tests: FlaskConical, verify: CheckCircle2,
+	browser: Globe, code: Code2, terminal: TerminalSquare, system: Server, data: Database, tests: FlaskConical, verify: CheckCircle2,
 };
 const COMPARE_ORDER: CompareSource[] = ['none', 'stable', 'live', 'preview', 'branch'];
 
@@ -733,7 +746,10 @@ function PaneToolbar({ leaf, single }: { leaf: PaneLeaf; single: boolean }) {
 	const ctx = useContextMenu();
 	const Icon = LENS_ICON[leaf.view];
 	return (
-		<div className="vs-pane-bar" onContextMenu={ctx.onContextMenu}>
+		<div className="vs-pane-bar" onContextMenu={ctx.onContextMenu}
+			draggable
+			onDragStart={(e) => { e.dataTransfer.setData('velocity/pane', leaf.id); e.dataTransfer.effectAllowed = 'move'; }}
+			title="Drag to move this panel">
 			{ctx.at && (
 				<ContextMenu x={ctx.at.x} y={ctx.at.y} onClose={ctx.close} items={[
 					{ label: 'Split right', icon: <SplitSquareHorizontal size={14} />, onClick: () => runtime.splitPane(leaf.id, 'row') },
@@ -783,17 +799,43 @@ function PaneToolbar({ leaf, single }: { leaf: PaneLeaf; single: boolean }) {
 	);
 }
 
+/** Which edge of the pane the cursor is nearest — the drop target. */
+function edgeAt(e: React.DragEvent, el: HTMLElement): DropEdge {
+	const r = el.getBoundingClientRect();
+	const x = (e.clientX - r.left) / r.width;
+	const y = (e.clientY - r.top) / r.height;
+	const d = { left: x, right: 1 - x, top: y, bottom: 1 - y };
+	const m = Math.min(d.left, d.right, d.top, d.bottom);
+	return m === d.left ? 'left' : m === d.right ? 'right' : m === d.top ? 'top' : 'bottom';
+}
+
 function Pane({ leaf, single }: { leaf: PaneLeaf; single: boolean }) {
 	const state = useWorkspace();
+	const [dropEdge, setDropEdge] = useState<DropEdge | null>(null);
 	const active = state.layout.activePaneId === leaf.id;
 	const comparing = leaf.view === 'browser' && !!leaf.compareSource && leaf.compareSource !== 'none';
 	return (
-		<section className={`vs-pane${active ? ' active' : ''}${state.layout.commentMode ? ' commenting' : ''}`} onMouseDown={() => runtime.focusPane(leaf.id)}>
+		<section className={`vs-pane${active ? ' active' : ''}${state.layout.commentMode ? ' commenting' : ''}`} onMouseDown={() => runtime.focusPane(leaf.id)}
+			onDragOver={(e) => {
+				if (![...e.dataTransfer.types].includes('velocity/pane')) return;
+				e.preventDefault();
+				e.dataTransfer.dropEffect = 'move';
+				setDropEdge(edgeAt(e, e.currentTarget));
+			}}
+			onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDropEdge(null); }}
+			onDrop={(e) => {
+				e.preventDefault();
+				const src = e.dataTransfer.getData('velocity/pane');
+				const edge = edgeAt(e, e.currentTarget);
+				setDropEdge(null);
+				if (src && src !== leaf.id) runtime.movePane(src, leaf.id, edge);
+			}}>
 			<PaneToolbar leaf={leaf} single={single} />
 			<div className="vs-pane-body">
 				{comparing ? <PreviewCompare source={leaf.compareSource!} /> : renderLens(leaf.view, leaf.id)}
 				{!comparing && <StageOverlay lens={leaf.view} />}
 			</div>
+			{dropEdge && <div className={`vs-drop-hint ${dropEdge}`} aria-hidden />}
 		</section>
 	);
 }
