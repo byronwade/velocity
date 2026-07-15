@@ -36,6 +36,7 @@ function Tab({ tab, active }: { tab: TabView; active: boolean }) {
 	const [renaming, setRenaming] = useState(false);
 	const [name, setName] = useState(tab.name);
 	const [hover, setHover] = useState(false);
+	const [dropTarget, setDropTarget] = useState(false);
 	const ctx = useContextMenu();
 
 	const openMission = (e: React.MouseEvent) => {
@@ -45,9 +46,14 @@ function Tab({ tab, active }: { tab: TabView; active: boolean }) {
 	};
 
 	return (
-		<div className={`vs-tab${active ? ' active' : ''}`} onClick={() => manager.switchProject(tab.id)}
+		<div className={`vs-tab${active ? ' active' : ''}${dropTarget ? ' droptarget' : ''}`} onClick={() => manager.switchProject(tab.id)}
 			onDoubleClick={() => { setName(tab.name); setRenaming(true); }} onContextMenu={ctx.onContextMenu}
 			onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
+			draggable={!renaming}
+			onDragStart={(e) => { e.dataTransfer.setData('text/plain', tab.id); e.dataTransfer.effectAllowed = 'move'; }}
+			onDragOver={(e) => { e.preventDefault(); setDropTarget(true); }}
+			onDragLeave={() => setDropTarget(false)}
+			onDrop={(e) => { e.preventDefault(); setDropTarget(false); const id = e.dataTransfer.getData('text/plain'); if (id) manager.reorderProjects(id, tab.id); }}
 			role="tab" aria-selected={active}>
 			<span className={`vs-tab-status${tab.working ? ' working' : tab.pendingReview ? ' review' : tab.openDecision ? ' decision' : tab.paused ? ' paused' : ''}`}>
 				{tab.working ? <span className="vs-tab-spin" /> : tab.pendingReview ? <Flag size={11} /> : tab.openDecision ? <ShieldQuestion size={11} /> : tab.paused ? <Pause size={10} /> : <span className="vs-tab-dot" />}

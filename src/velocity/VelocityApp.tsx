@@ -39,6 +39,8 @@ export function VelocityApp() {
 			if (mod && e.key.toLowerCase() === 'k') { e.preventDefault(); runtime.openCommand(true); return; }
 			if (mod && e.shiftKey && e.key.toLowerCase() === 'n') { e.preventDefault(); runtime.openMissionSheet(true); return; }
 			if (mod && e.shiftKey && e.key.toLowerCase() === 'd') { e.preventDefault(); runtime.openShip(true); return; }
+			if (mod && e.key === '\\') { e.preventDefault(); runtime.splitPane(runtime.getState().layout.activePaneId, e.shiftKey ? 'col' : 'row'); return; }
+			if (mod && e.key.toLowerCase() === 'j') { e.preventDefault(); runtime.openTool(runtime.getState().layout.openTool ? null : 'terminal'); return; }
 			if (typing || mod) return;
 			if (e.key >= '1' && e.key <= '7') { runtime.setLens(LENS_ORDER[Number(e.key) - 1]); return; }
 			if (e.key.toLowerCase() === 'c') runtime.comparePreview('stable');

@@ -626,6 +626,9 @@ export function CommandBar() {
 			{ id: 'checkpoint', label: 'Review latest checkpoint', run: () => runtime.openRight('checkpoint') },
 			{ id: 'decision', label: 'Open decision', run: () => runtime.openRight('decision') },
 			{ id: 'compare', label: 'Compare Candidate vs Stable', run: () => runtime.comparePreview('stable') },
+			{ id: 'split-r', label: 'Split active pane right', hint: '⌘\\', run: () => runtime.splitPane(state.layout.activePaneId, 'row') },
+			{ id: 'split-d', label: 'Split active pane down', hint: '⌘⇧\\', run: () => runtime.splitPane(state.layout.activePaneId, 'col') },
+			{ id: 'terminal', label: 'Toggle terminal', hint: '⌘J', run: () => runtime.openTool(state.layout.openTool ? null : 'terminal') },
 			{ id: 'pause', label: state.paused ? 'Resume all coworkers' : 'Pause all coworkers', run: () => runtime.togglePause() },
 			{ id: 'focus', label: 'Toggle focus mode', run: () => runtime.toggleFocus() },
 			{ id: 'tools', label: 'Toggle developer tools', run: () => runtime.openTool(state.layout.openTool ? null : 'explorer') },
@@ -633,7 +636,7 @@ export function CommandBar() {
 			{ id: 'ship', label: 'Ship — deploy to a host', hint: '⌘⇧D', run: () => runtime.openShip(true) },
 			...lensCmds,
 		];
-	}, [state.paused, state.layout.openTool]);
+	}, [state.paused, state.layout.openTool, state.layout.activePaneId]);
 
 	if (!state.layout.commandOpen) return null;
 	const filtered = cmds.filter((c) => c.label.toLowerCase().includes(q.toLowerCase()));

@@ -178,6 +178,16 @@ export class WorkspaceManager {
 		this.emit();
 	}
 
+	reorderProjects(dragId: string, targetId: string): void {
+		if (dragId === targetId) return;
+		const from = this.projects.findIndex((p) => p.id === dragId);
+		const to = this.projects.findIndex((p) => p.id === targetId);
+		if (from === -1 || to === -1) return;
+		const [moved] = this.projects.splice(from, 1);
+		this.projects.splice(to, 0, moved);
+		this.emit();
+	}
+
 	renameProject(id: string, name: string): void {
 		const project = this.projects.find((p) => p.id === id);
 		if (!project) return;

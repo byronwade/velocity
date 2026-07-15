@@ -48,6 +48,8 @@
 }
 .vs-tab:hover { background: color-mix(in srgb, var(--panel) 60%, transparent); color: var(--fg); }
 .vs-tab.active { background: var(--panel); border-color: var(--line); color: var(--fg); box-shadow: var(--elev-1); }
+.vs-tab.droptarget { box-shadow: inset 2px 0 0 var(--accent); }
+.vs-tab[draggable="true"] { cursor: grab; }
 .vs-tab-status { display: grid; place-items: center; width: 14px; height: 14px; flex: 0 0 auto; color: var(--faint); }
 .vs-tab-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--good); }
 .vs-tab-status.review { color: var(--warn); }
