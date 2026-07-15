@@ -30,7 +30,7 @@ function baseLayout(lens: Lens = 'browser', leftCompare?: CompareSource) {
 		openTool: null, dockExpanded: false, focusMode: false, followingId: null,
 		shipOpen: false, rightSurface: 'none' as const, activeCheckpointId: null,
 		activeDecisionId: null, missionSheetOpen: false, commandOpen: false,
-		commentMode: false, activeCommentId: null, shareOpen: false, workChatOpen: false, settingsOpen: false,
+		commentMode: false, activeCommentId: null, shareOpen: false, settingsOpen: false,
 	};
 }
 
@@ -50,13 +50,13 @@ function baseComments(): Comment[] {
 		{
 			id: 'cm1', lens: 'browser', x: 22, y: 60, authorName: 'Nadia Rao', authorColor: CO.nadia,
 			text: 'The passkey button should read “Continue with a passkey” — and can we soften the border?',
-			createdLabel: '4m', resolved: false, assignedCoworkerId: 'theo',
+			createdLabel: '4m', resolved: false, assignedCoworkerId: 'theo', intent: 'copy', model: 'auto', agents: 1,
 			replies: [{ authorName: 'Theo', authorColor: '#4a8dd1', text: 'On it — adjusting the label and border weight now.', tsLabel: '3m', fromCoworker: true }],
 		},
 		{
 			id: 'cm2', lens: 'browser', x: 14, y: 22, authorName: 'You', authorColor: CO.you,
 			text: 'Hero headline could be one line on mobile. Worth a pass?',
-			createdLabel: '2m', resolved: false, assignedCoworkerId: null, replies: [],
+			createdLabel: '2m', resolved: false, assignedCoworkerId: null, intent: 'redesign', model: 'auto', agents: 1, replies: [],
 		},
 	];
 }

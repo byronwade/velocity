@@ -368,7 +368,8 @@
 	transition: transform var(--dur) var(--ease);
 }
 .vs-pin:hover, .vs-pin.active { transform: translate(-50%, -100%) scale(1.1); }
-.vs-pin-badge { position: absolute; right: -2px; top: -2px; width: 10px; height: 10px; border-radius: 50%; background: var(--good); border: 2px solid var(--panel); }
+.vs-pin.assigned { border-radius: var(--r-md) var(--r-md) var(--r-md) 3px; }
+.vs-pin-face { font-size: 10px; font-weight: var(--fw-semibold); letter-spacing: 0.02em; }
 .vs-thread {
 	position: absolute; z-index: 22; width: 288px; max-height: 70vh; overflow: auto;
 	background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-lg); box-shadow: var(--elev-2);
@@ -383,22 +384,48 @@
 .vs-reply.bot { background: color-mix(in srgb, var(--accent) 6%, var(--panel-2)); }
 .vs-reply > div { flex: 1; color: var(--muted); }
 .vs-reply b { color: var(--fg); font-weight: var(--fw-medium); font-size: var(--text-12); }
-.vs-thread-assign { border-top: 1px solid var(--line); padding-top: 10px; display: flex; flex-direction: column; gap: 7px; }
-.vs-thread-assign > span { font-size: var(--text-11); color: var(--faint); font-weight: var(--fw-medium); }
-.vs-assign-row { display: flex; flex-wrap: wrap; gap: 5px; }
-.vs-assign-chip { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 9px 0 3px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--muted); font: inherit; font-size: var(--text-11); font-weight: var(--fw-medium); cursor: pointer; }
-.vs-assign-chip:hover { color: var(--fg); border-color: var(--line-2); }
-.vs-assign-chip.on { border-color: var(--id); color: color-mix(in srgb, var(--id) 55%, var(--fg)); background: color-mix(in srgb, var(--id) 10%, var(--panel)); }
 .vs-avatar.xs { width: 18px; height: 18px; font-size: 8px; margin: 0; }
-.vs-thread-resolve { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer; }
+/* Work tag — the intent, one neutral chip (stays monochrome / v0). */
+.vs-work-tag { align-self: flex-start; font-size: 10px; font-weight: var(--fw-semibold); text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 7px; border-radius: var(--r-sm); background: var(--panel-2); color: var(--muted); border: 1px solid var(--line); }
+/* Assignee row — who is on it, at a glance; click to change everything. */
+.vs-thread-assignee { display: flex; align-items: center; gap: 7px; height: 34px; padding: 0 10px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--panel-2); color: var(--fg); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer; text-align: left; }
+.vs-thread-assignee:hover { border-color: var(--line-2); }
+.vs-thread-assignee.ghost { color: var(--muted); background: transparent; border-style: dashed; justify-content: center; }
+.vs-ta-name { flex: 0 0 auto; }
+.vs-ta-meta { color: var(--faint); font-weight: var(--fw-normal); font-size: var(--text-11); }
+.vs-thread-assignee svg:last-child { margin-left: auto; color: var(--faint); flex: 0 0 auto; }
+.vs-thread-resolve { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--panel); color: var(--fg); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer; }
 .vs-thread-resolve:hover { border-color: var(--good); color: var(--good); }
+
+/* --- Work composer — describe → intent → auto-assign, one stable box ----- */
 .vs-composer {
-	position: absolute; transform: translate(12px, -8px); z-index: 22; width: 256px;
-	background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-md); box-shadow: var(--elev-2);
-	padding: 10px; display: flex; flex-direction: column; gap: 8px; animation: vs-rise var(--dur) var(--ease);
+	position: absolute; transform: translate(12px, -8px); z-index: 22; width: 288px;
+	background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-lg); box-shadow: var(--elev-2);
+	padding: 10px; display: flex; flex-direction: column; gap: 9px; animation: vs-rise var(--dur) var(--ease);
 }
-.vs-composer textarea { border: 0; background: transparent; color: var(--fg); font: inherit; font-size: var(--text-13); resize: none; outline: none; }
-.vs-composer-foot { display: flex; align-items: center; justify-content: space-between; }
+.vs-composer textarea { border: 0; background: transparent; color: var(--fg); font: inherit; font-size: var(--text-13); line-height: 1.45; resize: none; outline: none; }
+.vs-composer textarea::placeholder { color: var(--faint); }
+.vs-wc-intents { display: flex; flex-wrap: wrap; gap: 5px; }
+.vs-wc-chip { height: 24px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--muted); font: inherit; font-size: var(--text-11); font-weight: var(--fw-medium); cursor: pointer; transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease); }
+.vs-wc-chip:hover { color: var(--fg); border-color: var(--line-2); }
+.vs-wc-chip.on { background: var(--fg); color: var(--shell); border-color: var(--fg); }
+.vs-wc-foot { display: flex; align-items: center; gap: 8px; }
+.vs-wc-assignee { display: inline-flex; align-items: center; gap: 6px; height: 30px; max-width: 200px; padding: 0 9px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--panel-2); color: var(--fg); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer; white-space: nowrap; overflow: hidden; }
+.vs-wc-assignee:hover { border-color: var(--line-2); }
+.vs-wc-assignee svg:last-child { color: var(--faint); flex: 0 0 auto; }
+.vs-wc-brief { align-self: flex-start; padding: 2px 0 0; border: 0; background: transparent; color: var(--accent); font: inherit; font-size: var(--text-11); font-weight: var(--fw-medium); cursor: pointer; }
+.vs-wc-menuscrim { position: fixed; inset: 0; z-index: 1; }
+.vs-wc-menu { position: absolute; left: 10px; right: 10px; bottom: 52px; z-index: 2; max-height: 262px; overflow: auto; background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-lg); box-shadow: var(--elev-2); padding: 6px; }
+.vs-wc-mhead { padding: 7px 8px 3px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--faint); font-weight: var(--fw-semibold); }
+.vs-wc-mhead:first-child { padding-top: 3px; }
+.vs-wc-mrow { display: flex; align-items: center; gap: 8px; width: 100%; height: 30px; padding: 0 8px; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: var(--text-12); border-radius: var(--r-sm); cursor: pointer; text-align: left; }
+.vs-wc-mrow:hover { background: var(--panel-2); }
+.vs-wc-mname { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vs-wc-mrole { flex: 0 0 auto; color: var(--faint); font-size: var(--text-11); }
+.vs-wc-check { flex: 0 0 auto; color: var(--accent); }
+.vs-wc-agents { display: flex; gap: 4px; padding: 2px 4px 4px; }
+.vs-wc-agents button { flex: 1; height: 28px; border-radius: var(--r-sm); border: 1px solid var(--line); background: var(--panel); color: var(--muted); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer; }
+.vs-wc-agents button.on { background: var(--fg); color: var(--shell); border-color: var(--fg); }
 .vs-stage.commenting .vs-stage-inner { cursor: crosshair; }
 
 /* --- The seeded live app (Preview lens) --------------------------------- */

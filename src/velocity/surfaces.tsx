@@ -3,7 +3,6 @@ import {
 	X, Plus, Check, RotateCcw, GitCompare, Eye, Pause, Play, Pencil, Trash2,
 	CornerUpLeft, ShieldQuestion, FlaskConical, Camera, Activity, FileDiff, Circle,
 	Users, ChevronRight, ArchiveRestore, Terminal as TermIcon, Folder, AlertTriangle, GitBranch, Flag, EyeOff,
-	Sparkles, Send,
 } from 'lucide-react';
 import { Link2, UserPlus, Check as CheckIcon, Rocket } from 'lucide-react';
 import { MoreHorizontal } from 'lucide-react';
@@ -158,70 +157,6 @@ export function ShareSheet() {
 				</footer>
 			</div>
 		</div>
-	);
-}
-
-// --------------------------------------------------------------------------
-// New Work — an AI chat dropup. Say what to build; the system acts on it.
-// --------------------------------------------------------------------------
-const CHAT_MODELS = ['Auto · frontier', 'Claude Opus 4.8', 'Claude Sonnet 5', 'Local · qwen2.5-coder'];
-
-export function WorkChat() {
-	const state = useWorkspace();
-	const [model, setModel] = useState(CHAT_MODELS[0]);
-	const [draft, setDraft] = useState('');
-	const [msgs, setMsgs] = useState<{ role: 'user' | 'assistant'; text: string }[]>([]);
-	const taRef = useRef<HTMLTextAreaElement>(null);
-	const scrollRef = useRef<HTMLDivElement>(null);
-	useEffect(() => { if (state.layout.workChatOpen) taRef.current?.focus(); }, [state.layout.workChatOpen]);
-	useEffect(() => { scrollRef.current?.scrollTo(0, scrollRef.current.scrollHeight); }, [msgs]);
-	if (!state.layout.workChatOpen) return null;
-
-	const send = () => {
-		const t = draft.trim();
-		if (!t) return;
-		setMsgs((m) => [...m, { role: 'user', text: t }]);
-		const reply = runtime.chatWork(t);
-		setMsgs((m) => [...m, { role: 'assistant', text: reply }]);
-		setDraft('');
-	};
-
-	return (
-		<>
-			<div className="vs-workchat-scrim" onClick={() => runtime.openWorkChat(false)} />
-			<div className="vs-workchat" role="dialog" aria-label="New work">
-				<header className="vs-workchat-head">
-					<Sparkles size={15} /><b>New work</b>
-					<span className="vs-workchat-sub">{state.mission ? 'Direct the team on this project' : 'Describe an outcome to start'}</span>
-					<button className="vs-icon sm" onClick={() => runtime.openWorkChat(false)} aria-label="Close"><X size={15} /></button>
-				</header>
-				<div className="vs-workchat-msgs" ref={scrollRef}>
-					{msgs.length === 0 && (
-						<div className="vs-workchat-hello">
-							Tell me what to build or change and I'll staff a coworker and get started.
-							<div className="vs-workchat-eg">
-								{['Add a pricing page with a monthly/yearly toggle', 'Fix the passkey button label', 'Make onboarding responsive on mobile'].map((s) => (
-									<button key={s} onClick={() => setDraft(s)}>{s}</button>
-								))}
-							</div>
-						</div>
-					)}
-					{msgs.map((m, i) => <div key={i} className={`vs-cmsg ${m.role}`}>{m.text}</div>)}
-				</div>
-				<div className="vs-workchat-composer">
-					<textarea ref={taRef} value={draft} rows={2} placeholder="Describe the work…" onChange={(e) => setDraft(e.target.value)}
-						onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }} />
-					<div className="vs-workchat-foot">
-						<select className="vs-chat-model" value={model} onChange={(e) => setModel(e.target.value)} title="Model">
-							{CHAT_MODELS.map((m) => <option key={m}>{m}</option>)}
-						</select>
-						<button className="vs-chat-brief" onClick={() => { runtime.openWorkChat(false); runtime.openMissionSheet(true); }}>Detailed brief…</button>
-						<div className="vs-spacer" />
-						<button className="vs-app-primary sm" disabled={!draft.trim()} onClick={send}><Send size={13} />Send</button>
-					</div>
-				</div>
-			</div>
-		</>
 	);
 }
 
@@ -717,10 +652,10 @@ export function CommandBar() {
 	const cmds = useMemo<Cmd[]>(() => {
 		const lensCmds: Cmd[] = (Object.keys(LENS_META) as Lens[]).map((l) => ({ id: `lens:${l}`, label: `Lens: ${LENS_META[l].label}`, hint: LENS_META[l].hint, run: () => runtime.setLens(l) }));
 		return [
-			{ id: 'mission', label: 'New mission', hint: '⌘⇧N', run: () => runtime.openMissionSheet(true) },
+			{ id: 'newwork', label: 'New work — click your app to place it', hint: '⌘⇧N', run: () => runtime.armWork(true) },
+			{ id: 'mission', label: 'Detailed brief — full mission', run: () => runtime.openMissionSheet(true) },
 			{ id: 'coworkers', label: 'Open coworkers', run: () => runtime.openRight('coworkers') },
 			{ id: 'share', label: 'Workers — invite people & coworkers', run: () => runtime.openRight('coworkers') },
-			{ id: 'comment', label: 'Add a comment', hint: 'click stage', run: () => runtime.toggleCommentMode() },
 			{ id: 'activity', label: 'Open activity feed', run: () => runtime.openRight('activity') },
 			{ id: 'checkpoint', label: 'Review latest checkpoint', run: () => runtime.openRight('checkpoint') },
 			{ id: 'decision', label: 'Open decision', run: () => runtime.openRight('decision') },

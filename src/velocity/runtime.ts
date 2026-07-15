@@ -10,10 +10,10 @@
 // ---------------------------------------------------------------------------
 
 import { buildScenario } from './scenarios';
-import { DEPLOY_TARGETS } from './model';
+import { DEPLOY_TARGETS, WORK_INTENTS, WORK_MODELS } from './model';
 import { findLeaf, firstLeafId, firstLeafOfView, leafIds, removeLeaf, setCompareSource, setRatio, setView, splitLeaf } from './panes';
 import type {
-	Autonomy, CollabRole, CompareSource, Coworker, DeployTarget, Lens, MissionInput, SplitDir, ToolId, WorkspaceState,
+	Autonomy, CollabRole, CompareSource, Coworker, DeployTarget, Lens, MissionInput, SplitDir, ToolId, WorkIntent, WorkspaceState,
 } from './model';
 
 export interface CoworkerRuntime {
@@ -31,8 +31,6 @@ export interface CoworkerRuntime {
 	setPaneCompare(id: string, source: CompareSource): void;
 	comparePreview(source: CompareSource): void;
 	openShip(open: boolean): void;
-	openWorkChat(open: boolean): void;
-	chatWork(text: string): string;
 	openSettings(open: boolean): void;
 	openTool(tool: ToolId | null): void;
 	toggleDock(): void;
@@ -65,15 +63,30 @@ export interface CoworkerRuntime {
 	ship(): void;
 	deploy(provider: DeployTarget): void;
 
-	// --- collaboration ---
+	// --- work / comments ---
+	armWork(on: boolean): void;
 	toggleCommentMode(): void;
-	addComment(lens: Lens, x: number, y: number, text: string): void;
+	pickCoworker(text: string, intent: WorkIntent | null): string | null;
+	addComment(lens: Lens, x: number, y: number, text: string, opts?: AddWorkOpts): void;
 	openComment(id: string | null): void;
 	assignComment(commentId: string, coworkerId: string): void;
+	setCommentModel(id: string, model: string): void;
+	setCommentAgents(id: string, agents: number): void;
 	resolveComment(id: string): void;
+	deleteComment(id: string): void;
 	openShare(open: boolean): void;
 	inviteCollaborator(email: string, role: CollabRole): void;
 	removeCollaborator(id: string): void;
+}
+
+/** Options the WorkComposer/context-menu can pass; every one is optional and
+ *  auto-resolved when omitted, so the common path is just text. */
+export interface AddWorkOpts {
+	intent?: WorkIntent | null;
+	/** Explicit coworker; omit or 'auto' to let pickCoworker choose. */
+	assignee?: string | null;
+	model?: string;
+	agents?: number;
 }
 
 const IDENTITY_COLORS = ['#6f74c9', '#4a8dd1', '#2f9e8f', '#5b7a99', '#8a6fb0', '#3f7fd0'];
@@ -170,27 +183,7 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 		}
 	}
 	openShip(open: boolean): void { this.patchLayout({ shipOpen: open }); }
-	openWorkChat(open: boolean): void { this.patchLayout({ workChatOpen: open }); }
 	openSettings(open: boolean): void { this.patchLayout({ settingsOpen: open }); }
-	/** Interpret a freeform chat message and act — the "new work" entry point. */
-	chatWork(text: string): string {
-		const t = text.trim();
-		if (!t) return '';
-		if (!this.state.mission) {
-			const title = t.split(/\s+/).slice(0, 8).join(' ');
-			this.createMission({
-				title, outcome: t, acceptanceCriteria: [], includedScope: [], excludedScope: [],
-				staffing: 'auto', autonomy: 'collaborative', approvalPolicy: 'guarded',
-				budget: { spent: 0, total: 8, unit: '$' }, environment: 'Candidate', risk: 'medium', requiredEvidence: ['test', 'screenshot'],
-			});
-			return `On it. I've opened the mission “${title}” and staffed a coworker — they're planning now. Checkpoints will show up here as they land.`;
-		}
-		const cw = this.state.coworkers.find((c) => c.state !== 'archived' && c.state !== 'dismissed');
-		if (cw) this.mapCoworkers((c) => (c.id === cw.id ? { ...c, state: 'active', action: t.length > 44 ? `${t.slice(0, 44)}…` : t } : c));
-		this.addEvent('note', `You: ${t}`, cw?.id ?? null);
-		this.toast('Sent to the team.');
-		return `Got it — I've passed that to ${cw?.name ?? 'the team'}. Follow along in Workers or the activity feed.`;
-	}
 	openTool(tool: ToolId | null): void { this.patchLayout({ openTool: tool }); }
 	toggleDock(): void { this.patchLayout({ dockExpanded: !this.state.layout.dockExpanded }); }
 	toggleFocus(): void { this.patchLayout({ focusMode: !this.state.layout.focusMode, openTool: null, rightSurface: 'none' }); }
@@ -210,7 +203,6 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 	closeTopmost(): void {
 		const l = this.state.layout;
 		if (l.settingsOpen) return this.patchLayout({ settingsOpen: false });
-		if (l.workChatOpen) return this.patchLayout({ workChatOpen: false });
 		if (l.shipOpen) return this.patchLayout({ shipOpen: false });
 		if (l.shareOpen) return this.patchLayout({ shareOpen: false });
 		if (l.commandOpen) return this.patchLayout({ commandOpen: false });
@@ -350,33 +342,89 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 		}, 1100);
 	}
 
-	// --- collaboration ---
+	// --- work / comments ---
+	/** Arm placement: the next click on the app drops a work pin. */
+	armWork(on: boolean): void { this.patchLayout({ commentMode: on, activeCommentId: null }); }
 	toggleCommentMode(): void {
 		this.patchLayout({ commentMode: !this.state.layout.commentMode, activeCommentId: null });
 	}
-	addComment(lens: Lens, x: number, y: number, text: string): void {
-		if (!text.trim()) { this.patchLayout({ commentMode: false }); return; }
+
+	/** Which department best fits this request — used only for auto-assignment. */
+	private deptFor(text: string, intent: WorkIntent | null): string {
+		if (intent) return WORK_INTENTS[intent].dept;
+		const t = text.toLowerCase();
+		if (/\b(test|tests|qa|coverage|spec|specs|e2e|regression)\b/.test(t)) return 'Verification';
+		if (/\b(design|redesign|layout|ui|style|restyle|color|colour|spacing|responsive|mobile|hero|button|font|theme|padding)\b/.test(t)) return 'Design';
+		return 'Engineering';
+	}
+	/** Infer the request kind from freeform text when no chip was tapped. */
+	private detectIntent(text: string): WorkIntent | null {
+		const t = text.toLowerCase();
+		if (/\b(test|tests|qa|coverage|spec|specs|e2e)\b/.test(t)) return 'test';
+		if (/\b(redesign|design|layout|restyle|ui|spacing|responsive|mobile|align)\b/.test(t)) return 'redesign';
+		if (/\b(copy|wording|text|label|rename|typo|microcopy|headline)\b/.test(t)) return 'copy';
+		if (/\b(add|create|new|build|implement|introduce)\b/.test(t)) return 'add';
+		if (/\b(fix|bug|broken|error|crash|issue|wrong|regress)\b/.test(t)) return 'fix';
+		return null;
+	}
+	/** Deterministically pick the best-fit, least-busy coworker (null if none). */
+	pickCoworker(text: string, intent: WorkIntent | null): string | null {
+		const live = this.state.coworkers.filter((c) => c.state !== 'archived' && c.state !== 'dismissed');
+		if (!live.length) return null;
+		const dept = this.deptFor(text, intent);
+		const pool = live.filter((c) => c.department === dept);
+		// busy rank: free first, working next, paused/done last. Array.sort is
+		// stable, so equal ranks keep the seeded roster order → deterministic.
+		const rank = (c: Coworker) => (c.state === 'idle' || c.state === 'waiting' ? 0 : c.state === 'active' || c.state === 'verifying' || c.state === 'planning' ? 1 : 2);
+		return [...(pool.length ? pool : live)].sort((a, b) => rank(a) - rank(b))[0].id;
+	}
+
+	addComment(lens: Lens, x: number, y: number, text: string, opts: AddWorkOpts = {}): void {
+		const t = text.trim();
+		if (!t) { this.patchLayout({ commentMode: false }); return; }
 		const me = this.state.collaborators.find((c) => c.id === 'you') ?? this.state.collaborators[0];
+		const intent = opts.intent ?? this.detectIntent(t);
 		const id = uid('cm');
 		const comment = {
 			id, lens, x, y, authorName: me?.name ?? 'You', authorColor: me?.color ?? IDENTITY_COLORS[0],
-			text: text.trim(), createdLabel: 'now', resolved: false, assignedCoworkerId: null, replies: [],
+			text: t, createdLabel: 'now', resolved: false, assignedCoworkerId: null,
+			intent, model: opts.model ?? 'auto', agents: opts.agents ?? 1, replies: [],
 		};
 		this.set({ comments: [comment, ...this.state.comments], layout: { ...this.state.layout, commentMode: false, activeCommentId: id } });
-		this.addEvent('note', `Comment added on ${lens}.`, null);
-		this.toast('Comment added.');
+		this.addEvent('note', `Work pinned on ${lens}.`, null);
+		// Auto-assign unless the caller explicitly passed a coworker (or null).
+		const assignee = opts.assignee === undefined || opts.assignee === 'auto' ? this.pickCoworker(t, intent) : opts.assignee;
+		if (assignee) this.assignComment(id, assignee);
+		else this.toast('Work pinned — no coworker available yet.');
 	}
 	openComment(id: string | null): void { this.patchLayout({ activeCommentId: id, commentMode: false }); }
 	assignComment(commentId: string, coworkerId: string): void {
 		const cw = this.state.coworkers.find((c) => c.id === coworkerId);
+		const target = this.state.comments.find((c) => c.id === commentId);
+		const action = target?.intent ? WORK_INTENTS[target.intent].action : 'Addressing a comment';
 		this.set({
 			comments: this.state.comments.map((c) => (c.id === commentId
-				? { ...c, assignedCoworkerId: coworkerId, replies: [...c.replies, { authorName: cw?.name ?? 'Coworker', authorColor: cw?.color ?? IDENTITY_COLORS[0], text: 'Picking this up now — I’ll post a checkpoint when it’s ready.', tsLabel: 'now', fromCoworker: true }] }
+				? { ...c, assignedCoworkerId: coworkerId, replies: [...c.replies, { authorName: cw?.name ?? 'Coworker', authorColor: cw?.color ?? IDENTITY_COLORS[0], text: 'On it — I’ll post a checkpoint when it’s ready.', tsLabel: 'now', fromCoworker: true }] }
 				: c)),
 		});
-		if (cw) this.mapCoworkers((c) => (c.id === coworkerId ? { ...c, state: 'active', action: 'Addressing a comment' } : c));
-		this.addEvent('reassign', `${cw?.name ?? 'A coworker'} assigned to a comment.`, coworkerId);
+		if (cw) this.mapCoworkers((c) => (c.id === coworkerId ? { ...c, state: 'active', action } : c));
+		this.addEvent('reassign', `${cw?.name ?? 'A coworker'} is on “${(target?.text ?? 'a comment').slice(0, 32)}”.`, coworkerId);
 		this.toast(`Assigned to ${cw?.name ?? 'coworker'}.`);
+	}
+	setCommentModel(id: string, model: string): void {
+		this.set({ comments: this.state.comments.map((c) => (c.id === id ? { ...c, model } : c)) });
+		const label = WORK_MODELS.find((m) => m.id === model)?.label ?? model;
+		this.toast(`Model · ${label}.`);
+	}
+	setCommentAgents(id: string, agents: number): void {
+		const n = Math.max(1, Math.min(3, agents));
+		this.set({ comments: this.state.comments.map((c) => (c.id === id ? { ...c, agents: n } : c)) });
+		this.toast(`${n} coworker${n > 1 ? 's' : ''} on it.`);
+	}
+	deleteComment(id: string): void {
+		this.set({ comments: this.state.comments.filter((c) => c.id !== id) });
+		if (this.state.layout.activeCommentId === id) this.patchLayout({ activeCommentId: null });
+		this.toast('Work item removed.');
 	}
 	resolveComment(id: string): void {
 		this.set({ comments: this.state.comments.map((c) => (c.id === id ? { ...c, resolved: true } : c)) });

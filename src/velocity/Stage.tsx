@@ -1,17 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 import {
 	Play, Check, X, ShieldCheck, Sparkles, ArrowRight, Server, Database, Clock, Gauge, Circle,
-	MessageSquare, Send, CheckCheck, Code2, CheckCircle2, ChevronDown, SplitSquareHorizontal, SplitSquareVertical,
-	Globe, FlaskConical, GitCompare,
+	MessageSquare, CheckCheck, Code2, CheckCircle2, ChevronDown, SplitSquareHorizontal, SplitSquareVertical,
+	Globe, FlaskConical, GitCompare, Wand2, Trash2, MoreHorizontal,
 } from 'lucide-react';
 import { EditorMode } from '../modes/EditorMode';
 import { BrowserMode } from '../modes/BrowserMode';
 import { useServices } from '../services/container';
 import { useWorkspace, runtime } from './useWorkspace';
-import { LENS_META, COMPARE_LABEL } from './model';
+import { LENS_META, COMPARE_LABEL, WORK_INTENTS, WORK_MODELS } from './model';
 import { leafIds } from './panes';
 import { ContextMenu, useContextMenu } from './ContextMenu';
-import type { Collaborator, Comment, CompareSource, Coworker, Lens, PaneLeaf, PaneNode, PaneSplit } from './model';
+import type { MenuItem } from './ContextMenu';
+import type { Collaborator, Comment, CompareSource, Coworker, Lens, PaneLeaf, PaneNode, PaneSplit, WorkIntent } from './model';
 
 const ARTIFACT_ACTIONS = ['Improve', 'Fix', 'Rebuild', 'Investigate', 'Explain', 'Assign', 'Compare', 'Test'] as const;
 
@@ -338,10 +339,37 @@ function CursorLayer({ lens, collaborators }: { lens: Lens; collaborators: Colla
 	);
 }
 
+/** The one preset menu — assign (who) · model · agents · resolve · delete.
+ *  Shared by the pin right-click and the open thread's ⋯, so both behave the
+ *  same. Everything is one tap; there is no form. */
+function commentMenu(comment: Comment, coworkers: Coworker[]): MenuItem[] {
+	const agents = comment.agents ?? 1;
+	return [
+		{ label: 'Assign', header: true },
+		{ label: 'Auto · best fit', icon: <Wand2 size={14} />, checked: !comment.assignedCoworkerId,
+			onClick: () => { const id = runtime.pickCoworker(comment.text, comment.intent); if (id) runtime.assignComment(comment.id, id); } },
+		...coworkers.map((c): MenuItem => ({ label: c.name, icon: <span className="vs-avatar xs" style={{ background: c.color }}>{c.initials}</span>,
+			checked: comment.assignedCoworkerId === c.id, onClick: () => runtime.assignComment(comment.id, c.id) })),
+		{ separator: true },
+		{ label: 'Model', header: true },
+		...WORK_MODELS.map((m): MenuItem => ({ label: m.label, checked: comment.model === m.id, onClick: () => runtime.setCommentModel(comment.id, m.id) })),
+		{ separator: true },
+		{ label: 'Coworkers on it', header: true },
+		...[1, 2, 3].map((n): MenuItem => ({ label: `${n} coworker${n > 1 ? 's' : ''}`, checked: agents === n, onClick: () => runtime.setCommentAgents(comment.id, n) })),
+		{ separator: true },
+		{ label: 'Resolve', icon: <CheckCheck size={14} />, onClick: () => runtime.resolveComment(comment.id) },
+		{ label: 'Delete', icon: <Trash2 size={14} />, danger: true, onClick: () => runtime.deleteComment(comment.id) },
+	];
+}
+
 function CommentThread({ comment }: { comment: Comment }) {
 	const state = useWorkspace();
-	const assignable = state.coworkers.filter((c) => c.state !== 'archived' && c.state !== 'dismissed');
-	const assigned = assignable.find((c) => c.id === comment.assignedCoworkerId);
+	const coworkers = state.coworkers.filter((c) => c.state !== 'archived' && c.state !== 'dismissed');
+	const assigned = coworkers.find((c) => c.id === comment.assignedCoworkerId);
+	const ctx = useContextMenu();
+	const intent = comment.intent ? WORK_INTENTS[comment.intent] : null;
+	const modelShort = (WORK_MODELS.find((m) => m.id === comment.model)?.label ?? 'Auto').split(' · ')[0];
+	const agents = comment.agents ?? 1;
 	const tx = comment.x > 66 ? 'calc(-100% - 12px)' : '12px';
 	const ty = comment.y > 52 ? 'calc(-100% + 8px)' : '-8px';
 	return (
@@ -349,68 +377,146 @@ function CommentThread({ comment }: { comment: Comment }) {
 			<div className="vs-thread-head">
 				<span className="vs-avatar sm" style={{ background: comment.authorColor }}>{comment.authorName.slice(0, 2).toUpperCase()}</span>
 				<b>{comment.authorName}</b><span className="vs-thread-ts">{comment.createdLabel}</span>
-				<button className="vs-icon sm" onClick={() => runtime.openComment(null)} aria-label="Close"><X size={14} /></button>
+				<button className="vs-icon xs" onClick={(e) => ctx.onContextMenu(e)} aria-label="Options"><MoreHorizontal size={15} /></button>
+				<button className="vs-icon xs" onClick={() => runtime.openComment(null)} aria-label="Close"><X size={14} /></button>
 			</div>
+			{intent && <span className={`vs-work-tag ${comment.intent}`}>{intent.label}</span>}
 			<div className="vs-thread-text">{comment.text}</div>
+			{assigned ? (
+				<button className="vs-thread-assignee" style={{ ['--id' as string]: assigned.color }} onClick={(e) => ctx.onContextMenu(e)}>
+					<span className="vs-avatar xs" style={{ background: assigned.color }}>{assigned.initials}</span>
+					<span className="vs-ta-name">{assigned.name}</span>
+					<span className="vs-ta-meta">{modelShort}{agents > 1 ? ` · ${agents} agents` : ''}</span>
+					<ChevronDown size={13} />
+				</button>
+			) : (
+				<button className="vs-thread-assignee ghost" onClick={() => { const id = runtime.pickCoworker(comment.text, comment.intent); if (id) runtime.assignComment(comment.id, id); }}>
+					<Wand2 size={13} />Auto-assign a coworker
+				</button>
+			)}
 			{comment.replies.map((r, i) => (
 				<div key={i} className={`vs-reply${r.fromCoworker ? ' bot' : ''}`}>
 					<span className="vs-avatar sm" style={{ background: r.authorColor }}>{r.authorName.slice(0, 2).toUpperCase()}</span>
 					<div><b>{r.authorName}</b> <span className="vs-thread-ts">{r.tsLabel}</span><div>{r.text}</div></div>
 				</div>
 			))}
-			<div className="vs-thread-assign">
-				<span>{assigned ? 'Assigned to' : 'Assign to a coworker'}</span>
-				<div className="vs-assign-row">
-					{assignable.map((c) => (
-						<button key={c.id} className={`vs-assign-chip${assigned?.id === c.id ? ' on' : ''}`} style={{ ['--id' as string]: c.color }}
-							onClick={() => runtime.assignComment(comment.id, c.id)}>
-							<span className="vs-avatar xs" style={{ background: c.color }}>{c.initials}</span>{c.name}
-						</button>
-					))}
-				</div>
-			</div>
 			<button className="vs-thread-resolve" onClick={() => runtime.resolveComment(comment.id)}><CheckCheck size={13} />Resolve</button>
+			{ctx.at && <ContextMenu x={ctx.at.x} y={ctx.at.y} onClose={ctx.close} items={commentMenu(comment, coworkers)} />}
 		</div>
 	);
 }
 
-/** Comment pins + the click-to-comment composer for the current lens. */
+/** The place-work composer — describe it, pick an intent, and it auto-assigns.
+ *  Model / who / how-many are presets behind one popover, so the box never
+ *  grows and nothing on the page shifts. */
+function WorkComposer({ lens, x, y, onClose }: { lens: Lens; x: number; y: number; onClose: (submitted?: boolean) => void }) {
+	const state = useWorkspace();
+	const coworkers = state.coworkers.filter((c) => c.state !== 'archived' && c.state !== 'dismissed');
+	const [text, setText] = useState('');
+	const [intent, setIntent] = useState<WorkIntent | null>(null);
+	const [assignee, setAssignee] = useState<string>('auto');
+	const [model, setModel] = useState('auto');
+	const [agents, setAgents] = useState(1);
+	const [menu, setMenu] = useState(false);
+	const taRef = useRef<HTMLTextAreaElement>(null);
+	useEffect(() => { taRef.current?.focus(); }, []);
+
+	const autoId = runtime.pickCoworker(text, intent);
+	const resolved = coworkers.find((c) => c.id === (assignee === 'auto' ? autoId : assignee));
+
+	const submit = () => {
+		if (!text.trim()) return;
+		runtime.addComment(lens, x, y, text, { intent, assignee: assignee === 'auto' ? 'auto' : assignee, model, agents });
+		onClose(true);
+	};
+	const tx = x > 66 ? 'calc(-100% - 12px)' : '12px';
+	const ty = y > 60 ? 'calc(-100% + 8px)' : '-8px';
+	return (
+		<div className="vs-composer" style={{ left: `${x}%`, top: `${y}%`, transform: `translate(${tx}, ${ty})` }} onClick={(e) => e.stopPropagation()}>
+			<textarea ref={taRef} value={text} rows={2} placeholder="Describe the work — e.g. make the hero responsive"
+				onChange={(e) => setText(e.target.value)}
+				onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(); } if (e.key === 'Escape') onClose(); }} />
+			<div className="vs-wc-intents">
+				{(Object.keys(WORK_INTENTS) as WorkIntent[]).map((k) => (
+					<button key={k} className={`vs-wc-chip${intent === k ? ' on' : ''}`} onClick={() => setIntent(intent === k ? null : k)}>{WORK_INTENTS[k].label}</button>
+				))}
+			</div>
+			<div className="vs-wc-foot">
+				<button className="vs-wc-assignee" onClick={() => setMenu((v) => !v)} title="Who, which model, how many — auto by default">
+					{resolved
+						? <><span className="vs-avatar xs" style={{ background: resolved.color }}>{resolved.initials}</span>{assignee === 'auto' ? 'Auto · ' : ''}{resolved.name}</>
+						: <><Wand2 size={13} />Auto-assign</>}
+					<ChevronDown size={12} />
+				</button>
+				<div className="vs-spacer" />
+				<button className="vs-app-primary sm" disabled={!text.trim()} onClick={submit}>Start</button>
+			</div>
+			<button className="vs-wc-brief" onClick={() => { onClose(); runtime.openMissionSheet(true); }}>Detailed brief…</button>
+			{menu && (
+				<>
+					<div className="vs-wc-menuscrim" onClick={() => setMenu(false)} />
+					<div className="vs-wc-menu" onClick={(e) => e.stopPropagation()}>
+						<div className="vs-wc-mhead">Assign</div>
+						<button className={`vs-wc-mrow${assignee === 'auto' ? ' on' : ''}`} onClick={() => setAssignee('auto')}><Wand2 size={13} /><span className="vs-wc-mname">Auto · best fit</span>{assignee === 'auto' && <span className="vs-wc-check">✓</span>}</button>
+						{coworkers.map((c) => (
+							<button key={c.id} className={`vs-wc-mrow${assignee === c.id ? ' on' : ''}`} onClick={() => setAssignee(c.id)}>
+								<span className="vs-avatar xs" style={{ background: c.color }}>{c.initials}</span><span className="vs-wc-mname">{c.name}</span><span className="vs-wc-mrole">{c.role}</span>{assignee === c.id && <span className="vs-wc-check">✓</span>}
+							</button>
+						))}
+						<div className="vs-wc-mhead">Model</div>
+						{WORK_MODELS.map((m) => (
+							<button key={m.id} className={`vs-wc-mrow${model === m.id ? ' on' : ''}`} onClick={() => setModel(m.id)}><span className="vs-wc-mname">{m.label}</span>{model === m.id && <span className="vs-wc-check">✓</span>}</button>
+						))}
+						<div className="vs-wc-mhead">Coworkers on it</div>
+						<div className="vs-wc-agents">{[1, 2, 3].map((n) => (<button key={n} className={agents === n ? 'on' : ''} onClick={() => setAgents(n)}>{n}</button>))}</div>
+					</div>
+				</>
+			)}
+		</div>
+	);
+}
+
+function Pin({ comment }: { comment: Comment }) {
+	const state = useWorkspace();
+	const coworkers = state.coworkers.filter((c) => c.state !== 'archived' && c.state !== 'dismissed');
+	const assigned = coworkers.find((c) => c.id === comment.assignedCoworkerId);
+	const ctx = useContextMenu();
+	const active = state.layout.activeCommentId === comment.id;
+	return (
+		<>
+			<button className={`vs-pin${active ? ' active' : ''}${comment.assignedCoworkerId ? ' assigned' : ''}`}
+				style={{ left: `${comment.x}%`, top: `${comment.y}%`, ['--id' as string]: assigned?.color ?? comment.authorColor }}
+				onClick={(e) => { e.stopPropagation(); runtime.openComment(active ? null : comment.id); }}
+				onContextMenu={ctx.onContextMenu}
+				title={`${assigned ? assigned.name + ' · ' : ''}${comment.text}`}>
+				{assigned ? <span className="vs-pin-face">{assigned.initials}</span> : <MessageSquare size={13} />}
+			</button>
+			{ctx.at && <ContextMenu x={ctx.at.x} y={ctx.at.y} onClose={ctx.close} items={commentMenu(comment, coworkers)} />}
+		</>
+	);
+}
+
+/** Work pins + the place-work composer for the current lens. */
 function CommentLayer({ lens }: { lens: Lens }) {
 	const state = useWorkspace();
 	const { commentMode, activeCommentId } = state.layout;
-	const [draft, setDraft] = useState<{ x: number; y: number; text: string } | null>(null);
+	const [draft, setDraft] = useState<{ x: number; y: number } | null>(null);
 	const comments = state.comments.filter((c) => c.lens === lens && !c.resolved);
 	const active = comments.find((c) => c.id === activeCommentId);
 
 	const onPlace = (e: React.MouseEvent<HTMLDivElement>) => {
 		const r = e.currentTarget.getBoundingClientRect();
-		setDraft({ x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100, text: '' });
+		setDraft({ x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 });
 	};
+	// On submit the work is placed + a thread opens; only a cancel exits placement.
+	const closeDraft = (submitted?: boolean) => { setDraft(null); if (!submitted) runtime.armWork(false); };
 
 	return (
 		<>
-			{commentMode && <div className="vs-comment-catcher" onClick={onPlace} />}
-			{comments.map((c) => (
-				<button key={c.id} className={`vs-pin${activeCommentId === c.id ? ' active' : ''}${c.assignedCoworkerId ? ' assigned' : ''}`}
-					style={{ left: `${c.x}%`, top: `${c.y}%`, ['--id' as string]: c.authorColor }}
-					onClick={(e) => { e.stopPropagation(); runtime.openComment(activeCommentId === c.id ? null : c.id); }}
-					title={`${c.authorName}: ${c.text}`}>
-					<MessageSquare size={13} />
-					{c.assignedCoworkerId && <span className="vs-pin-badge" />}
-				</button>
-			))}
-			{active && <CommentThread comment={active} />}
-			{draft && (
-				<div className="vs-composer" style={{ left: `${draft.x}%`, top: `${draft.y}%`, transform: `translate(${draft.x > 66 ? 'calc(-100% - 12px)' : '12px'}, ${draft.y > 60 ? 'calc(-100% + 8px)' : '-8px'})` }} onClick={(e) => e.stopPropagation()}>
-					<textarea autoFocus value={draft.text} placeholder="Add a comment…" rows={2}
-						onChange={(e) => setDraft({ ...draft, text: e.target.value })}
-						onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); runtime.addComment(lens, draft.x, draft.y, draft.text); setDraft(null); } if (e.key === 'Escape') setDraft(null); }} />
-					<div className="vs-composer-foot">
-						<span className="vs-hint">↵ to post</span>
-						<button className="vs-app-primary sm" disabled={!draft.text.trim()} onClick={() => { runtime.addComment(lens, draft.x, draft.y, draft.text); setDraft(null); }}><Send size={12} />Comment</button>
-					</div>
-				</div>
-			)}
+			{commentMode && !draft && <div className="vs-comment-catcher" onClick={onPlace} />}
+			{comments.map((c) => <Pin key={c.id} comment={c} />)}
+			{active && !draft && <CommentThread comment={active} />}
+			{draft && <WorkComposer lens={lens} x={draft.x} y={draft.y} onClose={closeDraft} />}
 		</>
 	);
 }

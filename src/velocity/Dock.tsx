@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-	Plus, Pause, Play, Command, PanelBottom, Eye, Activity, MessageSquarePlus, Maximize2,
+	Plus, Pause, Play, Command, PanelBottom, Eye, Activity, Maximize2,
 	Flag, ShieldQuestion, Rocket, MoreHorizontal, RotateCcw,
 } from 'lucide-react';
 import { useWorkspace, runtime } from './useWorkspace';
@@ -46,7 +46,7 @@ export function Dock() {
 
 	return (
 		<div className="vs-dock" role="toolbar" aria-label="Workspace dock">
-			<button className={`vs-dock-btn primary${state.layout.workChatOpen ? ' active' : ''}`} onClick={() => runtime.openWorkChat(!state.layout.workChatOpen)} title="New work (⌘⇧N)">
+			<button className={`vs-dock-btn primary${state.layout.commentMode ? ' active' : ''}`} onClick={() => runtime.armWork(!state.layout.commentMode)} title="New work — click your app to place it (⌘⇧N)">
 				<Plus size={16} />New work
 			</button>
 
@@ -81,9 +81,6 @@ export function Dock() {
 
 			<div className="vs-dock-sep" />
 
-			<button className={`vs-dock-btn${state.layout.commentMode ? ' accent' : ''}`} onClick={() => runtime.toggleCommentMode()} title="Comment — click the app to pin a note">
-				<MessageSquarePlus size={15} />
-			</button>
 			<button className="vs-dock-btn" onClick={() => runtime.openShip(true)} title="Ship — deploy (⌘⇧D)">
 				<Rocket size={15} />
 			</button>

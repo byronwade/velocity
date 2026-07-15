@@ -5,7 +5,7 @@ import type { Lens } from './model';
 import { TabBar } from './TabBar';
 import { Stage } from './Stage';
 import { Dock } from './Dock';
-import { MissionSheet, RightRail, ToolDrawer, CommandBar, ShipSheet, WorkChat } from './surfaces';
+import { MissionSheet, RightRail, ToolDrawer, CommandBar, ShipSheet } from './surfaces';
 import { SettingsSheet } from './SettingsSheet';
 import './velocity.css';
 
@@ -77,7 +77,7 @@ export function VelocityApp() {
 			const typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
 			if (e.key === 'Escape') { runtime.closeTopmost(); return; }
 			if (mod && e.key.toLowerCase() === 'k') { e.preventDefault(); runtime.openCommand(true); return; }
-			if (mod && e.shiftKey && e.key.toLowerCase() === 'n') { e.preventDefault(); runtime.openMissionSheet(true); return; }
+			if (mod && e.shiftKey && e.key.toLowerCase() === 'n') { e.preventDefault(); runtime.armWork(true); return; }
 			if (mod && e.shiftKey && e.key.toLowerCase() === 'd') { e.preventDefault(); runtime.openShip(true); return; }
 			if (mod && e.key === '\\') { e.preventDefault(); runtime.splitPane(runtime.getState().layout.activePaneId, e.shiftKey ? 'col' : 'row'); return; }
 			if (mod && e.key.toLowerCase() === 'j') { e.preventDefault(); runtime.openTool(runtime.getState().layout.openTool ? null : 'terminal'); return; }
@@ -104,7 +104,6 @@ export function VelocityApp() {
 				<RightRail />
 				<Dock />
 				<MissionSheet />
-				<WorkChat />
 				<ShipSheet />
 				<SettingsSheet />
 				{helpOpen && <HelpOverlay onClose={() => setHelpOpen(false)} />}

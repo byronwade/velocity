@@ -229,7 +229,34 @@ export interface CommentReply {
 	fromCoworker?: boolean;
 }
 
-/** A comment pinned to a spot on a lens; can be handed to a coworker to fix. */
+/** The handful of things a comment can ask for. Kept tiny on purpose —
+ *  one tap frames the request and steers auto-assignment to the right team. */
+export type WorkIntent = 'fix' | 'redesign' | 'copy' | 'add' | 'test';
+
+export interface WorkIntentMeta {
+	label: string;
+	/** Present-tense line shown on the coworker who picks it up. */
+	action: string;
+	/** Department auto-assignment prefers for this kind of work. */
+	dept: string;
+}
+
+export const WORK_INTENTS: Record<WorkIntent, WorkIntentMeta> = {
+	fix:      { label: 'Fix',      action: 'Fixing a reported issue',  dept: 'Engineering' },
+	redesign: { label: 'Redesign', action: 'Reworking the design',     dept: 'Design' },
+	copy:     { label: 'Copy',     action: 'Rewriting the copy',       dept: 'Engineering' },
+	add:      { label: 'Add',      action: 'Building a new piece',     dept: 'Engineering' },
+	test:     { label: 'Test',     action: 'Adding test coverage',     dept: 'Verification' },
+};
+
+export const WORK_MODELS: { id: string; label: string }[] = [
+	{ id: 'auto', label: 'Auto · frontier' },
+	{ id: 'opus', label: 'Claude Opus 4.8' },
+	{ id: 'sonnet', label: 'Claude Sonnet 5' },
+	{ id: 'local', label: 'Local · qwen2.5-coder' },
+];
+
+/** A comment pinned to a spot on a lens; work is auto-handed to a coworker. */
 export interface Comment {
 	id: string;
 	lens: Lens;
@@ -241,6 +268,12 @@ export interface Comment {
 	createdLabel: string;
 	resolved: boolean;
 	assignedCoworkerId: string | null;
+	/** How the request was framed (drives auto-assignment + the coworker's action). */
+	intent: WorkIntent | null;
+	/** Model preset the assigned coworker runs on ('auto' = frontier). */
+	model: string;
+	/** How many coworkers/specialists are on it (1 by default). */
+	agents: number;
 	replies: CommentReply[];
 }
 
@@ -276,8 +309,6 @@ export interface LayoutState {
 	commentMode: boolean;
 	activeCommentId: string | null;
 	shareOpen: boolean;
-	/** The New Work AI chat dropup. */
-	workChatOpen: boolean;
 	/** The full settings modal. */
 	settingsOpen: boolean;
 }
