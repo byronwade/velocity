@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Maximize2, Minimize2, GitCompare, Flag, ShieldQuestion, EyeOff, UserPlus } from 'lucide-react';
+import { Maximize2, Minimize2, GitCompare, Flag, ShieldQuestion, UserPlus } from 'lucide-react';
 import { useWorkspace, runtime } from './useWorkspace';
 import { LENS_META } from './model';
 import type { Lens } from './model';
@@ -47,8 +47,10 @@ function TopBar() {
 			</nav>
 
 			<div className="vs-top-right">
-				{openDecision && <button className="vs-alert decision" onClick={() => runtime.openRight('decision')}><ShieldQuestion size={14} />Decision</button>}
-				{pendingCheckpoint && <button className="vs-alert" onClick={() => runtime.openRight('checkpoint')}><Flag size={14} />Review</button>}
+				<div className="vs-top-alerts">
+					{openDecision && <button className="vs-alert decision" onClick={() => runtime.openRight('decision')}><ShieldQuestion size={14} />Decision</button>}
+					{pendingCheckpoint && <button className="vs-alert" onClick={() => runtime.openRight('checkpoint')}><Flag size={14} />Review</button>}
+				</div>
 				<button className={`vs-ghosticon${compare ? ' on' : ''}`} onClick={() => runtime.toggleCompare()} title="Compare Stable vs Candidate"><GitCompare size={16} /></button>
 				<button className={`vs-ghosticon${focusMode ? ' on' : ''}`} onClick={() => runtime.toggleFocus()} title="Focus mode">{focusMode ? <Minimize2 size={16} /> : <Maximize2 size={16} />}</button>
 				<select className="vs-scenario" value={state.scenario} onChange={(e) => runtime.load(e.target.value)} title="Demo scenario" aria-label="Demo scenario">
@@ -83,22 +85,6 @@ function Toast() {
 	return <div className="vs-toast" role="status">{state.toast}</div>;
 }
 
-function FollowBanner() {
-	const state = useWorkspace();
-	const followed = state.coworkers.find((c) => c.id === state.layout.followingId);
-	if (!followed) return null;
-	return (
-		<div className="vs-followbar" style={{ ['--id' as string]: followed.color }} role="status">
-			<span className="vs-avatar sm" style={{ background: followed.color }}>{followed.initials}</span>
-			<b>Following {followed.name}</b>
-			<span>· {followed.action}</span>
-			<button className="vs-followbar-view" onClick={() => runtime.openRight('follow')}>See activity</button>
-			<div className="vs-spacer" />
-			<button className="vs-followbar-stop" onClick={() => runtime.follow(null)}><EyeOff size={13} />Stop following</button>
-		</div>
-	);
-}
-
 export function VelocityApp() {
 	// Prototype-scoped keyboard. The production shell routes these through the
 	// keybinding engine; here a single scoped listener keeps the demo self-contained.
@@ -127,7 +113,6 @@ export function VelocityApp() {
 			{!focusMode && <TabBar />}
 			<div className={`vs-root${focusMode ? ' focus' : ''}`}>
 				{!focusMode && <TopBar />}
-				{!focusMode && <FollowBanner />}
 				<div className="vs-main">
 					<Stage />
 				</div>

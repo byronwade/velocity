@@ -128,7 +128,10 @@
 .vs-lens:hover { color: var(--fg); }
 .vs-lens.on { background: var(--panel); color: var(--fg); box-shadow: var(--elev-1); }
 
-.vs-top-right { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+.vs-top-right { position: relative; display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+/* Alerts float just left of the control cluster so their appearance never
+   shifts the surrounding controls (no layout shift). */
+.vs-top-alerts { position: absolute; right: 100%; top: 50%; transform: translateY(-50%); display: flex; gap: 6px; margin-right: 8px; }
 .vs-ghosticon {
 	width: 32px; height: 32px; display: grid; place-items: center; border-radius: 8px;
 	border: 1px solid transparent; background: transparent; color: var(--muted); cursor: pointer;
@@ -213,11 +216,11 @@
 /* Collapsed to an avatar chip by default; expands on hover / when followed —
    this keeps the stage calm even with many coworkers present. */
 .vs-flag {
-	position: absolute; transform: translate(-50%, -50%); z-index: 13;
+	position: absolute; transform: translate(-16px, -17px); z-index: 13;
 	display: inline-flex; align-items: center; gap: 0; height: 34px; padding: 3px;
 	background: var(--panel); border: 1px solid var(--line); border-radius: 999px; cursor: pointer;
 	box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--id) 30%, transparent), var(--elev-1);
-	transition: box-shadow var(--dur) var(--ease), gap var(--dur) var(--ease), padding var(--dur) var(--ease);
+	transition: box-shadow var(--dur) var(--ease);
 }
 .vs-flag:hover, .vs-flag.following { z-index: 16; gap: 7px; padding: 3px 12px 3px 3px; box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--id) 40%, transparent), var(--elev-2); }
 .vs-flag.following { box-shadow: 0 0 0 2px var(--id), var(--elev-2); }
@@ -630,7 +633,8 @@
 .vs-feed-text { font-size: var(--text-12); color: var(--muted); line-height: 1.4; }
 
 /* --- Tool drawer -------------------------------------------------------- */
-.vs-drawer { flex: 0 0 auto; border-top: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; position: relative; }
+/* Floating overlay above the dock — never resizes the stage (no layout shift). */
+.vs-drawer { position: absolute; left: 14px; right: 14px; bottom: 64px; z-index: 38; border: 1px solid var(--line-2); border-radius: var(--r-lg); background: var(--panel); display: flex; flex-direction: column; box-shadow: var(--elev-2); overflow: hidden; animation: vs-rise var(--dur) var(--ease); }
 .vs-drawer-grip { position: absolute; top: -3px; left: 0; right: 0; height: 6px; cursor: ns-resize; z-index: 5; }
 .vs-drawer-tabs { display: flex; align-items: center; gap: 2px; padding: 6px 10px; border-bottom: 1px solid var(--line); }
 .vs-dtab { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 7px; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: var(--text-12); cursor: pointer; }

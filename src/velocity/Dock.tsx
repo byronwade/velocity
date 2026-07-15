@@ -29,7 +29,7 @@ export function Dock() {
 			</button>
 
 			{following && (
-				<button className="vs-dock-follow" onClick={() => runtime.follow(null)} title="Stop following" style={{ ['--id' as string]: following.color }}>
+				<button className={`vs-dock-follow${state.layout.rightSurface === 'follow' ? ' on' : ''}`} onClick={() => runtime.openRight(state.layout.rightSurface === 'follow' ? 'none' : 'follow')} title="See what they're doing" style={{ ['--id' as string]: following.color }}>
 					<Eye size={13} />Following {following.name}
 				</button>
 			)}
