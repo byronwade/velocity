@@ -27,7 +27,7 @@ to the Dropped section at the bottom with a reason.
 - [x] **comments-as-work** — Place work on the app; comments are the assignment mechanism (no chat). _(shipped 2026-07-15)_
 - [x] **auto-assign** — Deterministic best-fit routing of work to coworkers by department and load. _(shipped 2026-07-15)_
 - [x] **work-items-chip** — All open work pins in one dock popover. _(shipped 2026-07-15)_
-- [ ] **agents-as-files** — Coworkers defined as versionable files (`.velocity/coworkers/*.md`: role, model, autonomy, tools, scope, budget) that the Add-Coworker UI writes and the runtime hydrates. _(planned · phase 4)_
+- [x] **agents-as-files** — Coworkers as versionable files: `.velocity/coworkers/<id>.md` (name, role, department, model, autonomy, scope, budget) mirrors the active project's team; editing a file in the IDE applies live. _(shipped 2026-07-15)_
 - [ ] **mission-timeline** — A mission timeline in the Verify lens showing criteria proven over time. _(planned)_
 
 ## Coworkers

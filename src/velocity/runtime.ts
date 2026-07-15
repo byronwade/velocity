@@ -54,6 +54,8 @@ export interface CoworkerRuntime {
 	restoreCoworker(id: string): void;
 	setModel(id: string, staffing: 'auto' | 'manual', model: string): void;
 	setAutonomy(id: string, autonomy: Autonomy): void;
+	/** Apply an edited `.velocity/coworkers/<id>.md` definition (agents-as-files). */
+	updateCoworkerFromFile(id: string, patch: { name?: string; role?: string; department?: string; model?: string; autonomy?: Autonomy; scope?: string }): void;
 
 	acceptCheckpoint(id: string): void;
 	rejectCheckpoint(id: string): void;
@@ -354,6 +356,16 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 		this.toast('Model applied at the next safe checkpoint.');
 	}
 	setAutonomy(id: string, autonomy: Autonomy): void { this.mapCoworkers((c) => (c.id === id ? { ...c, autonomy } : c)); }
+	updateCoworkerFromFile(id: string, patch: { name?: string; role?: string; department?: string; model?: string; autonomy?: Autonomy; scope?: string }): void {
+		const cw = this.state.coworkers.find((c) => c.id === id);
+		if (!cw) return;
+		const next = { ...cw, ...patch };
+		// Only apply (and announce) a real change — file syncs are idempotent.
+		if (next.name === cw.name && next.role === cw.role && next.department === cw.department
+			&& next.model === cw.model && next.autonomy === cw.autonomy && next.scope === cw.scope) return;
+		this.mapCoworkers((c) => (c.id === id ? next : c));
+		this.addEvent('note', `${next.name}'s definition updated from ${id}.md.`, id);
+	}
 
 	// --- checkpoints ---
 	acceptCheckpoint(id: string): void {

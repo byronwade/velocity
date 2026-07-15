@@ -12,6 +12,8 @@
 
 import { PrototypeCoworkerRuntime, type CoworkerRuntime } from './runtime';
 import { STATE_TONE } from './model';
+import { AGENT_DIR, agentPath, coworkerToFile, identitySignature, parseAgentFile } from './agentfiles';
+import { getServices } from '../services/container';
 import type { WorkspaceState } from './model';
 
 export interface ProjectTab {
@@ -95,10 +97,68 @@ export class WorkspaceManager {
 	private listeners = new Set<() => void>();
 	private snap: ManagerSnapshot;
 
+	private agentSig = '';
+	private syncingFiles = false;
+
 	constructor(firstScenario: string) {
 		for (const seed of seedProjects(firstScenario)) this.create(seed.name, seed.scenario);
 		this.activeId = this.projects[0].id;
 		this.snap = this.build();
+		// Agents as files: mirror the ACTIVE project's coworkers to
+		// .velocity/coworkers/*.md, and hydrate edits back (see syncAgentFiles).
+		void this.syncAgentFiles();
+		getServices().fs.onChange(() => void this.hydrateAgentFiles());
+	}
+
+	/** Which coworkers a definition file may exist for (live only). */
+	private liveCoworkers() {
+		return this.getActive().getState().coworkers.filter((c) => c.state !== 'archived' && c.state !== 'dismissed');
+	}
+
+	/** Write/update `.velocity/coworkers/<id>.md` for the active project's live
+	 *  coworkers and remove files for coworkers that no longer exist. Gated by
+	 *  an identity signature so the heartbeat's churn never touches the FS. */
+	private async syncAgentFiles(): Promise<void> {
+		if (this.syncingFiles) return;
+		const live = this.liveCoworkers();
+		const sig = live.map(identitySignature).join('\n');
+		if (sig === this.agentSig) return;
+		this.syncingFiles = true;
+		try {
+			const { fs } = getServices();
+			for (const c of live) {
+				const path = agentPath(c.id);
+				const desired = coworkerToFile(c);
+				const current = (await fs.exists(path)) ? await fs.readFile(path) : null;
+				if (current !== desired) await fs.writeFile(path, desired);
+			}
+			const liveIds = new Set(live.map((c) => c.id));
+			for (const path of await fs.list()) {
+				if (!path.startsWith(`${AGENT_DIR}/`) || !path.endsWith('.md')) continue;
+				const id = path.slice(AGENT_DIR.length + 1, -3);
+				if (!liveIds.has(id)) await fs.delete(path);
+			}
+			this.agentSig = sig;
+		} finally {
+			this.syncingFiles = false;
+		}
+	}
+
+	/** Apply edited definition files to the active project's coworkers.
+	 *  Idempotent — our own writes round-trip to a no-op. */
+	private async hydrateAgentFiles(): Promise<void> {
+		if (this.syncingFiles) return;
+		const { fs } = getServices();
+		const runtime = this.getActive();
+		for (const c of this.liveCoworkers()) {
+			const path = agentPath(c.id);
+			if (!(await fs.exists(path))) continue;
+			const patch = parseAgentFile(await fs.readFile(path));
+			runtime.updateCoworkerFromFile(c.id, patch);
+		}
+		// A real edit changed identity → re-sign so the next sync doesn't
+		// immediately rewrite the file the user just authored.
+		this.agentSig = this.liveCoworkers().map(identitySignature).join('\n');
 	}
 
 	private create(name: string, scenario: string): Project {
@@ -158,6 +218,7 @@ export class WorkspaceManager {
 	private emit(): void {
 		this.snap = this.build();
 		for (const l of this.listeners) l();
+		void this.syncAgentFiles();
 	}
 
 	subscribe = (listener: () => void): (() => void) => {
@@ -177,6 +238,7 @@ export class WorkspaceManager {
 	switchProject(id: string): void {
 		if (id === this.activeId || !this.projects.some((p) => p.id === id)) return;
 		this.activeId = id;
+		this.agentSig = ''; // the files mirror the active project's team — force a rewrite
 		this.emit();
 	}
 

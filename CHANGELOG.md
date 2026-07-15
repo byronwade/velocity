@@ -8,6 +8,11 @@ list item of the shape `- **slug** — Name. What changed and why it matters. (\
 **slug** is a stable kebab-case feature id shared with [ROADMAP.md](ROADMAP.md) — never rename one;
 corrections get a new entry. Newest release first.
 
+## 2026-07-15 · Agents as files
+
+### Added
+- **agents-as-files** — Coworkers are files. Every live coworker is mirrored to `.velocity/coworkers/<id>.md` — simple frontmatter for name, role, department, model, autonomy, scope, and budget. Edit a file in the IDE and save: the coworker updates live. Coworkers are now versionable, diffable, shareable artifacts, the same pattern as Cursor rules and Claude Code subagents.
+
 ## 2026-07-15 · The workspace comes alive
 
 ### Added
