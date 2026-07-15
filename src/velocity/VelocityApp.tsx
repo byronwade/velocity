@@ -1,0 +1,116 @@
+import { useEffect, useState } from 'react';
+import { X } from 'lucide-react';
+import { useWorkspace, runtime } from './useWorkspace';
+import type { Lens } from './model';
+import { TabBar } from './TabBar';
+import { Stage } from './Stage';
+import { Dock } from './Dock';
+import { MissionSheet, RightRail, ToolDrawer, CommandBar, ShipSheet } from './surfaces';
+import { SettingsSheet } from './SettingsSheet';
+import './velocity.css';
+
+const LENS_ORDER: Lens[] = ['browser', 'code', 'system', 'data', 'tests', 'verify'];
+
+const SHORTCUTS: { group: string; keys: [string, string][] }[] = [
+	{ group: 'Views', keys: [['1 – 6', 'Switch the active pane\'s view'], ['C', 'Compare Candidate vs Stable'], ['F', 'Focus mode']] },
+	{ group: 'Panes', keys: [['⌘ \\', 'Split active pane right'], ['⌘ ⇧ \\', 'Split active pane down'], ['⌘ J', 'Toggle terminal']] },
+	{ group: 'Work', keys: [['⌘ ⇧ N', 'New work'], ['⌘ ⇧ D', 'Ship'], ['. ', 'Pause / resume all'], ['⌘ K', 'Command palette']] },
+	{ group: 'General', keys: [['?', 'This shortcuts help'], ['Esc', 'Close the topmost surface']] },
+];
+
+function HelpOverlay({ onClose }: { onClose: () => void }) {
+	useEffect(() => {
+		const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+		window.addEventListener('keydown', onKey);
+		return () => window.removeEventListener('keydown', onKey);
+	}, [onClose]);
+	return (
+		<div className="vs-scrim" onClick={onClose}>
+			<div className="vs-help" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Keyboard shortcuts">
+				<header className="vs-help-head"><h2>Keyboard shortcuts</h2><button className="vs-icon" onClick={onClose} aria-label="Close"><X size={16} /></button></header>
+				<div className="vs-help-body">
+					{SHORTCUTS.map((g) => (
+						<div key={g.group} className="vs-help-group">
+							<div className="vs-help-grouphead">{g.group}</div>
+							{g.keys.map(([k, d]) => <div key={k} className="vs-help-row"><kbd>{k}</kbd><span>{d}</span></div>)}
+						</div>
+					))}
+				</div>
+			</div>
+		</div>
+	);
+}
+
+function Confetti() {
+	const state = useWorkspace();
+	if (!state.celebrate) return null;
+	return (
+		<div className="vs-confetti" aria-hidden>
+			{Array.from({ length: 42 }).map((_, i) => (
+				<span key={i} style={{ left: `${(i * 37) % 100}%`, animationDelay: `${(i % 8) * 40}ms`, background: ['#6f74c9', '#4a8dd1', '#2f9e8f', '#e0b34d', '#c96f9a'][i % 5] }} />
+			))}
+		</div>
+	);
+}
+
+function Toast() {
+	const state = useWorkspace();
+	if (!state.toast) return null;
+	return <div className="vs-toast" role="status">{state.toast}</div>;
+}
+
+export function VelocityApp() {
+	const [helpOpen, setHelpOpen] = useState(false);
+	// Apply saved density / motion preferences on load.
+	useEffect(() => {
+		try {
+			const d = localStorage.getItem('vs-density'); if (d) document.documentElement.dataset.density = d;
+			const m = localStorage.getItem('vs-motion'); if (m) document.documentElement.dataset.motion = m;
+		} catch { /* ignore */ }
+	}, []);
+	// Prototype-scoped keyboard. The production shell routes these through the
+	// keybinding engine; here a single scoped listener keeps the demo self-contained.
+	useEffect(() => {
+		const onKey = (e: KeyboardEvent) => {
+			const mod = e.metaKey || e.ctrlKey;
+			const tag = (e.target as HTMLElement)?.tagName;
+			const typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+			if (e.key === 'Escape') { runtime.closeTopmost(); return; }
+			if (mod && e.key.toLowerCase() === 'k') { e.preventDefault(); runtime.openCommand(true); return; }
+			if (mod && e.shiftKey && e.key.toLowerCase() === 'n') { e.preventDefault(); runtime.armWork(true); return; }
+			if (mod && e.shiftKey && e.key.toLowerCase() === 'd') { e.preventDefault(); runtime.openShip(true); return; }
+			if (mod && e.key === '\\') { e.preventDefault(); runtime.splitPane(runtime.getState().layout.activePaneId, e.shiftKey ? 'col' : 'row'); return; }
+			if (mod && e.key.toLowerCase() === 'j') { e.preventDefault(); runtime.openTool(runtime.getState().layout.openTool ? null : 'terminal'); return; }
+			if (typing || mod) return;
+			if (e.key === '?') { e.preventDefault(); setHelpOpen(true); return; }
+			if (e.key >= '1' && e.key <= '6') { runtime.setLens(LENS_ORDER[Number(e.key) - 1]); return; }
+			if (e.key.toLowerCase() === 'c') runtime.comparePreview('stable');
+			if (e.key.toLowerCase() === 'f') runtime.toggleFocus();
+			if (e.key === '.') runtime.togglePause();
+		};
+		window.addEventListener('keydown', onKey);
+		return () => window.removeEventListener('keydown', onKey);
+	}, []);
+
+	const focusMode = useWorkspace().layout.focusMode;
+	return (
+		<div className="vs-shell">
+			{!focusMode && <TabBar />}
+			<div className={`vs-root${focusMode ? ' focus' : ''}`}>
+				<div className="vs-main">
+					<Stage />
+				</div>
+				<ToolDrawer />
+				<RightRail />
+				<Dock />
+				<MissionSheet />
+				<ShipSheet />
+				<SettingsSheet />
+				{helpOpen && <HelpOverlay onClose={() => setHelpOpen(false)} />}
+				<CommandBar />
+				<Toast />
+				<Confetti />
+			</div>
+		</div>
+	);
+}

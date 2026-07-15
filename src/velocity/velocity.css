@@ -1,0 +1,1119 @@
+/* ==========================================================================
+   Velocity prototype — the autonomous coworker workspace.
+   Light-first, quiet chrome, one dominant stage. Built on styles/tokens.css.
+   ========================================================================== */
+
+.vs-shell {
+	position: fixed;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	background: var(--sunk);
+	color: var(--fg);
+	font-family: var(--sans);
+	font-size: var(--text-13);
+	overflow: hidden;
+}
+
+.vs-root {
+	position: relative;
+	flex: 1 1 auto;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	background: var(--shell);
+	color: var(--fg);
+	overflow: hidden;
+}
+
+/* ---- Project tab bar (account-level, above everything) ---------------- */
+.vs-tabbar {
+	height: 44px;
+	flex: 0 0 44px;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 0 12px 0 14px;
+	background: var(--sunk);
+	border-bottom: 1px solid var(--line);
+	z-index: 35;
+}
+.vs-tabbar-logo { width: 20px; height: 20px; border-radius: 6px; background: var(--brand-mark); flex: 0 0 auto; }
+.vs-tabs { display: flex; align-items: center; gap: 4px; flex: 1 1 auto; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.vs-tabs::-webkit-scrollbar { display: none; }
+.vs-tab {
+	display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 8px 0 10px; border-radius: var(--r-md);
+	background: transparent; border: 1px solid transparent; cursor: pointer; max-width: 220px; flex: 0 0 auto;
+	color: var(--muted); transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.vs-tab:hover { background: color-mix(in srgb, var(--panel) 60%, transparent); color: var(--fg); }
+.vs-tab.active { background: var(--panel); border-color: var(--line); color: var(--fg); box-shadow: var(--elev-1); }
+.vs-tab.droptarget { box-shadow: inset 2px 0 0 var(--accent); }
+.vs-tab[draggable="true"] { cursor: grab; }
+.vs-tab-status { display: grid; place-items: center; width: 14px; height: 14px; flex: 0 0 auto; color: var(--faint); }
+.vs-tab-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--good); }
+.vs-tab-status.review { color: var(--warn); }
+.vs-tab-status.decision { color: var(--accent); }
+.vs-tab-status.paused { color: var(--faint); }
+.vs-tab-name { font-size: var(--text-12); font-weight: var(--fw-medium); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vs-tab-rename { width: 96px; height: 22px; border: 1px solid var(--accent); border-radius: 5px; background: var(--panel); color: var(--fg); font: inherit; font-size: var(--text-12); padding: 0 5px; }
+.vs-tab-meta { font-size: 10px; color: var(--faint); background: var(--panel-2); border-radius: var(--r-sm); padding: 1px 6px; font-variant-numeric: tabular-nums; }
+.vs-tab.active .vs-tab-meta { background: var(--panel-2); }
+.vs-tab-close { width: 18px; height: 18px; display: grid; place-items: center; border: 0; background: transparent; color: var(--faint); border-radius: 5px; cursor: pointer; opacity: 0; }
+.vs-tab:hover .vs-tab-close, .vs-tab.active .vs-tab-close { opacity: 1; }
+.vs-tab-close:hover { background: var(--line-2); color: var(--fg); }
+.vs-tab-new { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 8px; border: 0; background: transparent; color: var(--muted); cursor: pointer; flex: 0 0 auto; }
+.vs-tab-new:hover { background: var(--panel); color: var(--fg); }
+
+.vs-tabbar-right { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.vs-tabbar-sep { width: 1px; height: 20px; background: var(--line); }
+.vs-tabbar-right .vs-mission-chip { height: 28px; margin: 0; }
+.vs-tabbar-right .vs-share-btn { height: 28px; }
+.vs-tabbar-right .vs-facepile { margin: 0; }
+.vs-profile-scenario { display: flex; flex-direction: column; gap: 5px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.vs-profile-scenario > span { font-size: var(--text-11); color: var(--faint); font-weight: var(--fw-medium); }
+.vs-profile-scenario select { height: 32px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--fg); padding: 0 10px; font: inherit; font-size: var(--text-12); cursor: pointer; }
+
+/* Dock alerts (moved from the removed top bar). */
+.vs-dock-alert { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 11px; border-radius: var(--r-md); border: 1px solid color-mix(in srgb, var(--warn) 40%, var(--line)); background: color-mix(in srgb, var(--warn) 12%, var(--panel)); color: color-mix(in srgb, var(--warn) 62%, var(--fg)); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer; }
+.vs-dock-alert:hover { background: color-mix(in srgb, var(--warn) 18%, var(--panel)); }
+.vs-dock-alert.decision { border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); background: color-mix(in srgb, var(--accent) 12%, var(--panel)); color: color-mix(in srgb, var(--accent) 60%, var(--fg)); }
+.vs-credits { display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); }
+.vs-credits-bar { width: 54px; height: 5px; border-radius: 3px; background: var(--panel-2); overflow: hidden; }
+.vs-credits-bar span { display: block; height: 100%; border-radius: 3px; background: var(--brand-mark); }
+.vs-credits-n { font-size: var(--text-11); color: var(--fg); font-variant-numeric: tabular-nums; }
+.vs-credits-n em { color: var(--faint); font-style: normal; }
+.vs-tabbar-icon { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; border: 1px solid transparent; background: transparent; color: var(--muted); cursor: pointer; }
+.vs-tabbar-icon:hover { background: var(--panel); color: var(--fg); }
+
+.vs-profile-wrap { position: relative; }
+.vs-profile { width: 30px; height: 30px; border-radius: 50%; border: 0; background: transparent; padding: 0; cursor: pointer; display: grid; place-items: center; }
+.vs-profile-badge { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: var(--text-11); font-weight: var(--fw-semibold); }
+.vs-profile-badge.lg { width: 40px; height: 40px; font-size: var(--text-14); }
+.vs-profile-scrim { position: fixed; inset: 0; z-index: 48; }
+.vs-profile-menu { position: absolute; top: 38px; right: 0; z-index: 49; width: 280px; background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-lg); box-shadow: var(--elev-2); padding: 14px; animation: vs-rise var(--dur) var(--ease); }
+.vs-profile-head { display: flex; align-items: center; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.vs-profile-head > div { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.vs-profile-head b { font-size: var(--text-14); font-weight: var(--fw-semibold); }
+.vs-profile-head span { font-size: var(--text-12); color: var(--muted); }
+.vs-plan { font-size: 10px; font-weight: var(--fw-semibold); text-transform: uppercase; letter-spacing: 0.05em; padding: 3px 8px; border-radius: 6px; background: color-mix(in srgb, var(--brand-mark) 16%, var(--panel)); color: var(--brand-mark); }
+.vs-profile-credits { padding-top: 12px; }
+.vs-pc-top { display: flex; justify-content: space-between; font-size: var(--text-12); color: var(--muted); margin-bottom: 6px; font-variant-numeric: tabular-nums; }
+.vs-pc-bar { height: 6px; border-radius: 3px; background: var(--panel-2); overflow: hidden; }
+.vs-pc-bar span { display: block; height: 100%; border-radius: 3px; background: var(--brand-mark); }
+.vs-pc-usage { margin-top: 8px; font-size: var(--text-11); color: var(--faint); }
+
+/* --- Top bar (quiet) ---------------------------------------------------- */
+.vs-top {
+	height: 52px;
+	flex: 0 0 52px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 0 14px;
+	border-bottom: 1px solid var(--line);
+	background: color-mix(in srgb, var(--shell) 86%, transparent);
+	backdrop-filter: saturate(1.1) blur(8px);
+	z-index: 30;
+}
+.vs-top-left { min-width: 0; }
+.vs-top-left { display: flex; align-items: center; gap: 10px; }
+.vs-logo { width: 22px; height: 22px; border-radius: var(--r-sm); background: var(--brand-mark); flex: 0 0 auto; }
+.vs-proj { display: flex; flex-direction: column; line-height: 1.25; }
+.vs-proj b { font-size: var(--text-13); font-weight: var(--fw-semibold); }
+.vs-proj span { font-size: var(--text-11); color: var(--faint); }
+
+/* Mission progress chip */
+.vs-mission-chip { display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 10px; margin-left: 4px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--panel); color: var(--fg); font: inherit; cursor: pointer; max-width: 260px; transition: border-color var(--dur) var(--ease); }
+.vs-mission-chip:hover { border-color: var(--line-2); }
+.vs-mission-title { font-size: var(--text-12); font-weight: var(--fw-medium); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vs-mission-dots { display: inline-flex; gap: 3px; flex: 0 0 auto; }
+.vs-mdot { width: 6px; height: 6px; border-radius: 50%; background: var(--line-2); }
+.vs-mdot.verified { background: var(--good); }
+.vs-mdot.checking { background: var(--warn); }
+.vs-mdot.failed { background: var(--danger); }
+.vs-mission-n { font-size: var(--text-11); color: var(--faint); font-variant-numeric: tabular-nums; flex: 0 0 auto; }
+
+.vs-lenses { display: flex; gap: 2px; padding: 3px; background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--r-md); }
+.vs-lens {
+	appearance: none; border: 0; background: transparent; color: var(--muted);
+	font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium);
+	padding: 5px 12px; border-radius: var(--r-sm); cursor: pointer; transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.vs-lens:hover { color: var(--fg); }
+.vs-lens.on { background: var(--panel); color: var(--fg); box-shadow: var(--elev-1); }
+
+.vs-top-right { position: relative; display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+/* Alerts float just left of the control cluster so their appearance never
+   shifts the surrounding controls (no layout shift). */
+.vs-top-alerts { position: absolute; right: 100%; top: 50%; transform: translateY(-50%); display: flex; gap: 6px; margin-right: 8px; }
+.vs-ghosticon {
+	width: 32px; height: 32px; display: grid; place-items: center; border-radius: 8px;
+	border: 1px solid transparent; background: transparent; color: var(--muted); cursor: pointer;
+	transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.vs-ghosticon:hover { background: var(--panel-2); color: var(--fg); }
+.vs-ghosticon.on { background: var(--panel); border-color: var(--line); color: var(--fg); }
+.vs-scenario {
+	appearance: none; height: 32px; border: 1px solid var(--line); background: var(--panel);
+	color: var(--muted); border-radius: 8px; padding: 0 8px; font: inherit; font-size: var(--text-12); cursor: pointer;
+}
+.vs-alert {
+	display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 8px;
+	border: 1px solid color-mix(in srgb, var(--warn) 40%, var(--line)); background: color-mix(in srgb, var(--warn) 12%, var(--panel));
+	color: color-mix(in srgb, var(--warn) 60%, var(--fg)); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer;
+}
+.vs-alert.decision { border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); background: color-mix(in srgb, var(--accent) 10%, var(--panel)); color: color-mix(in srgb, var(--accent) 55%, var(--fg)); }
+
+/* Follow-mode banner */
+.vs-followbar { display: flex; align-items: center; gap: 8px; height: 38px; flex: 0 0 38px; padding: 0 14px; font-size: var(--text-12); color: var(--fg); border-bottom: 1px solid color-mix(in srgb, var(--id) 30%, var(--line)); background: color-mix(in srgb, var(--id) 9%, var(--shell)); z-index: 20; }
+.vs-followbar b { font-weight: var(--fw-semibold); }
+.vs-followbar > span:nth-child(3) { color: var(--muted); }
+.vs-followbar-stop { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 10px; border-radius: var(--r-sm); border: 1px solid color-mix(in srgb, var(--id) 40%, var(--line)); background: var(--panel); color: color-mix(in srgb, var(--id) 55%, var(--fg)); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer; }
+.vs-followbar-view { height: 26px; padding: 0 10px; border-radius: var(--r-sm); border: 1px solid transparent; background: color-mix(in srgb, var(--id) 14%, transparent); color: color-mix(in srgb, var(--id) 55%, var(--fg)); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer; }
+.vs-followbar-view:hover { background: color-mix(in srgb, var(--id) 22%, transparent); }
+
+/* Follow panel — what a coworker is doing + has done. */
+.vs-follow-id { display: flex; flex-direction: column; line-height: 1.2; flex: 1; }
+.vs-follow-id b { font-size: var(--text-13); font-weight: var(--fw-semibold); }
+.vs-follow-id span { font-size: var(--text-11); color: var(--muted); }
+.vs-follow-now { display: flex; align-items: center; gap: 8px; }
+.vs-follow-act { font-size: var(--text-12); color: var(--fg); }
+.vs-follow-sec { font-size: var(--text-11); text-transform: uppercase; letter-spacing: 0.07em; color: var(--faint); font-weight: var(--fw-semibold); margin-top: 4px; }
+.vs-follow-live { display: flex; align-items: center; gap: 8px; font-size: var(--text-12); color: var(--muted); padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--panel-2); }
+.vs-follow-live b { color: var(--fg); font-weight: var(--fw-medium); }
+.vs-follow-pulse { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; box-shadow: 0 0 0 0 color-mix(in srgb, var(--id) 60%, transparent); animation: vs-ring 1.8s ease-out infinite; }
+@keyframes vs-ring { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--id) 55%, transparent); } 100% { box-shadow: 0 0 0 7px transparent; } }
+@media (prefers-reduced-motion: reduce) { .vs-follow-pulse { animation: none; } }
+.vs-follow-ckp { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--panel); font: inherit; font-size: var(--text-12); cursor: pointer; }
+.vs-follow-ckp:hover { border-color: var(--line-2); }
+.vs-follow-ckp > span:nth-child(2) { flex: 1; color: var(--fg); }
+.vs-follow-ckp svg { color: var(--muted); flex: 0 0 auto; }
+
+/* Deploy targets (Ship lens). */
+.vs-ship-top { display: flex; align-items: flex-start; gap: 10px; text-align: left; }
+.vs-ship-top svg { color: var(--good); margin-top: 2px; }
+.vs-ship-top h2 { font-size: var(--text-16); font-weight: var(--fw-semibold); line-height: 1.3; }
+.vs-ship-top p { color: var(--muted); font-size: var(--text-13); margin-top: 2px; }
+.vs-deploy-head { font-size: var(--text-11); text-transform: uppercase; letter-spacing: 0.07em; color: var(--faint); font-weight: var(--fw-semibold); margin-top: 4px; }
+.vs-deploy-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.vs-deploy { border: 1px solid var(--line); border-radius: var(--r-lg); padding: 14px; display: flex; flex-direction: column; gap: 9px; text-align: left; background: var(--panel); }
+.vs-deploy.on { border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }
+.vs-deploy.live { border-color: color-mix(in srgb, var(--good) 42%, var(--line)); background: color-mix(in srgb, var(--good) 4%, var(--panel)); }
+.vs-deploy-top { display: flex; align-items: center; gap: 8px; }
+.vs-deploy-top b { flex: 1; font-size: var(--text-13); }
+.vs-deploy-mark { width: 24px; height: 24px; border-radius: var(--r-sm); display: grid; place-items: center; color: #fff; font-weight: var(--fw-semibold); font-size: var(--text-12); flex: 0 0 auto; }
+.vs-deploy-mark.vercel { background: #000; }
+.vs-deploy-mark.netlify { background: #05bdba; }
+.vs-deploy-mark.cloudflare { background: #f38020; }
+.vs-deploy-url { font-family: var(--mono); font-size: var(--text-11); color: var(--faint); }
+.vs-deploy-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 34px; border-radius: 8px; border: 0; background: var(--fg); color: var(--shell); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer; }
+.vs-deploy-btn:hover { opacity: 0.9; }
+.vs-deploy-btn:disabled { opacity: 0.7; cursor: default; }
+.vs-deploy-btn.ghost { background: var(--panel); color: var(--fg); border: 1px solid var(--line); }
+.vs-deploy-live { display: flex; gap: 6px; }
+.vs-deploy-visit { flex: 1; display: inline-flex; align-items: center; justify-content: center; height: 34px; border-radius: 8px; background: var(--good); color: #fff; font-size: var(--text-12); font-weight: var(--fw-medium); text-decoration: none; }
+.vs-deploy-live .vs-deploy-btn.ghost { flex: 0 0 auto; padding: 0 12px; }
+.vs-ship-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 4px; }
+.vs-ship-livenote { font-size: var(--text-12); color: var(--good); font-family: var(--mono); }
+
+/* --- Main + stage ------------------------------------------------------- */
+.vs-main { flex: 1 1 auto; display: flex; min-height: 0; position: relative; }
+/* Empty / compare fill the workspace edge-to-edge (no card). */
+.vs-stage { flex: 1 1 auto; position: relative; background: var(--panel); overflow: hidden; min-width: 0; }
+.vs-stage-inner { position: absolute; inset: 0; overflow: auto; }
+
+/* --- Split-pane workspace ---------------------------------------------- */
+.vs-workspace { flex: 1 1 auto; display: flex; min-width: 0; min-height: 0; background: var(--line); }
+.vs-split { display: flex; flex: 1 1 auto; min-width: 0; min-height: 0; }
+.vs-split.row { flex-direction: row; }
+.vs-split.col { flex-direction: column; }
+.vs-split-slot { display: flex; min-width: 0; min-height: 0; overflow: hidden; }
+.vs-split-divider { flex: 0 0 1px; background: var(--line); position: relative; z-index: 6; transition: background var(--dur) var(--ease); }
+.vs-split-divider.row { width: 1px; cursor: col-resize; }
+.vs-split-divider.col { height: 1px; cursor: row-resize; }
+.vs-split-divider::after { content: ''; position: absolute; inset: -3px; }
+.vs-split-divider:hover { background: color-mix(in srgb, var(--accent) 70%, var(--line)); }
+
+.vs-pane { flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--panel); position: relative; container-type: inline-size; }
+.vs-pane-body { flex: 1 1 auto; position: relative; overflow: auto; min-height: 0; }
+.vs-pane.commenting .vs-pane-body { cursor: crosshair; }
+
+/* Compact, adaptive per-pane toolbar (Framer-style). */
+.vs-pane-bar { height: 34px; flex: 0 0 34px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 5px 0 7px; border-bottom: 1px solid var(--line); background: var(--panel-2); }
+.vs-pane.active .vs-pane-bar { background: var(--panel); box-shadow: inset 0 2px 0 -1px color-mix(in srgb, var(--accent) 55%, transparent); }
+.vs-pane-view { position: relative; min-width: 0; }
+.vs-pane-viewbtn { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; height: 24px; padding: 0 7px; border-radius: 6px; border: 1px solid transparent; background: transparent; color: var(--fg); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer; }
+.vs-pane-viewbtn:hover { background: var(--panel-2); border-color: var(--line); }
+.vs-pane.active .vs-pane-viewbtn:hover { background: var(--panel-2); }
+.vs-pane-viewbtn > svg:first-child { color: var(--muted); flex: 0 0 auto; }
+.vs-pane-viewname { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vs-pane-chev { color: var(--faint); flex: 0 0 auto; }
+.vs-pane-scrim { position: fixed; inset: 0; z-index: 24; }
+.vs-pane-menu { position: absolute; top: 30px; left: 0; z-index: 25; width: 224px; background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-lg); box-shadow: var(--elev-2); padding: 6px; animation: vs-rise var(--dur) var(--ease); }
+.vs-pane-menuitem { display: flex; align-items: center; gap: 9px; width: 100%; height: 34px; padding: 0 9px; border-radius: var(--r-sm); border: 0; background: transparent; color: var(--fg); font: inherit; font-size: var(--text-13); cursor: pointer; text-align: left; }
+.vs-pane-menuitem:hover { background: var(--panel-2); }
+.vs-pane-menuitem.on { color: var(--accent); }
+.vs-pane-menuitem > svg { color: var(--muted); flex: 0 0 auto; }
+.vs-pane-menuitem.on > svg { color: var(--accent); }
+.vs-pane-menuitem > span { flex: 1; }
+.vs-pane-menuitem em { font-style: normal; font-size: 10px; color: var(--faint); }
+.vs-pane-tools { display: flex; align-items: center; gap: 1px; flex: 0 0 auto; }
+.vs-pane-tool { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 6px; border: 0; background: transparent; color: var(--faint); cursor: pointer; }
+.vs-pane-tool:hover { background: var(--panel-2); color: var(--fg); }
+
+/* Browser URL pill lives in the pane toolbar (one bar, not two). */
+.vs-pane-mid { flex: 1 1 auto; min-width: 0; display: flex; justify-content: center; padding: 0 8px; }
+.vs-pane-url { display: inline-flex; align-items: center; gap: 7px; min-width: 0; max-width: 340px; height: 24px; padding: 0 4px 0 11px; border-radius: var(--r-sm); border: 1px solid var(--line); background: var(--panel); color: var(--muted); font-size: var(--text-12); }
+.vs-pane-url > svg { color: var(--good); flex: 0 0 auto; }
+.vs-url-reload { width: 20px; height: 20px; display: grid; place-items: center; border: 0; background: transparent; color: var(--faint); border-radius: 5px; cursor: pointer; flex: 0 0 auto; }
+.vs-url-reload:hover { background: var(--panel-2); color: var(--fg); }
+@container (max-width: 360px) { .vs-pane-mid { display: none; } }
+
+.vs-pane-left { display: flex; align-items: center; gap: 3px; min-width: 0; }
+.vs-pane-cmpbtn { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; height: 24px; padding: 0 7px; border-radius: 6px; border: 1px solid transparent; background: transparent; color: var(--muted); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer; }
+.vs-pane-cmpbtn:hover { background: var(--panel-2); border-color: var(--line); color: var(--fg); }
+.vs-pane-cmpbtn > svg:first-child { flex: 0 0 auto; }
+.vs-pane-cmpbtn.on { background: color-mix(in srgb, var(--accent) 12%, var(--panel)); border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); color: color-mix(in srgb, var(--accent) 60%, var(--fg)); }
+
+@container (max-width: 300px) {
+	.vs-pane-cmpbtn .vs-pane-viewname, .vs-pane-cmpbtn .vs-pane-chev { display: none; }
+}
+@container (max-width: 240px) {
+	.vs-pane-viewname, .vs-pane-chev { display: none; }
+}
+@container (max-width: 170px) {
+	.vs-pane-tool[title="Split down"] { display: none; }
+}
+
+/* In-pane Preview compare (vs Stable / Live / Preview / Branch). */
+.vs-pane-compare { position: absolute; inset: 0; display: flex; }
+.vs-cmp-side { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.vs-cmp-tag { display: flex; align-items: center; gap: 8px; padding: 8px 14px; font-size: var(--text-12); font-weight: var(--fw-semibold); border-bottom: 1px solid var(--line); background: var(--panel-2); flex: 0 0 auto; }
+.vs-cmp-frame { flex: 1; overflow: auto; position: relative; }
+.vs-cmp-div { width: 1px; background: var(--line-2); flex: 0 0 auto; }
+
+/* Browser view — hosts the real in-app browser (BrowserMode). */
+.vs-browserhost { position: absolute; inset: 0; display: flex; }
+.vs-browserhost > .mode.browser { flex: 1 1 auto; min-width: 0; min-height: 0; }
+
+/* Clean fallback for sites that refuse to be framed. */
+.cr-blocked { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 40px; background: var(--panel); }
+.cr-blocked-mark { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; background: var(--panel-2); border: 1px solid var(--line); color: var(--muted); font-size: 22px; font-weight: var(--fw-semibold); }
+.cr-blocked h3 { font-size: var(--text-16); font-weight: var(--fw-semibold); }
+.cr-blocked p { color: var(--muted); font-size: var(--text-13); max-width: 44ch; line-height: 1.5; }
+.cr-blocked-actions { display: flex; gap: 8px; margin-top: 4px; }
+.cr-blocked-open { display: inline-flex; align-items: center; height: 36px; padding: 0 16px; border-radius: var(--r-md); background: var(--fg); color: var(--shell); font-size: var(--text-13); font-weight: var(--fw-medium); text-decoration: none; }
+.cr-blocked-try { height: 36px; padding: 0 16px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--panel); color: var(--fg); font: inherit; font-size: var(--text-13); font-weight: var(--fw-medium); cursor: pointer; }
+.cr-blocked-try:hover { background: var(--panel-2); }
+
+/* Tests view — suite runner. */
+.vs-tests { min-height: 100%; padding: 32px 36px; }
+.vs-tests-head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.vs-tests-head h2 { font-size: var(--text-16); font-weight: var(--fw-semibold); }
+.vs-tests-head p { color: var(--muted); font-size: var(--text-13); margin-top: 2px; }
+.vs-tests-head .vs-tag { margin-left: auto; }
+.vs-tests-list { display: flex; flex-direction: column; gap: 8px; max-width: 720px; }
+.vs-test-suite { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--panel); }
+.vs-test-suite.fail { border-color: color-mix(in srgb, var(--danger) 38%, var(--line)); }
+.vs-test-icon { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--good) 18%, var(--panel)); color: var(--good); flex: 0 0 auto; }
+.vs-test-suite.fail .vs-test-icon { background: color-mix(in srgb, var(--danger) 16%, var(--panel)); color: var(--danger); }
+.vs-test-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.vs-test-body code { font-family: var(--mono); font-size: var(--text-12); color: var(--fg); }
+.vs-test-body span { font-size: var(--text-11); color: var(--faint); }
+.vs-run.sm { min-width: 0; }
+
+/* Header Ship button + compact Share icon. */
+.vs-ship-btn { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; border-radius: 8px; border: 0; background: var(--fg); color: var(--shell); font: inherit; font-size: var(--text-12); font-weight: var(--fw-semibold); cursor: pointer; }
+.vs-ship-btn:hover { opacity: 0.9; }
+.vs-shipsheet { width: min(560px, 100%); }
+
+/* Presence flags — calm, Figma-style coworker presence (no pulsing dot). */
+/* Collapsed to an avatar chip by default; expands on hover / when followed —
+   this keeps the stage calm even with many coworkers present. */
+.vs-flag {
+	position: absolute; transform: translate(-16px, -17px); z-index: 13;
+	display: inline-flex; align-items: center; gap: 0; height: 34px; padding: 3px;
+	background: var(--panel); border: 1px solid var(--line); border-radius: 999px; cursor: pointer;
+	box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--id) 30%, transparent), var(--elev-1);
+	transition: box-shadow var(--dur) var(--ease);
+}
+.vs-flag:hover, .vs-flag.following { z-index: 16; gap: 7px; padding: 3px 12px 3px 3px; box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--id) 40%, transparent), var(--elev-2); }
+.vs-flag.following { box-shadow: 0 0 0 2px var(--id), var(--elev-2); }
+.vs-flag-avatar {
+	position: relative; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+	color: #fff; font-size: 10px; font-weight: var(--fw-semibold); flex: 0 0 auto;
+}
+.vs-flag-work { position: absolute; right: -1px; bottom: -1px; width: 8px; height: 8px; border-radius: 50%; background: var(--good); border: 2px solid var(--panel); }
+.vs-flag-work::after { content: ''; position: absolute; inset: -2px; border-radius: 50%; border: 1.5px solid var(--good); opacity: 0.55; animation: vs-breathe 2.6s ease-in-out infinite; }
+@keyframes vs-breathe { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.5); opacity: 0; } }
+.vs-flag-body { display: none; flex-direction: column; line-height: 1.15; text-align: left; }
+.vs-flag:hover .vs-flag-body, .vs-flag.following .vs-flag-body { display: flex; }
+.vs-flag-name { font-size: var(--text-12); font-weight: var(--fw-semibold); color: var(--fg); white-space: nowrap; }
+.vs-flag-act { font-size: 10px; color: var(--faint); white-space: nowrap; max-width: 140px; overflow: hidden; text-overflow: ellipsis; }
+@media (prefers-reduced-motion: reduce) { .vs-flag-work::after { animation: none; } }
+
+/* Human collaborator cursors — a pointer + name tag. */
+.vs-cursor { position: absolute; z-index: 14; pointer-events: none; transition: left 0.6s var(--ease), top 0.6s var(--ease); }
+.vs-cursor svg { display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.25)); }
+.vs-cursor-name { position: absolute; left: 12px; top: 12px; white-space: nowrap; color: #fff; font-size: 10px; font-weight: var(--fw-semibold); padding: 2px 7px; border-radius: 6px; box-shadow: var(--elev-1); }
+
+/* Comment pins + threads + composer. */
+.vs-comment-catcher { position: absolute; inset: 0; z-index: 18; cursor: crosshair; }
+.vs-pin {
+	position: absolute; transform: translate(-50%, -100%); z-index: 15; width: 30px; height: 30px;
+	display: grid; place-items: center; border: 0; cursor: pointer; color: #fff;
+	background: var(--id, var(--accent)); border-radius: 50% 50% 50% 2px; box-shadow: var(--elev-2);
+	transition: transform var(--dur) var(--ease);
+}
+.vs-pin:hover, .vs-pin.active { transform: translate(-50%, -100%) scale(1.1); }
+.vs-pin.assigned { border-radius: var(--r-md) var(--r-md) var(--r-md) 3px; }
+.vs-pin-face { font-size: 10px; font-weight: var(--fw-semibold); letter-spacing: 0.02em; }
+.vs-thread {
+	position: absolute; z-index: 22; width: 288px; max-height: 70vh; overflow: auto;
+	background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-lg); box-shadow: var(--elev-2);
+	padding: 12px; display: flex; flex-direction: column; gap: 10px; cursor: default; animation: vs-rise var(--dur) var(--ease);
+}
+.vs-thread-head { display: flex; align-items: center; gap: 8px; }
+.vs-thread-head b { font-size: var(--text-13); font-weight: var(--fw-semibold); }
+.vs-thread-ts { font-size: 10px; color: var(--faint); }
+.vs-thread-head .vs-icon { margin-left: auto; }
+.vs-thread-text { font-size: var(--text-13); color: var(--fg); line-height: 1.45; }
+.vs-reply { display: flex; gap: 8px; padding: 8px; border-radius: var(--r-md); background: var(--panel-2); font-size: var(--text-12); }
+.vs-reply.bot { background: color-mix(in srgb, var(--accent) 6%, var(--panel-2)); }
+.vs-reply > div { flex: 1; color: var(--muted); }
+.vs-reply b { color: var(--fg); font-weight: var(--fw-medium); font-size: var(--text-12); }
+.vs-avatar.xs { width: 18px; height: 18px; font-size: 8px; margin: 0; }
+/* Work tag — the intent, one neutral chip (stays monochrome / v0). */
+.vs-work-tag { align-self: flex-start; font-size: 10px; font-weight: var(--fw-semibold); text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 7px; border-radius: var(--r-sm); background: var(--panel-2); color: var(--muted); border: 1px solid var(--line); }
+/* Assignee row — who is on it, at a glance; click to change everything. */
+.vs-thread-assignee { display: flex; align-items: center; gap: 7px; height: 34px; padding: 0 10px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--panel-2); color: var(--fg); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer; text-align: left; }
+.vs-thread-assignee:hover { border-color: var(--line-2); }
+.vs-thread-assignee.ghost { color: var(--muted); background: transparent; border-style: dashed; justify-content: center; }
+.vs-ta-name { flex: 0 0 auto; }
+.vs-ta-meta { color: var(--faint); font-weight: var(--fw-normal); font-size: var(--text-11); }
+.vs-thread-assignee svg:last-child { margin-left: auto; color: var(--faint); flex: 0 0 auto; }
+.vs-thread-resolve { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--panel); color: var(--fg); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer; }
+.vs-thread-resolve:hover { border-color: var(--good); color: var(--good); }
+
+/* --- Work composer — describe → intent → auto-assign, one stable box ----- */
+.vs-composer {
+	position: absolute; transform: translate(12px, -8px); z-index: 22; width: 288px;
+	background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-lg); box-shadow: var(--elev-2);
+	padding: 10px; display: flex; flex-direction: column; gap: 9px; animation: vs-rise var(--dur) var(--ease);
+}
+.vs-composer textarea { border: 0; background: transparent; color: var(--fg); font: inherit; font-size: var(--text-13); line-height: 1.45; resize: none; outline: none; }
+.vs-composer textarea::placeholder { color: var(--faint); }
+.vs-wc-intents { display: flex; flex-wrap: wrap; gap: 5px; }
+.vs-wc-chip { height: 24px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--muted); font: inherit; font-size: var(--text-11); font-weight: var(--fw-medium); cursor: pointer; transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease); }
+.vs-wc-chip:hover { color: var(--fg); border-color: var(--line-2); }
+.vs-wc-chip.on { background: var(--fg); color: var(--shell); border-color: var(--fg); }
+.vs-wc-foot { display: flex; align-items: center; gap: 8px; }
+.vs-wc-assignee { display: inline-flex; align-items: center; gap: 6px; height: 30px; max-width: 200px; padding: 0 9px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--panel-2); color: var(--fg); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer; white-space: nowrap; overflow: hidden; }
+.vs-wc-assignee:hover { border-color: var(--line-2); }
+.vs-wc-assignee svg:last-child { color: var(--faint); flex: 0 0 auto; }
+.vs-wc-brief { align-self: flex-start; padding: 2px 0 0; border: 0; background: transparent; color: var(--accent); font: inherit; font-size: var(--text-11); font-weight: var(--fw-medium); cursor: pointer; }
+.vs-wc-menuscrim { position: fixed; inset: 0; z-index: 1; }
+.vs-wc-menu { position: absolute; left: 10px; right: 10px; bottom: 52px; z-index: 2; max-height: 262px; overflow: auto; background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-lg); box-shadow: var(--elev-2); padding: 6px; }
+.vs-wc-mhead { padding: 7px 8px 3px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--faint); font-weight: var(--fw-semibold); }
+.vs-wc-mhead:first-child { padding-top: 3px; }
+.vs-wc-mrow { display: flex; align-items: center; gap: 8px; width: 100%; height: 30px; padding: 0 8px; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: var(--text-12); border-radius: var(--r-sm); cursor: pointer; text-align: left; }
+.vs-wc-mrow:hover { background: var(--panel-2); }
+.vs-wc-mname { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vs-wc-mrole { flex: 0 0 auto; color: var(--faint); font-size: var(--text-11); }
+.vs-wc-check { flex: 0 0 auto; color: var(--accent); }
+.vs-wc-agents { display: flex; gap: 4px; padding: 2px 4px 4px; }
+.vs-wc-agents button { flex: 1; height: 28px; border-radius: var(--r-sm); border: 1px solid var(--line); background: var(--panel); color: var(--muted); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer; }
+.vs-wc-agents button.on { background: var(--fg); color: var(--shell); border-color: var(--fg); }
+.vs-stage.commenting .vs-stage-inner { cursor: crosshair; }
+
+/* --- The seeded live app (Preview lens) --------------------------------- */
+.vs-app { min-height: 100%; background: var(--panel); color: var(--fg); display: flex; flex-direction: column; }
+.vs-app.candidate { background: color-mix(in srgb, var(--accent) 2%, var(--panel)); }
+.vs-app-top { display: flex; align-items: center; gap: 18px; padding: 16px 26px; border-bottom: 1px solid var(--line); }
+.vs-app-brand { display: flex; align-items: center; gap: 8px; font-weight: var(--fw-semibold); font-size: var(--text-14); }
+.vs-app-mark { width: 16px; height: 16px; border-radius: 5px; background: var(--brand-mark); }
+.vs-app-nav { display: flex; gap: 18px; color: var(--muted); font-size: var(--text-13); }
+.vs-app-cta { margin-left: auto; height: 32px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); font: inherit; font-size: var(--text-13); cursor: pointer; }
+.vs-app-hero { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 28px; padding: 44px 26px; align-items: center; }
+.vs-eyebrow { text-transform: uppercase; letter-spacing: 0.12em; font-size: var(--text-11); color: var(--faint); font-weight: var(--fw-semibold); }
+.vs-app-hero-copy h1 { font-size: 34px; line-height: 1.08; letter-spacing: -0.02em; margin: 10px 0; font-weight: var(--fw-semibold); }
+.vs-app-sub { color: var(--muted); font-size: var(--text-16); max-width: 42ch; }
+.vs-app-row { display: flex; gap: 10px; margin-top: 18px; }
+.vs-app-hero-art { height: 200px; border-radius: var(--r-lg); background:
+	radial-gradient(120% 120% at 20% 10%, color-mix(in srgb, var(--brand-mark) 24%, transparent), transparent 60%),
+	linear-gradient(150deg, var(--panel-2), color-mix(in srgb, var(--accent) 10%, var(--panel-2))); border: 1px solid var(--line); }
+.vs-app-body { display: grid; grid-template-columns: 1fr 260px; gap: 22px; padding: 8px 26px 44px; }
+.vs-app-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 22px; box-shadow: var(--elev-1); }
+.vs-app-onboarding h3 { font-size: var(--text-20); font-weight: var(--fw-semibold); }
+.vs-app-onboarding > p { color: var(--muted); margin: 4px 0 16px; }
+.vs-app-passkey { display: inline-flex; align-items: center; gap: 8px; width: 100%; justify-content: center; height: 40px; border-radius: var(--r-md); border: 1px solid var(--line-2); background: var(--panel-2); font-weight: var(--fw-medium); cursor: pointer; }
+.vs-app-or { display: flex; align-items: center; gap: 10px; color: var(--faint); font-size: var(--text-11); margin: 14px 0; }
+.vs-app-or::before, .vs-app-or::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.vs-app-field { display: flex; flex-direction: column; gap: 6px; font-size: var(--text-12); color: var(--muted); }
+.vs-app-field input { height: 36px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--panel); color: var(--fg); padding: 0 12px; font: inherit; }
+.vs-app-email { margin-top: 14px; width: 100%; height: 40px; border-radius: var(--r-md); border: 0; background: var(--fg); color: var(--shell); font-weight: var(--fw-medium); cursor: pointer; }
+.vs-app-side { display: flex; flex-direction: column; gap: 10px; }
+.vs-app-plan { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--panel); }
+.vs-app-plan span { color: var(--muted); }
+.vs-app-primary { height: 36px; padding: 0 16px; border-radius: var(--r-md); border: 0; background: var(--fg); color: var(--shell); font: inherit; font-size: var(--text-13); font-weight: var(--fw-medium); cursor: pointer; display: inline-flex; align-items: center; gap: 7px; justify-content: center; transition: transform var(--dur) var(--ease), opacity var(--dur) var(--ease); }
+.vs-app-primary:hover { opacity: 0.9; }
+.vs-app-primary:active { transform: translateY(1px); }
+.vs-app-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+.vs-app-primary.lg { height: 44px; padding: 0 22px; font-size: var(--text-14); }
+.vs-app-ghost { height: 36px; padding: 0 16px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--panel); color: var(--fg); font: inherit; font-size: var(--text-13); font-weight: var(--fw-medium); cursor: pointer; display: inline-flex; align-items: center; gap: 7px; justify-content: center; transition: background var(--dur) var(--ease); }
+.vs-app-ghost:hover { background: var(--panel-2); }
+.vs-app-ghost.danger { color: var(--danger); }
+
+/* Artifact regions — hover to reveal the direct affordance. */
+.vs-region { position: relative; }
+.vs-region > .vs-region-tag {
+	position: absolute; top: 6px; right: 6px; font-size: 10px; font-weight: var(--fw-medium); letter-spacing: 0.02em;
+	background: var(--fg); color: var(--shell); padding: 2px 7px; border-radius: 5px; opacity: 0; transition: opacity var(--dur) var(--ease); pointer-events: none; z-index: 4;
+}
+.vs-region:hover { outline: 1.5px dashed color-mix(in srgb, var(--accent) 55%, transparent); outline-offset: 2px; border-radius: 8px; cursor: pointer; }
+.vs-region:hover > .vs-region-tag, .vs-region.selecting > .vs-region-tag { opacity: 1; }
+.vs-region.selecting { outline: 1.5px solid var(--accent); outline-offset: 2px; }
+.vs-assign {
+	position: absolute; top: 8px; right: 8px; z-index: 20; width: 220px; background: var(--panel); border: 1px solid var(--line-2);
+	border-radius: var(--r-md); box-shadow: var(--elev-2); padding: 10px; cursor: default;
+}
+.vs-assign-head { font-size: var(--text-12); color: var(--muted); margin-bottom: 8px; }
+.vs-assign-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.vs-assign-actions button { height: 30px; border-radius: var(--r-sm); border: 1px solid var(--line); background: var(--panel-2); color: var(--fg); font: inherit; font-size: var(--text-12); cursor: pointer; }
+.vs-assign-actions button:hover { background: var(--panel); border-color: var(--accent); color: var(--accent); }
+
+/* --- Code lens (real editor) ------------------------------------------- */
+.vs-code { position: absolute; inset: 0; }
+.vs-code .editor, .vs-code .cm-editor { height: 100%; }
+
+/* IDE lens — file tree + live editor. */
+.vs-ide { position: absolute; inset: 0; display: flex; min-height: 0; }
+.vs-ide-files { flex: 0 0 208px; width: 208px; display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--line); background: var(--panel); }
+.vs-ide-fhead { height: 34px; flex: 0 0 34px; display: flex; align-items: center; padding: 0 12px; font-size: var(--text-11); font-weight: var(--fw-semibold); text-transform: uppercase; letter-spacing: 0.05em; color: var(--faint); border-bottom: 1px solid var(--line); }
+.vs-ide-filter { display: flex; align-items: center; gap: 6px; height: 32px; flex: 0 0 32px; padding: 0 8px 0 10px; border-bottom: 1px solid var(--line); color: var(--faint); }
+.vs-ide-filter input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: var(--text-12); outline: none; }
+.vs-ide-filter input::placeholder { color: var(--faint); }
+.vs-ide-filter-x { width: 18px; height: 18px; display: grid; place-items: center; border: 0; background: transparent; color: var(--faint); border-radius: var(--r-sm); cursor: pointer; }
+.vs-ide-filter-x:hover { background: var(--panel-2); color: var(--fg); }
+.vs-ide-ftree { flex: 1; overflow: auto; padding: 4px 0; }
+.vs-ide-dir { margin-left: auto; color: var(--faint); font-size: 10px; overflow: hidden; text-overflow: ellipsis; }
+.vs-ide-noresults { padding: 16px 12px; color: var(--faint); font-size: var(--text-12); }
+.vs-pane-ctx { display: flex; align-items: center; gap: 1px; margin-left: 4px; padding-left: 6px; border-left: 1px solid var(--line); }
+.vs-ide-row { display: flex; align-items: center; gap: 6px; width: 100%; height: 26px; padding: 0 10px 0 8px; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: var(--text-12); cursor: pointer; text-align: left; white-space: nowrap; }
+.vs-ide-row:hover { background: var(--panel-2); }
+.vs-ide-row.dir { color: var(--fg); font-weight: var(--fw-medium); }
+.vs-ide-row.file.active { background: color-mix(in srgb, var(--accent) 10%, var(--panel-2)); color: var(--fg); }
+.vs-ide-row svg { flex: 0 0 auto; color: var(--faint); }
+.vs-ide-row.file.active svg { color: var(--accent); }
+.vs-ide-caret { width: 13px; height: 13px; display: grid; place-items: center; flex: 0 0 auto; color: var(--faint); }
+.vs-ide-name { overflow: hidden; text-overflow: ellipsis; }
+.vs-ide-editor { flex: 1 1 auto; min-width: 0; position: relative; }
+.vs-ide-editor .editor, .vs-ide-editor .cm-editor { height: 100%; }
+
+/* Shared lens scaffolding */
+.vs-run { align-self: flex-start; display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); font: inherit; font-weight: var(--fw-medium); cursor: pointer; }
+.vs-run:hover { border-color: var(--accent); color: var(--accent); }
+.vs-run.sm { height: 28px; padding: 0 10px; font-size: var(--text-11); }
+.vs-panel-card { border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--panel); box-shadow: var(--elev-1); padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.vs-panel-head { display: flex; align-items: center; justify-content: space-between; font-size: var(--text-11); text-transform: uppercase; letter-spacing: 0.07em; color: var(--faint); font-weight: var(--fw-semibold); }
+.vs-hdot { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; }
+.vs-hdot.healthy { background: var(--good); }
+.vs-hdot.building { background: var(--warn); }
+.vs-hdot.unhealthy { background: var(--danger); }
+
+/* --- System lens -------------------------------------------------------- */
+.vs-system { min-height: 100%; padding: 36px 40px; display: flex; flex-direction: column; gap: 24px; }
+.vs-sys-head { display: flex; align-items: center; gap: 12px; }
+.vs-sys-head h2 { font-size: var(--text-16); font-weight: var(--fw-semibold); }
+.vs-sys-sub { color: var(--faint); font-size: var(--text-12); margin-left: auto; }
+.vs-sys-topo { display: flex; align-items: stretch; gap: 6px; flex-wrap: wrap; }
+.vs-sys-step { display: flex; align-items: center; gap: 6px; }
+.vs-sys-card { min-width: 148px; padding: 12px 16px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--panel); box-shadow: var(--elev-1); display: flex; flex-direction: column; gap: 7px; }
+.vs-sys-card.building { border-color: color-mix(in srgb, var(--warn) 40%, var(--line)); background: color-mix(in srgb, var(--warn) 5%, var(--panel)); }
+.vs-sys-card-top { display: flex; align-items: center; gap: 7px; font-size: var(--text-13); }
+.vs-sys-card-top svg { color: var(--muted); }
+.vs-sys-card-meta { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: var(--text-11); color: var(--faint); }
+.vs-sys-arrow { color: var(--faint); flex: 0 0 auto; }
+.vs-sys-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; max-width: 900px; }
+.vs-trace { display: flex; flex-direction: column; }
+.vs-trace-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.vs-trace-row:last-child { border-bottom: 0; }
+.vs-trace-node { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--good) 18%, var(--panel)); color: var(--good); flex: 0 0 auto; }
+.vs-trace-body { flex: 1; display: flex; flex-direction: column; }
+.vs-trace-body code { font-family: var(--mono); font-size: var(--text-12); color: var(--fg); }
+.vs-trace-body span { font-size: var(--text-11); color: var(--muted); }
+.vs-trace-ms { font-family: var(--mono); font-size: var(--text-11); color: var(--faint); }
+.vs-contract { font-family: var(--mono); font-size: var(--text-12); border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; }
+.vs-contract-row { display: flex; gap: 8px; padding: 6px 10px; color: var(--muted); }
+.vs-contract-row span { width: 8px; color: var(--faint); }
+.vs-contract-row.add { background: color-mix(in srgb, var(--good) 9%, var(--panel)); color: var(--fg); }
+.vs-contract-row.add span { color: var(--good); }
+.vs-sys-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.vs-metric { display: flex; flex-direction: column; gap: 2px; padding: 10px; border: 1px solid var(--line); border-radius: var(--r-md); }
+.vs-metric svg { color: var(--muted); }
+.vs-metric b { font-size: var(--text-16); font-weight: var(--fw-semibold); }
+.vs-metric span { font-size: var(--text-11); color: var(--faint); }
+
+/* --- Data lens ---------------------------------------------------------- */
+.vs-data { position: absolute; inset: 0; display: grid; grid-template-columns: 208px 1fr; }
+.vs-data-schema { border-right: 1px solid var(--line); padding: 14px; display: flex; flex-direction: column; gap: 3px; background: var(--panel-2); }
+.vs-data-schema-head { display: flex; align-items: center; gap: 6px; font-size: var(--text-11); text-transform: uppercase; letter-spacing: 0.07em; color: var(--faint); font-weight: var(--fw-semibold); padding: 4px 8px 10px; }
+.vs-data-table { display: flex; align-items: center; justify-content: space-between; padding: 9px 10px; border-radius: 8px; font-family: var(--mono); font-size: var(--text-12); color: var(--muted); cursor: pointer; }
+.vs-data-table:hover { background: color-mix(in srgb, var(--panel) 60%, transparent); }
+.vs-data-table.active { background: var(--panel); color: var(--fg); box-shadow: var(--elev-1); }
+.vs-data-table em { color: var(--good); font-style: normal; font-size: var(--text-11); }
+.vs-data-rows { color: var(--faint); font-size: var(--text-11); }
+.vs-data-main { padding: 20px 24px; overflow: auto; display: flex; flex-direction: column; gap: 14px; }
+.vs-data-q { display: flex; align-items: center; gap: 12px; }
+.vs-data-q code { flex: 1; font-family: var(--mono); font-size: var(--text-12); background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; color: var(--fg); }
+.vs-data-scroll { border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; }
+.vs-data-grid { width: 100%; border-collapse: collapse; font-size: var(--text-12); }
+.vs-data-grid th { text-align: left; padding: 10px 14px; color: var(--faint); font-weight: var(--fw-medium); border-bottom: 1px solid var(--line); font-family: var(--mono); background: var(--panel-2); position: relative; }
+.vs-data-grid th.new { color: var(--good); }
+.vs-th-tag { font-size: 9px; margin-left: 6px; background: color-mix(in srgb, var(--good) 16%, var(--panel)); color: var(--good); padding: 1px 5px; border-radius: 4px; }
+.vs-data-grid td { padding: 9px 14px; border-bottom: 1px solid var(--line); font-family: var(--mono); color: var(--fg); }
+.vs-data-grid tr:last-child td { border-bottom: 0; }
+.vs-data-grid td.new { color: var(--good); }
+.vs-data-grid td.muted { color: var(--faint); }
+.vs-data-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.vs-data-migration { display: flex; align-items: center; gap: 8px; font-size: var(--text-12); color: var(--muted); }
+.vs-data-migration svg { color: var(--good); flex: 0 0 auto; }
+.vs-data-migration b { color: var(--fg); font-weight: var(--fw-medium); }
+
+/* --- Verify lens -------------------------------------------------------- */
+.vs-verify { min-height: 100%; padding: 36px 40px; }
+.vs-verify-head { display: flex; align-items: center; gap: 16px; margin-bottom: 22px; }
+.vs-verify-head h2 { font-size: var(--text-16); font-weight: var(--fw-semibold); }
+.vs-verify-head p { color: var(--muted); font-size: var(--text-13); margin-top: 2px; }
+.vs-ring { width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; flex: 0 0 auto;
+	background: conic-gradient(var(--good) calc(var(--pct) * 1%), var(--panel-2) 0); }
+.vs-ring span { width: 42px; height: 42px; border-radius: 50%; background: var(--panel); display: grid; place-items: center; font-size: var(--text-12); font-weight: var(--fw-semibold); font-variant-numeric: tabular-nums; }
+.vs-verify-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; align-items: start; max-width: 900px; }
+.vs-verify-list { display: flex; flex-direction: column; gap: 8px; }
+.vs-verify-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--panel); }
+.vs-verify-row > svg:first-child { flex: 0 0 auto; color: var(--faint); }
+.vs-verify-body { flex: 1; display: flex; flex-direction: column; gap: 1px; }
+.vs-verify-ev { font-size: var(--text-11); color: var(--faint); }
+.vs-verify-row.verified { border-color: color-mix(in srgb, var(--good) 30%, var(--line)); }
+.vs-verify-row.verified > svg:first-child { color: var(--good); }
+.vs-verify-row.checking { border-color: color-mix(in srgb, var(--warn) 32%, var(--line)); }
+.vs-verify-row.failed { border-color: color-mix(in srgb, var(--danger) 38%, var(--line)); }
+.vs-verify-row.failed > svg:first-child { color: var(--danger); }
+.vs-spin { width: 13px; height: 13px; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--warn) 30%, var(--line)); border-top-color: var(--warn); animation: vs-rot 0.7s linear infinite; flex: 0 0 auto; }
+@keyframes vs-rot { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .vs-spin { animation: none; } }
+.vs-scenario-steps { display: flex; flex-direction: column; }
+.vs-scenario-step { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: var(--text-12); }
+.vs-scenario-step:last-child { border-bottom: 0; }
+.vs-scenario-step > span:nth-child(2) { flex: 1; color: var(--fg); }
+.vs-scenario-node { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--good) 18%, var(--panel)); color: var(--good); flex: 0 0 auto; }
+
+/* --- Ship lens ---------------------------------------------------------- */
+.vs-ship { position: absolute; inset: 0; display: grid; place-items: center; padding: 40px; overflow: auto; }
+.vs-ship-card { width: 100%; max-width: 620px; display: flex; flex-direction: column; gap: 16px;
+	background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-xl); box-shadow: var(--elev-1); padding: 24px; }
+.vs-ship-checks { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* --- Empty state -------------------------------------------------------- */
+.vs-empty { display: grid; place-items: center; }
+.vs-empty-inner { text-align: center; max-width: 460px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.vs-empty-mark { width: 52px; height: 52px; border-radius: 15px; display: grid; place-items: center; background: color-mix(in srgb, var(--brand-mark) 14%, var(--panel)); color: var(--brand-mark); }
+.vs-empty-inner h1 { font-size: var(--text-24); font-weight: var(--fw-semibold); letter-spacing: -0.01em; }
+.vs-empty-inner p { color: var(--muted); }
+
+/* --- Compare ------------------------------------------------------------ */
+.vs-compare { display: flex; }
+.vs-compare-pane { flex: 1; position: relative; display: flex; flex-direction: column; min-width: 0; }
+.vs-compare-tag { display: flex; align-items: center; gap: 8px; padding: 10px 16px; font-size: var(--text-12); font-weight: var(--fw-semibold); border-bottom: 1px solid var(--line); background: var(--panel-2); }
+.vs-compare-frame { flex: 1; position: relative; overflow: auto; }
+.vs-compare-divider { width: 1px; background: var(--line-2); }
+.vs-compare-bar { position: absolute; left: 50%; bottom: 84px; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--panel); border: 1px solid var(--line-2); border-radius: 12px; box-shadow: var(--elev-2); z-index: 41; }
+.vs-spacer { flex: 1; }
+
+/* --- Dock (floating) ---------------------------------------------------- */
+.vs-dock {
+	position: fixed; left: 50%; bottom: calc(18px + var(--vs-tools-h, 0px)); transform: translateX(-50%); z-index: 40;
+	transition: bottom var(--dur) var(--ease);
+	display: flex; align-items: center; gap: 5px; padding: 5px; border-radius: 14px;
+	background: color-mix(in srgb, var(--panel) 92%, transparent); border: 1px solid var(--line-2);
+	box-shadow: var(--elev-2); backdrop-filter: saturate(1.2) blur(12px);
+}
+.vs-dock-sep { width: 1px; height: 20px; background: var(--line); margin: 0 1px; }
+.vs-dock-btn { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border-radius: var(--r-md); border: 1px solid transparent; background: transparent; color: var(--muted); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer; transition: background var(--dur) var(--ease), color var(--dur) var(--ease); }
+.vs-dock-btn:hover { background: var(--panel-2); color: var(--fg); }
+.vs-dock-btn.primary { background: var(--fg); color: var(--shell); padding: 0 11px; }
+.vs-dock-btn.primary:hover { opacity: 0.9; }
+.vs-dock-btn.on { background: var(--panel-2); color: var(--fg); }
+.vs-dock-btn.warn { color: var(--warn); }
+.vs-dock-btn:not(.primary):not(.on):not(.accent) { width: 30px; padding: 0; justify-content: center; }
+.vs-dock-avatars { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 8px 0 5px; border-radius: var(--r-md); border: 1px solid transparent; background: transparent; cursor: pointer; }
+.vs-dock-avatars:hover, .vs-dock-avatars.open { background: var(--panel-2); }
+.vs-dock-usericon { color: var(--faint); }
+.vs-avatar-stack { display: inline-flex; }
+.vs-avatar { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 9px; font-weight: var(--fw-semibold); box-shadow: 0 0 0 2px var(--panel); margin-left: -7px; position: relative; }
+.vs-avatar:first-child { margin-left: 0; }
+.vs-avatar.more { background: var(--panel-2); color: var(--muted); box-shadow: 0 0 0 2px var(--panel); }
+.vs-avatar.sm { width: 22px; height: 22px; font-size: 9px; margin: 0; }
+.vs-avatar.tone-work::after, .vs-avatar.tone-warn::after, .vs-avatar.tone-good::after, .vs-avatar.tone-danger::after {
+	content: ''; position: absolute; right: -1px; bottom: -1px; width: 8px; height: 8px; border-radius: 50%; border: 2px solid var(--panel);
+}
+.vs-avatar.tone-work::after { background: var(--accent); }
+.vs-avatar.tone-warn::after { background: var(--warn); }
+.vs-avatar.tone-good::after { background: var(--good); }
+.vs-avatar.tone-danger::after { background: var(--danger); }
+.vs-dock-follow { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 11px; border-radius: var(--r-md); border: 1px solid color-mix(in srgb, var(--id) 40%, var(--line)); background: color-mix(in srgb, var(--id) 12%, var(--panel)); color: color-mix(in srgb, var(--id) 55%, var(--fg)); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer; }
+
+/* --- Right rail --------------------------------------------------------- */
+/* Full-height panel docked flush to the right edge — squared, no outer inset,
+   overlays the stage (so it never reflows the layout). */
+.vs-dockpanel {
+	position: absolute; top: 0; right: 0; bottom: var(--vs-tools-h, 0px); z-index: 39;
+	width: 384px; display: flex; flex-direction: column;
+	background: var(--panel); border-left: 1px solid var(--line);
+	box-shadow: var(--elev-2); overflow: hidden; animation: vs-slide-r var(--dur) var(--ease);
+}
+.vs-dockpanel.wide { width: 440px; }
+.vs-dockpanel-caret { display: none; }
+@keyframes vs-slide-r { from { transform: translateX(12px); opacity: 0; } }
+.vs-rail { display: flex; flex-direction: column; overflow: hidden; flex: 1; min-height: 0; }
+.vs-rail-head { display: flex; align-items: center; gap: 8px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.vs-rail-head h3 { font-size: var(--text-14); font-weight: var(--fw-semibold); flex: 1; }
+.vs-rail-head svg { color: var(--muted); }
+.vs-count { font-size: var(--text-12); color: var(--faint); }
+.vs-rail-body { flex: 1; overflow: auto; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.vs-rail-foot { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 14px; border-top: 1px solid var(--line); }
+.vs-rail-foot .vs-app-ghost, .vs-rail-foot .vs-app-primary { height: 34px; font-size: var(--text-12); padding: 0 12px; }
+
+/* Checkpoint footer — utilities row + a clear Reject/Accept decision row. */
+.vs-ckp-foot { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--line); background: var(--panel); }
+.vs-ckp-utils { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.vs-ckp-utils button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--muted); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer; min-width: 0; }
+.vs-ckp-utils button:hover { color: var(--fg); border-color: var(--line-2); background: var(--panel-2); }
+.vs-ckp-utils button svg { flex: 0 0 auto; }
+.vs-ckp-decide { display: grid; grid-template-columns: 1fr 1.4fr; gap: 8px; }
+.vs-ckp-reject, .vs-ckp-accept { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 40px; border-radius: var(--r-md); font: inherit; font-size: var(--text-13); font-weight: var(--fw-semibold); cursor: pointer; white-space: nowrap; }
+.vs-ckp-reject { border: 1px solid color-mix(in srgb, var(--danger) 34%, var(--line)); background: var(--panel); color: var(--danger); }
+.vs-ckp-reject:hover { background: color-mix(in srgb, var(--danger) 8%, var(--panel)); border-color: color-mix(in srgb, var(--danger) 50%, var(--line)); }
+.vs-ckp-accept { border: 0; background: var(--good); color: #fff; }
+.vs-ckp-accept:hover { background: color-mix(in srgb, var(--good) 88%, #000); }
+.vs-ckp-accept:active, .vs-ckp-reject:active { transform: translateY(1px); }
+.vs-empty-rail { color: var(--faint); text-align: center; padding: 40px 0; }
+
+/* --- Coworker card ------------------------------------------------------ */
+/* --- Worker card (flat, compact, observable) --------------------------- */
+.vs-wk { border: 1px solid var(--line); border-radius: var(--r-md); padding: 11px 12px; background: var(--panel); display: flex; flex-direction: column; gap: 8px; }
+.vs-wk.manager { border-left: 2px solid var(--id, var(--brand-mark)); }
+.vs-wk-top { display: flex; align-items: center; gap: 9px; }
+.vs-wk-badge { position: relative; width: 30px; height: 30px; border-radius: var(--r-md); display: grid; place-items: center; color: #fff; font-weight: var(--fw-semibold); font-size: var(--text-11); flex: 0 0 auto; }
+.vs-wk-live { position: absolute; right: -2px; bottom: -2px; width: 9px; height: 9px; border-radius: 50%; background: var(--good); border: 2px solid var(--panel); }
+.vs-wk-id { flex: 1; min-width: 0; line-height: 1.2; }
+.vs-wk-name { font-size: var(--text-13); font-weight: var(--fw-semibold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vs-wk-role { font-size: var(--text-11); color: var(--muted); }
+.vs-wk-follow, .vs-wk-more { width: 26px; height: 26px; display: grid; place-items: center; border-radius: var(--r-sm); border: 0; background: transparent; color: var(--faint); cursor: pointer; flex: 0 0 auto; }
+.vs-wk-follow:hover, .vs-wk-more:hover { background: var(--panel-2); color: var(--fg); }
+.vs-wk-follow.on { color: color-mix(in srgb, var(--id, var(--accent)) 60%, var(--fg)); background: color-mix(in srgb, var(--id, var(--accent)) 12%, var(--panel)); }
+.vs-wk-now { display: flex; align-items: flex-start; gap: 8px; }
+.vs-wk-action { flex: 1; min-width: 0; font-size: var(--text-12); color: var(--fg); line-height: 1.4; }
+.vs-wk-pct { font-size: var(--text-11); color: var(--muted); font-variant-numeric: tabular-nums; flex: 0 0 auto; }
+.vs-wk-bar { height: 3px; border-radius: 3px; background: var(--panel-2); overflow: hidden; }
+.vs-wk-bar > span { display: block; height: 100%; border-radius: 3px; background: var(--id, var(--accent)); transition: width var(--dur) var(--ease); }
+.vs-wk-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
+.vs-wk-scope { display: inline-flex; align-items: center; gap: 4px; font-family: var(--mono); font-size: 10px; color: var(--faint); }
+.vs-wk-scope svg { flex: 0 0 auto; }
+.vs-wk-tool { font-size: 10px; font-family: var(--mono); color: var(--muted); background: var(--panel-2); border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px; }
+.vs-wk-meta { display: flex; align-items: center; gap: 6px; font-size: var(--text-11); color: var(--faint); }
+.vs-wk-sep { opacity: 0.6; }
+.vs-wk-budget { display: inline-flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums; }
+.vs-wk-budget-bar { width: 26px; height: 4px; border-radius: 3px; background: var(--panel-2); overflow: hidden; }
+.vs-wk-budget-bar > span { display: block; height: 100%; border-radius: 3px; background: color-mix(in srgb, var(--id, var(--accent)) 70%, var(--faint)); }
+.vs-wk-subs { margin-top: 2px; padding-top: 8px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 7px; }
+.vs-wk-subhead { display: flex; align-items: center; gap: 4px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--faint); font-weight: var(--fw-semibold); }
+.vs-wk-sub { display: flex; align-items: flex-start; gap: 8px; padding-left: 4px; }
+.vs-wk-sub-rail { width: 2px; align-self: stretch; border-radius: 2px; background: color-mix(in srgb, var(--id, var(--brand-mark)) 45%, var(--line)); flex: 0 0 auto; margin: 2px 0; }
+.vs-wk-sub-body { flex: 1; min-width: 0; }
+.vs-wk-sub-name { font-size: var(--text-12); }
+.vs-wk-sub-name b { font-weight: var(--fw-medium); }
+.vs-wk-sub-name span { color: var(--muted); margin-left: 5px; }
+.vs-wk-sub-action { font-size: 10px; color: var(--faint); }
+.vs-rename { height: 24px; border: 1px solid var(--accent); border-radius: 6px; background: var(--panel); color: var(--fg); font: inherit; font-size: var(--text-13); font-weight: var(--fw-semibold); padding: 0 6px; width: 100%; }
+
+/* context-menu header + check (used by the worker overflow) */
+.vs-ctx-header { padding: 6px 9px 2px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--faint); font-weight: var(--fw-semibold); }
+.vs-ctx-check { color: var(--accent); font-size: var(--text-12); margin-left: auto; }
+.vs-ctx-item.checked .vs-ctx-label { color: var(--fg); font-weight: var(--fw-medium); }
+
+.vs-state { font-size: var(--text-11); font-weight: var(--fw-medium); padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+.vs-state.sm { font-size: 10px; padding: 2px 7px; }
+.vs-state.tone-neutral { background: var(--panel-2); color: var(--muted); }
+.vs-state.tone-work { background: color-mix(in srgb, var(--accent) 14%, var(--panel)); color: color-mix(in srgb, var(--accent) 55%, var(--fg)); }
+.vs-state.tone-good { background: color-mix(in srgb, var(--good) 16%, var(--panel)); color: color-mix(in srgb, var(--good) 55%, var(--fg)); }
+.vs-state.tone-warn { background: color-mix(in srgb, var(--warn) 18%, var(--panel)); color: color-mix(in srgb, var(--warn) 60%, var(--fg)); }
+.vs-state.tone-danger { background: color-mix(in srgb, var(--danger) 16%, var(--panel)); color: color-mix(in srgb, var(--danger) 55%, var(--fg)); }
+
+.vs-specialists { border-top: 1px solid var(--line); padding-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.vs-spec-head { display: flex; align-items: center; gap: 4px; font-size: var(--text-11); color: var(--faint); font-weight: var(--fw-medium); }
+.vs-spec { display: flex; align-items: flex-start; gap: 8px; font-size: var(--text-12); }
+.vs-spec-body { flex: 1; min-width: 0; }
+.vs-spec-name { line-height: 1.3; }
+.vs-spec-name b { font-weight: var(--fw-medium); }
+.vs-spec-role { color: var(--muted); }
+.vs-spec-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--id, var(--brand-mark)); flex: 0 0 auto; margin-top: 5px; }
+.vs-spec-action { color: var(--faint); font-size: var(--text-11); }
+
+.vs-addcw { display: grid; grid-template-columns: 1fr 1fr auto; gap: 6px; padding-top: 4px; }
+.vs-addcw input { height: 32px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--fg); padding: 0 10px; font: inherit; font-size: var(--text-12); }
+.vs-app-primary.sm { height: 32px; padding: 0 10px; font-size: var(--text-12); }
+.vs-archive { border-top: 1px solid var(--line); padding-top: 10px; }
+.vs-archive-head { font-size: var(--text-11); color: var(--faint); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+.vs-archive-row { display: flex; align-items: center; gap: 8px; font-size: var(--text-12); color: var(--muted); padding: 5px 0; }
+.vs-archive-row span:nth-child(2) { flex: 1; }
+
+/* --- Checkpoint / Decision ---------------------------------------------- */
+.vs-risk { font-size: var(--text-11); font-weight: var(--fw-medium); padding: 3px 9px; border-radius: 6px; }
+.vs-risk.low { background: color-mix(in srgb, var(--good) 16%, var(--panel)); color: color-mix(in srgb, var(--good) 55%, var(--fg)); }
+.vs-risk.medium { background: color-mix(in srgb, var(--warn) 18%, var(--panel)); color: color-mix(in srgb, var(--warn) 60%, var(--fg)); }
+.vs-risk.high { background: color-mix(in srgb, var(--danger) 16%, var(--panel)); color: color-mix(in srgb, var(--danger) 55%, var(--fg)); }
+.vs-ckp-outcome { font-size: var(--text-16); font-weight: var(--fw-semibold); line-height: 1.3; }
+.vs-ckp-by { font-size: var(--text-12); color: var(--faint); }
+.vs-ckp-metrics { display: flex; gap: 6px; }
+.vs-ckp-sec { font-size: var(--text-11); text-transform: uppercase; letter-spacing: 0.07em; color: var(--faint); font-weight: var(--fw-semibold); display: flex; flex-direction: column; gap: 8px; }
+.vs-diff, .vs-ev, .vs-blast { text-transform: none; letter-spacing: 0; font-weight: var(--fw-normal); }
+.vs-diff { display: flex; flex-direction: column; gap: 4px; }
+.vs-diff-row { display: flex; align-items: center; gap: 8px; font-size: var(--text-12); }
+.vs-diff-row code { flex: 1; font-family: var(--mono); color: var(--fg); }
+.vs-add-n { color: var(--good); font-family: var(--mono); font-size: var(--text-11); }
+.vs-rem-n { color: var(--danger); font-family: var(--mono); font-size: var(--text-11); }
+.vs-ev { display: flex; flex-direction: column; gap: 6px; }
+.vs-ev-row { display: flex; align-items: center; gap: 8px; font-size: var(--text-12); color: var(--muted); }
+.vs-ev-row svg { color: var(--accent); flex: 0 0 auto; }
+.vs-ev-row b { color: var(--fg); font-weight: var(--fw-medium); }
+.vs-blast { display: flex; flex-wrap: wrap; gap: 5px; }
+.vs-ckp-limits { display: flex; gap: 8px; font-size: var(--text-12); color: var(--muted); background: var(--panel-2); border-radius: var(--r-md); padding: 10px 12px; }
+.vs-ckp-limits svg { color: var(--warn); flex: 0 0 auto; margin-top: 1px; }
+.vs-ckp-rollback { display: flex; align-items: center; gap: 6px; font-size: var(--text-11); color: var(--faint); font-family: var(--mono); }
+.vs-dec-title { font-size: var(--text-16); font-weight: var(--fw-semibold); }
+.vs-dec-why { font-size: var(--text-13); color: var(--muted); }
+.vs-dec-opts { display: flex; flex-direction: column; gap: 8px; }
+.vs-dec-opt { text-align: left; display: flex; flex-direction: column; gap: 4px; padding: 12px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--panel); cursor: pointer; font: inherit; }
+.vs-dec-opt:hover { border-color: var(--accent); }
+.vs-dec-opt.rec { border-color: color-mix(in srgb, var(--good) 40%, var(--line)); background: color-mix(in srgb, var(--good) 5%, var(--panel)); }
+.vs-dec-opt-top { display: flex; align-items: center; gap: 8px; }
+.vs-dec-opt-top b { flex: 1; font-size: var(--text-13); }
+.vs-dec-opt span { font-size: var(--text-12); color: var(--muted); }
+
+.vs-tag { font-size: 10px; font-weight: var(--fw-medium); padding: 2px 7px; border-radius: 5px; background: var(--panel-2); color: var(--muted); border: 1px solid var(--line); }
+.vs-tag.good { background: color-mix(in srgb, var(--good) 14%, var(--panel)); color: color-mix(in srgb, var(--good) 55%, var(--fg)); border-color: transparent; }
+.vs-tag.warn { background: color-mix(in srgb, var(--warn) 16%, var(--panel)); color: color-mix(in srgb, var(--warn) 60%, var(--fg)); border-color: transparent; }
+
+/* --- Activity feed ------------------------------------------------------ */
+.vs-feed { gap: 0; padding: 6px 0; }
+.vs-feed-row { display: flex; gap: 10px; padding: 10px 16px; }
+.vs-feed-rail { width: 2px; border-radius: 2px; flex: 0 0 auto; background: var(--line-2); }
+.vs-feed-rail.tone-good { background: var(--good); }
+.vs-feed-rail.tone-work { background: var(--accent); }
+.vs-feed-rail.tone-warn { background: var(--warn); }
+.vs-feed-rail.tone-danger { background: var(--danger); }
+.vs-feed-main { flex: 1; min-width: 0; }
+.vs-feed-top { display: flex; align-items: center; gap: 7px; margin-bottom: 3px; }
+.vs-feed-kind { font-size: var(--text-11); font-weight: var(--fw-semibold); }
+.vs-feed-kind.tone-good { color: color-mix(in srgb, var(--good) 60%, var(--fg)); }
+.vs-feed-kind.tone-work { color: color-mix(in srgb, var(--accent) 60%, var(--fg)); }
+.vs-feed-kind.tone-warn { color: color-mix(in srgb, var(--warn) 62%, var(--fg)); }
+.vs-feed-kind.tone-danger { color: color-mix(in srgb, var(--danger) 60%, var(--fg)); }
+.vs-feed-kind.tone-neutral { color: var(--muted); }
+.vs-feed-ts { margin-left: auto; font-size: 10px; color: var(--faint); font-variant-numeric: tabular-nums; }
+.vs-feed-text { font-size: var(--text-12); color: var(--muted); line-height: 1.4; }
+
+/* --- Tool drawer -------------------------------------------------------- */
+/* Full-width panel docked flush to the bottom — squared, overlays the stage
+   (never resizes it, so no layout shift). */
+/* Docked bottom panel — an in-flow region that pushes the workspace up
+   (a real panel, not a floating sheet). Resizable via the top grip. */
+.vs-drawer { position: relative; flex: 0 0 auto; z-index: 38; border-top: 1px solid var(--line-2); background: var(--panel); display: flex; flex-direction: column; overflow: hidden; }
+.vs-drawer-grip { position: absolute; top: 0; left: 0; right: 0; height: 5px; cursor: ns-resize; z-index: 5; }
+.vs-drawer-grip:hover { background: color-mix(in srgb, var(--accent) 40%, transparent); }
+.vs-drawer-tabs { display: flex; align-items: center; gap: 2px; padding: 6px 10px; border-bottom: 1px solid var(--line); }
+.vs-dtab { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: var(--r-sm); border: 0; background: transparent; color: var(--muted); font: inherit; font-size: var(--text-12); cursor: pointer; }
+.vs-dtab:hover { background: var(--panel-2); color: var(--fg); }
+.vs-dtab.on { background: var(--panel-2); color: var(--fg); font-weight: var(--fw-medium); }
+.vs-drawer-body { flex: 1; overflow: auto; padding: 12px 14px; font-family: var(--mono); font-size: var(--text-12); }
+.vs-drawer-body.term { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+.vs-termpanel { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.vs-term-bar { display: flex; align-items: center; gap: 2px; padding: 5px 8px; border-bottom: 1px solid var(--line); background: var(--panel-2); flex: 0 0 auto; }
+.vs-term-tab { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 10px; border-radius: var(--r-sm); border: 0; background: transparent; color: var(--muted); font: inherit; font-size: var(--text-12); font-family: var(--mono); cursor: pointer; }
+.vs-term-tab:hover { background: var(--panel); color: var(--fg); }
+.vs-term-tab.on { background: var(--panel); color: var(--fg); box-shadow: var(--elev-1); }
+.vs-term-host { flex: 1; position: relative; min-height: 0; }
+.vs-term-host > .mode { position: absolute; inset: 0; }
+.vs-tree-row { padding: 3px 0; white-space: pre; color: var(--muted); }
+.vs-tree-row.dir { color: var(--fg); font-weight: var(--fw-medium); }
+.vs-tree-row.active { color: var(--accent); }
+.vs-term-line { color: var(--fg); }
+.vs-term-p { color: var(--good); margin-right: 8px; }
+.vs-term-out { color: var(--muted); padding: 2px 0; }
+.vs-term-out.ok { color: var(--good); }
+.vs-caret { display: inline-block; width: 7px; height: 14px; background: var(--fg); vertical-align: text-bottom; animation: vs-blink 1s step-end infinite; }
+@keyframes vs-blink { 50% { opacity: 0; } }
+.vs-log { display: flex; flex-direction: column; gap: 6px; }
+.vs-log-row { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+.vs-problems .vs-ok-empty, .vs-ok-empty { display: flex; align-items: center; gap: 8px; color: var(--good); font-family: var(--sans); }
+
+/* --- Mission sheet + scrims -------------------------------------------- */
+.vs-scrim { position: fixed; inset: 0; z-index: 50; background: color-mix(in srgb, var(--fg) 22%, transparent); backdrop-filter: blur(2px); display: grid; place-items: center; padding: 24px; animation: vs-fade var(--dur) var(--ease); }
+.vs-scrim.top { align-items: flex-start; padding-top: 14vh; }
+@keyframes vs-fade { from { opacity: 0; } }
+.vs-sheet { width: min(620px, 100%); max-height: 88vh; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-xl); box-shadow: var(--elev-2); overflow: hidden; animation: vs-rise var(--dur) var(--ease); }
+@keyframes vs-rise { from { transform: translateY(8px); opacity: 0; } }
+.vs-sheet-head { display: flex; align-items: flex-start; gap: 12px; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+.vs-sheet-head h2 { font-size: var(--text-16); font-weight: var(--fw-semibold); line-height: 1.3; }
+.vs-sheet-head p { font-size: var(--text-13); color: var(--muted); margin-top: 2px; }
+.vs-sheet-head .vs-icon { margin-left: auto; }
+.vs-sheet-body { padding: 20px; overflow: auto; display: flex; flex-direction: column; gap: 16px; }
+.vs-sheet-foot { display: flex; align-items: center; gap: 8px; padding: 16px 20px; border-top: 1px solid var(--line); background: var(--panel-2); }
+.vs-hint { font-size: var(--text-12); color: var(--faint); }
+.vs-f { display: flex; flex-direction: column; gap: 6px; }
+.vs-f > span { font-size: var(--text-12); font-weight: var(--fw-medium); color: var(--muted); }
+.vs-f input, .vs-f textarea, .vs-f select { border: 1px solid var(--line); background: var(--panel); color: var(--fg); border-radius: var(--r-md); padding: 9px 12px; font: inherit; font-size: var(--text-13); }
+.vs-f input:focus, .vs-f textarea:focus, .vs-f select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+.vs-f textarea { resize: vertical; }
+.vs-f2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.vs-f3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.vs-crit { display: flex; flex-direction: column; gap: 6px; }
+.vs-crit-row { display: flex; align-items: center; gap: 8px; }
+.vs-crit-row svg { color: var(--faint); flex: 0 0 auto; }
+.vs-crit-row input { flex: 1; border: 1px solid var(--line); background: var(--panel); color: var(--fg); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: var(--text-13); }
+.vs-add { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; height: 30px; padding: 0 10px; border-radius: var(--r-sm); border: 1px dashed var(--line-2); background: transparent; color: var(--muted); font: inherit; font-size: var(--text-12); cursor: pointer; }
+.vs-add:hover { color: var(--fg); border-color: var(--accent); }
+.vs-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.vs-chip { height: 28px; padding: 0 11px; border-radius: 20px; border: 1px solid var(--line); background: var(--panel); color: var(--muted); font: inherit; font-size: var(--text-12); cursor: pointer; }
+.vs-chip.on { background: var(--fg); color: var(--shell); border-color: var(--fg); }
+
+.vs-icon { width: 30px; height: 30px; display: grid; place-items: center; border-radius: var(--r-sm); border: 0; background: transparent; color: var(--muted); cursor: pointer; }
+.vs-icon:hover { background: var(--panel-2); color: var(--fg); }
+.vs-icon.sm { width: 24px; height: 24px; }
+.vs-icon.xs { width: 18px; height: 18px; color: var(--faint); }
+
+/* --- Command palette ---------------------------------------------------- */
+.vs-cmd { width: min(560px, 100%); background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-lg); box-shadow: var(--elev-2); overflow: hidden; animation: vs-rise var(--dur) var(--ease); }
+.vs-cmd > input { width: 100%; height: 48px; border: 0; border-bottom: 1px solid var(--line); background: transparent; color: var(--fg); padding: 0 18px; font: inherit; font-size: var(--text-14); outline: none; }
+.vs-cmd-list { max-height: 320px; overflow: auto; padding: 6px; }
+.vs-cmd-row { display: flex; align-items: center; width: 100%; padding: 9px 12px; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: var(--text-13); border-radius: 8px; cursor: pointer; text-align: left; }
+.vs-cmd-row span { flex: 1; }
+.vs-cmd-row:hover, .vs-cmd-row:first-child { background: var(--panel-2); }
+.vs-cmd-row kbd { font-family: var(--mono); font-size: 10px; color: var(--faint); background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 2px 5px; }
+.vs-cmd-empty { padding: 20px; text-align: center; color: var(--faint); }
+
+/* --- Toast + confetti --------------------------------------------------- */
+.vs-toast { position: fixed; left: 50%; bottom: 76px; transform: translateX(-50%); z-index: 60; background: var(--fg); color: var(--shell); font-size: var(--text-13); font-weight: var(--fw-medium); padding: 10px 16px; border-radius: var(--r-md); box-shadow: var(--elev-2); animation: vs-rise var(--dur) var(--ease); }
+.vs-confetti { position: fixed; inset: 0; z-index: 70; pointer-events: none; overflow: hidden; }
+.vs-confetti span { position: absolute; top: -10px; width: 8px; height: 12px; border-radius: 2px; animation: vs-fall 1.5s var(--ease) forwards; }
+@keyframes vs-fall { to { transform: translateY(102vh) rotate(540deg); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .vs-confetti { display: none; } }
+
+/* --- Collaboration chrome: face pile, Share, invite modal --------------- */
+.vs-facepile { display: flex; align-items: center; margin-left: 4px; }
+.vs-face { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 10px; font-weight: var(--fw-semibold); box-shadow: 0 0 0 2px var(--shell); margin-left: -7px; }
+.vs-face:first-child { margin-left: 0; }
+.vs-share-btn { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer; }
+.vs-share-btn:hover { border-color: var(--line-2); background: var(--panel-2); }
+.vs-dock-btn.accent { background: color-mix(in srgb, var(--accent) 14%, var(--panel-2)); color: var(--accent); }
+
+.vs-share { width: min(520px, 100%); }
+.vs-invite { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; }
+.vs-invite input { height: 36px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--panel); color: var(--fg); padding: 0 12px; font: inherit; font-size: var(--text-13); }
+.vs-invite input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+.vs-invite select { height: 36px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--panel); color: var(--fg); padding: 0 10px; font: inherit; font-size: var(--text-13); cursor: pointer; }
+.vs-invite .vs-app-primary { height: 36px; }
+.vs-collab-list { display: flex; flex-direction: column; gap: 2px; }
+.vs-collab { display: flex; align-items: center; gap: 10px; padding: 9px 6px; border-radius: var(--r-md); }
+.vs-collab:hover { background: var(--panel-2); }
+.vs-collab-id { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.vs-collab-id b { font-size: var(--text-13); font-weight: var(--fw-medium); }
+.vs-collab-id span { font-size: var(--text-12); color: var(--faint); }
+.vs-collab-role { font-size: var(--text-12); color: var(--muted); }
+.vs-collab-live { width: 8px; height: 8px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 22%, transparent); }
+
+/* --- Tab: loading spinner, mission ring, hover card -------------------- */
+.vs-tab-spin { width: 12px; height: 12px; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--accent) 30%, var(--line)); border-top-color: var(--accent); animation: vs-rot 0.7s linear infinite; }
+.vs-tab-status.working { color: var(--accent); }
+.vs-tab-mission { display: inline-flex; align-items: center; gap: 5px; height: 20px; padding: 0 7px; border-radius: 20px; border: 1px solid var(--line); background: var(--panel-2); color: var(--muted); font: inherit; font-size: 10px; font-weight: var(--fw-semibold); font-variant-numeric: tabular-nums; cursor: pointer; flex: 0 0 auto; }
+.vs-tab-mission:hover { border-color: var(--line-2); color: var(--fg); }
+.vs-tab-ring { position: relative; width: 12px; height: 12px; border-radius: 50%; flex: 0 0 auto; background: conic-gradient(var(--good) calc(var(--pct) * 1%), color-mix(in srgb, var(--fg) 15%, transparent) 0); }
+.vs-tab-ring::after { content: ''; position: absolute; inset: 3px; border-radius: 50%; background: var(--panel-2); }
+.vs-tab.active .vs-tab-mission { background: var(--panel-2); }
+.vs-tab { position: relative; }
+.vs-tabhover { position: absolute; left: 4px; top: calc(100% + 8px); z-index: 60; width: 280px; background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-lg); box-shadow: var(--elev-2); padding: 12px; animation: vs-rise var(--dur) var(--ease); cursor: default; }
+.vs-tabhover-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.vs-tabhover-head b { font-size: var(--text-13); font-weight: var(--fw-semibold); }
+.vs-tabhover-prog { font-size: var(--text-11); color: var(--good); font-variant-numeric: tabular-nums; }
+.vs-tabhover-mission { font-size: var(--text-12); color: var(--muted); margin-bottom: 10px; line-height: 1.4; }
+.vs-tabhover-roster { display: flex; flex-direction: column; gap: 7px; }
+.vs-tabhover-row { display: flex; align-items: center; gap: 7px; font-size: var(--text-12); min-width: 0; }
+.vs-tabhover-row b { font-weight: var(--fw-medium); flex: 0 0 auto; }
+.vs-tabhover-row span { color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vs-dotmark { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; }
+.vs-tabhover-needs { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
+.vs-tabhover-need { display: flex; align-items: center; gap: 6px; font-size: var(--text-12); color: color-mix(in srgb, var(--warn) 62%, var(--fg)); }
+.vs-tabhover-need svg { color: var(--warn); flex: 0 0 auto; }
+.vs-tabhover-empty { font-size: var(--text-12); color: var(--faint); }
+
+/* --- Context menu (right-click) --------------------------------------- */
+.vs-ctx-scrim { position: fixed; inset: 0; z-index: 79; }
+.vs-ctx { position: fixed; z-index: 80; min-width: 200px; background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-lg); box-shadow: var(--elev-2); padding: 6px; animation: vs-rise var(--dur) var(--ease); }
+.vs-ctx-item { display: flex; align-items: center; gap: 9px; width: 100%; height: 30px; padding: 0 9px; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: var(--text-13); border-radius: var(--r-sm); cursor: pointer; text-align: left; }
+.vs-ctx-item:hover { background: var(--panel-2); }
+.vs-ctx-item:disabled { opacity: 0.4; cursor: default; }
+.vs-ctx-item.danger { color: var(--danger); }
+.vs-ctx-icon { display: grid; place-items: center; color: var(--muted); }
+.vs-ctx-item.danger .vs-ctx-icon { color: var(--danger); }
+.vs-ctx-label { flex: 1; }
+.vs-ctx-item kbd { font-family: var(--mono); font-size: 10px; color: var(--faint); }
+.vs-ctx-sep { height: 1px; background: var(--line); margin: 4px 6px; }
+
+/* --- Profile settings -------------------------------------------------- */
+.vs-set-sec { display: flex; align-items: center; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); font-size: var(--text-11); text-transform: uppercase; letter-spacing: 0.06em; color: var(--faint); font-weight: var(--fw-semibold); }
+.vs-set-sec svg { color: var(--faint); }
+.vs-set-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; }
+.vs-set-row > span { font-size: var(--text-12); color: var(--muted); }
+.vs-seg { display: inline-flex; padding: 3px; border-radius: var(--r-md); background: var(--panel-2); border: 1px solid var(--line); }
+.vs-seg button { display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 12px; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: var(--text-13); font-weight: var(--fw-medium); border-radius: var(--r-sm); cursor: pointer; transition: color var(--dur) var(--ease); }
+.vs-seg button:hover { color: var(--fg); }
+.vs-seg button.on { background: var(--panel); color: var(--fg); box-shadow: var(--elev-1); }
+.vs-profile-scenario { display: flex; flex-direction: column; gap: 5px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.vs-profile-scenario > span { display: flex; align-items: center; gap: 6px; font-size: var(--text-11); color: var(--faint); font-weight: var(--fw-medium); }
+.vs-profile-scenario select { height: 32px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--fg); padding: 0 10px; font: inherit; font-size: var(--text-12); cursor: pointer; }
+.vs-profile-menu { width: 300px; }
+
+/* --- Dock: overflow, workers ------------------------------------------- */
+.vs-dock-more { position: relative; }
+.vs-dock-scrim { position: fixed; inset: 0; z-index: 41; }
+.vs-dockmenu { position: absolute; bottom: 42px; right: 0; z-index: 42; width: 208px; background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-lg); box-shadow: var(--elev-2); padding: 6px; animation: vs-rise var(--dur) var(--ease); }
+.vs-dockmenu-item { display: flex; align-items: center; gap: 10px; width: 100%; height: 34px; padding: 0 10px; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: var(--text-13); border-radius: var(--r-sm); cursor: pointer; text-align: left; }
+.vs-dockmenu-item:hover { background: var(--panel-2); }
+.vs-dockmenu-item.on { color: var(--accent); }
+.vs-dockmenu-item svg { color: var(--muted); flex: 0 0 auto; }
+.vs-dockmenu-item.on svg { color: var(--accent); }
+.vs-avatar.human { box-shadow: 0 0 0 2px var(--panel), 0 0 0 3px color-mix(in srgb, var(--fg) 22%, transparent); }
+
+/* --- Unified Workers panel: people ------------------------------------- */
+.vs-worker-sec { font-size: var(--text-11); text-transform: uppercase; letter-spacing: 0.06em; color: var(--faint); font-weight: var(--fw-semibold); margin-top: 4px; }
+.vs-worker-sec:not(:first-child) { margin-top: 8px; }
+.vs-person { display: flex; align-items: center; gap: 10px; padding: 8px 6px; border-radius: var(--r-md); }
+.vs-person:hover { background: var(--panel-2); }
+.vs-person-id { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.vs-person-id b { font-size: var(--text-13); font-weight: var(--fw-medium); }
+.vs-person-id span { font-size: var(--text-12); color: var(--faint); }
+.vs-person-role { font-size: var(--text-12); color: var(--muted); }
+
+/* Snap highlight on divider. */
+.vs-split-divider.snapped { background: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+
+/* --- Density + reduced motion (from profile settings) ------------------ */
+:root[data-density="compact"] .vs-tabbar { height: 40px; flex-basis: 40px; }
+:root[data-density="compact"] .vs-pane-bar { height: 30px; flex-basis: 30px; }
+:root[data-density="compact"] .vs-rail-body { padding: 10px; gap: 8px; }
+:root[data-density="compact"] .vs-cw { padding: 11px; gap: 9px; }
+:root[data-motion="reduced"] * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+:root[data-motion="reduced"] .vs-confetti { display: none; }
+
+/* --- New Work AI chat dropup ------------------------------------------- */
+.vs-workchat-scrim { position: fixed; inset: 0; z-index: 44; }
+.vs-workchat { position: fixed; left: 50%; bottom: 74px; transform: translateX(-50%); z-index: 45; width: min(520px, calc(100vw - 32px)); max-height: 62vh; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-xl); box-shadow: var(--elev-2); overflow: hidden; animation: vs-rise var(--dur) var(--ease); }
+.vs-workchat-head { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+.vs-workchat-head svg { color: var(--brand-mark); flex: 0 0 auto; }
+.vs-workchat-head b { font-size: var(--text-14); font-weight: var(--fw-semibold); }
+.vs-workchat-sub { font-size: var(--text-12); color: var(--faint); }
+.vs-workchat-head .vs-icon { margin-left: auto; }
+.vs-workchat-msgs { flex: 1; overflow: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; min-height: 90px; }
+.vs-workchat-hello { font-size: var(--text-13); color: var(--muted); line-height: 1.5; }
+.vs-workchat-eg { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.vs-workchat-eg button { text-align: left; padding: 8px 11px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--panel); color: var(--fg); font: inherit; font-size: var(--text-12); cursor: pointer; }
+.vs-workchat-eg button:hover { border-color: var(--accent); background: var(--panel-2); }
+.vs-cmsg { max-width: 88%; padding: 9px 12px; border-radius: 12px; font-size: var(--text-13); line-height: 1.45; }
+.vs-cmsg.user { align-self: flex-end; background: var(--fg); color: var(--shell); border-bottom-right-radius: 4px; }
+.vs-cmsg.assistant { align-self: flex-start; background: var(--panel-2); color: var(--fg); border-bottom-left-radius: 4px; }
+.vs-workchat-composer { border-top: 1px solid var(--line); padding: 10px 12px; }
+.vs-workchat-composer textarea { width: 100%; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: var(--text-13); resize: none; outline: none; }
+.vs-workchat-foot { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.vs-chat-model { height: 30px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); color: var(--muted); padding: 0 8px; font: inherit; font-size: var(--text-11); cursor: pointer; }
+.vs-chat-brief { height: 30px; padding: 0 10px; border: 0; background: transparent; color: var(--accent); font: inherit; font-size: var(--text-12); cursor: pointer; }
+.vs-chat-brief:hover { text-decoration: underline; }
+
+/* --- Settings modal (Cursor-style) ------------------------------------- */
+.vs-settings { width: min(920px, calc(100vw - 48px)); height: min(640px, calc(100vh - 72px)); display: flex; background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-xl); box-shadow: var(--elev-2); overflow: hidden; animation: vs-rise var(--dur) var(--ease); }
+.vs-settings-nav { width: 232px; flex: 0 0 232px; background: var(--panel-2); border-right: 1px solid var(--line); padding: 14px 12px; overflow: auto; }
+.vs-settings-title { font-size: var(--text-13); font-weight: var(--fw-semibold); color: var(--faint); padding: 4px 8px 12px; }
+.vs-settings-group { margin-bottom: 10px; }
+.vs-settings-grouphead { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--faint); font-weight: var(--fw-semibold); padding: 8px 8px 4px; }
+.vs-settings-navitem { display: flex; align-items: center; gap: 9px; width: 100%; height: 34px; padding: 0 9px; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: var(--text-13); border-radius: 8px; cursor: pointer; text-align: left; }
+.vs-settings-navitem:hover { background: var(--panel); color: var(--fg); }
+.vs-settings-navitem.on { background: var(--panel); color: var(--fg); font-weight: var(--fw-medium); box-shadow: var(--elev-1); }
+.vs-settings-navitem svg { color: var(--muted); flex: 0 0 auto; }
+.vs-settings-navitem.on svg { color: var(--fg); }
+.vs-settings-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.vs-settings-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px 10px; }
+.vs-settings-head h2 { font-size: var(--text-16); font-weight: var(--fw-semibold); line-height: 1.3; }
+.vs-settings-body { flex: 1; overflow: auto; padding: 4px 24px 24px; }
+.vs-settings-sechead { font-size: var(--text-12); color: var(--faint); font-weight: var(--fw-semibold); margin: 22px 0 4px; }
+.vs-set-r { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 0; border-top: 1px solid var(--line); }
+.vs-settings-body > .vs-set-r:first-child, .vs-settings-sechead + .vs-set-r { border-top: 0; }
+.vs-set-r-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.vs-set-r-txt b { font-size: var(--text-13); font-weight: var(--fw-medium); }
+.vs-set-r-txt span { font-size: var(--text-12); color: var(--muted); }
+.vs-set-r-ctl { flex: 0 0 auto; }
+.vs-set-select { appearance: none; height: 34px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--panel); color: var(--fg); padding: 0 30px 0 12px; font: inherit; font-size: var(--text-13); cursor: pointer;
+	background-image: linear-gradient(45deg, transparent 50%, var(--faint) 50%), linear-gradient(135deg, var(--faint) 50%, transparent 50%); background-position: calc(100% - 15px) 15px, calc(100% - 10px) 15px; background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; }
+.vs-set-select:hover { border-color: var(--line-2); }
+.vs-toggle { width: 40px; height: 24px; border-radius: 20px; border: 0; background: var(--line-2); cursor: pointer; padding: 0; position: relative; transition: background var(--dur) var(--ease); }
+.vs-toggle > span { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: var(--elev-1); transition: transform var(--dur) var(--ease); }
+.vs-toggle.on { background: var(--accent); }
+.vs-toggle.on > span { transform: translateX(16px); }
+.vs-plan-card { display: flex; border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; margin-top: 8px; }
+.vs-plan-info { flex: 1; padding: 18px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.vs-plan-badge { font-size: var(--text-11); color: var(--muted); background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px; }
+.vs-plan-name { font-size: var(--text-16); font-weight: var(--fw-semibold); }
+.vs-plan-info p { font-size: var(--text-13); color: var(--muted); }
+.vs-plan-info .vs-app-ghost { margin-top: 6px; }
+.vs-plan-art { width: 190px; flex: 0 0 190px; background: radial-gradient(120% 120% at 70% 20%, color-mix(in srgb, var(--brand-mark) 42%, transparent), transparent 60%), linear-gradient(150deg, color-mix(in srgb, var(--accent) 24%, var(--panel-2)), color-mix(in srgb, var(--brand-mark) 30%, var(--panel-2))); }
+.vs-app-ghost.sm { height: 32px; padding: 0 14px; font-size: var(--text-12); }
+
+.vs-profile-actions { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 2px; }
+.vs-profile-item { display: flex; align-items: center; gap: 9px; width: 100%; height: 34px; padding: 0 8px; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: var(--text-13); border-radius: var(--r-sm); cursor: pointer; text-align: left; }
+.vs-profile-item:hover { background: var(--panel-2); }
+.vs-profile-item svg { color: var(--muted); flex: 0 0 auto; }
+
+/* --- Inbox (cross-project "needs you") --------------------------------- */
+.vs-inbox-wrap { position: relative; }
+.vs-inbox-badge { position: absolute; top: 0; right: 0; min-width: 15px; height: 15px; padding: 0 4px; border-radius: 8px; background: var(--danger); color: #fff; font-size: 9px; font-weight: var(--fw-semibold); display: grid; place-items: center; box-shadow: 0 0 0 2px var(--sunk); }
+.vs-inbox-menu { position: absolute; top: 38px; right: 0; z-index: 49; width: 344px; max-height: 62vh; overflow: auto; background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-lg); box-shadow: var(--elev-2); padding: 6px; animation: vs-rise var(--dur) var(--ease); }
+.vs-inbox-head { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px 6px; font-size: var(--text-13); font-weight: var(--fw-semibold); }
+.vs-inbox-head span { font-size: var(--text-11); color: var(--faint); }
+.vs-inbox-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 28px; color: var(--faint); font-size: var(--text-13); }
+.vs-inbox-empty svg { color: var(--good); }
+.vs-inbox-item { display: flex; align-items: flex-start; gap: 10px; width: 100%; padding: 10px; border: 0; background: transparent; border-radius: var(--r-md); cursor: pointer; text-align: left; }
+.vs-inbox-item:hover { background: var(--panel-2); }
+.vs-inbox-icon { width: 24px; height: 24px; border-radius: var(--r-sm); display: grid; place-items: center; flex: 0 0 auto; }
+.vs-inbox-icon.tone-warn { background: color-mix(in srgb, var(--warn) 16%, var(--panel)); color: color-mix(in srgb, var(--warn) 62%, var(--fg)); }
+.vs-inbox-icon.tone-work { background: color-mix(in srgb, var(--accent) 14%, var(--panel)); color: color-mix(in srgb, var(--accent) 60%, var(--fg)); }
+.vs-inbox-icon.tone-good { background: color-mix(in srgb, var(--good) 16%, var(--panel)); color: color-mix(in srgb, var(--good) 55%, var(--fg)); }
+.vs-inbox-body { flex: 1; min-width: 0; }
+.vs-inbox-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: var(--text-12); font-weight: var(--fw-medium); }
+.vs-inbox-proj { font-size: 10px; color: var(--faint); background: var(--panel-2); border-radius: 5px; padding: 1px 6px; flex: 0 0 auto; }
+.vs-inbox-text { font-size: var(--text-12); color: var(--muted); line-height: 1.4; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+
+/* --- Keyboard help overlay --------------------------------------------- */
+.vs-help { width: min(480px, 100%); background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-xl); box-shadow: var(--elev-2); overflow: hidden; animation: vs-rise var(--dur) var(--ease); }
+.vs-help-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 12px; border-bottom: 1px solid var(--line); }
+.vs-help-head h2 { font-size: var(--text-16); font-weight: var(--fw-semibold); }
+.vs-help-body { padding: 6px 20px 20px; max-height: 66vh; overflow: auto; }
+.vs-help-group { margin-top: 14px; }
+.vs-help-grouphead { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--faint); font-weight: var(--fw-semibold); margin-bottom: 6px; }
+.vs-help-row { display: flex; align-items: center; gap: 12px; padding: 5px 0; }
+.vs-help-row kbd { flex: 0 0 auto; min-width: 66px; text-align: center; font-family: var(--mono); font-size: var(--text-11); color: var(--fg); background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; }
+.vs-help-row span { font-size: var(--text-13); color: var(--muted); }
+
+@media (max-width: 1180px) {
+	.vs-dockpanel { width: min(384px, calc(100vw - 24px)); }
+}

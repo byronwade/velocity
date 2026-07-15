@@ -1,11 +1,27 @@
 # CLAUDE.md
 
-Guidance for working in this repository. Velocity is a **workstream-first developer environment** —
-a React SPA, shipped as a **Tauri 2** desktop app, where a piece of work (not a file) is the primary
-object. Each workstream has three views (Conversation / Work / Review), and the editor, terminal,
-browser, agent, design canvas, and studios are all surfaces over one in-memory workspace. Everything
-runs client-side; there is no backend or language server (persistence and real worktrees are still
-mocked — see the merge spec under `docs/superpowers/specs/`).
+Guidance for working in this repository. Velocity is an **autonomous software-development
+workspace** — a React SPA shipped as a **Tauri 2** desktop app, where named AI coworkers
+continuously build a shared project while the human directs, observes, and approves. Everything runs
+client-side; there is no backend or language server (persistence and real worktrees are still mocked
+— see the merge spec under `docs/superpowers/specs/`).
+
+**The default app is the Phase-1 prototype in `src/velocity/`** (`VelocityApp`, mounted by
+`src/App.tsx`). It is deterministic and provider-free: a `CoworkerRuntime` (`src/velocity/runtime.ts`)
+produces every state transition, bound to React via `useSyncExternalStore`. The design target is
+**v0.app / Geist / shadcn** — enforce the token layer in `src/styles/tokens.css` (one radius /
+control-height / dialog / popover spec) rather than redesigning. Standing rules: **no content
+shifting** (transient UI overlays; verify with `getBoundingClientRect`), and **always deliver a
+screenshot** for a UI change (drive the built app in Playwright). The earlier workstream shell
+(`src/workbench/`) is legacy but still owns the shared services the prototype's IDE and tools render.
+
+Key `src/velocity/` files: `model.ts` (types + `LayoutState` + `WORK_INTENTS`), `runtime.ts` (the
+deterministic runtime + `pickCoworker` auto-assign), `workspace.ts` (the multi-project manager;
+`runtime` is a Proxy to the active tab), `Stage.tsx` (split panes, the `IDELens` file tree, the
+`WorkComposer`/comment threads), `surfaces.tsx` (rails, docked `ToolDrawer`, command bar),
+`Dock.tsx`, `TabBar.tsx`, `SettingsSheet.tsx`, and `velocity.css`. Work is directed via **comments,
+not chat**: "New work" arms placement → click the app → describe → auto-assign. The Browser
+(`src/modes/BrowserMode.tsx`) is a real in-app browser with DevTools.
 
 ## Commands
 

@@ -1,15 +1,88 @@
 # Velocity
 
-Velocity is an open-source, local-first developer workstream environment. It keeps a feature's
-conversation, implementation surfaces, acceptance criteria, evidence, and meaningful activity in
-one place.
+Velocity is an open-source, local-first **autonomous software-development workspace**. Named AI
+coworkers continuously build a shared project while you direct, observe, and approve — it is not a
+chat app. The full product thesis lives in [`VELOCITY_PRODUCT_VISION.md`](VELOCITY_PRODUCT_VISION.md).
 
-The interface is intentionally closer to Framer, ChatGPT, and Cursor than a traditional multi-rail
-IDE: a single top header and one active piece of work. There is no sidebar and no icon rail —
-switching workstreams happens from a dropdown in the header, so the entire space below the bar is
-working canvas.
+![Velocity — a project on the Browser lens beside the IDE, with coworker presence markers and the floating dock](docs/screenshots/prototype/velocity-calm-light.png)
 
-![Velocity — the Work view: the conversation beside the code editor and its file tree](docs/screenshots/velocity-work.png)
+## The prototype (Phase 1)
+
+A polished, deterministic, design-first prototype of the workspace lives in
+[`src/velocity/`](src/velocity/). It renders as the default app. Nothing there talks to a provider
+or the network — a `CoworkerRuntime` produces every state transition deterministically, so the
+demo is fully repeatable.
+
+- **Project tabs** — the top row is a tab per project; each tab is a fully isolated workspace
+  (its own coworkers, missions, lens, open terminals/tools, and rails). Above the tabs sits the
+  account bar — credits/usage meter, the light/dark toggle, and the user profile.
+- **Split-pane workspace (Cursor-style)** — the running app is the left pane; the right holds the
+  IDE (or any tool). Every pane has its own **contextual** toolbar with a **view dropdown**
+  (Browser · IDE · System · Data · Tests · Verify) and **split-right / split-down / close** — build
+  50/50, stacked, or 2×2 layouts with draggable dividers. The Browser pane adds a **compare
+  selector** (vs Stable / Live / Preview / Branch); the IDE pane adds **toggle file tree**, **search
+  files**, and **find & replace**. **Spatial presence markers** show where each coworker is working;
+  click one to Follow.
+- **Real in-app browser** — a Chrome-style browser (address bar, history, bookmarks, zoom) that runs
+  the **live workspace preview** for local URLs and iframes external sites. Built-in **DevTools**
+  (⌥⌘I) with **Elements** (the real parsed DOM), **Console** (live output from the preview), and
+  **Network** — docked at the bottom of the pane.
+- **Real IDE** — a file tree bound to the in-memory filesystem beside a live CodeMirror editor;
+  open/close and search the tree, and full **find & replace** (match case, regexp, by word).
+- **Comments are the work** — there is no chat. **New work** (or ⌘⇧N) arms placement; click the app
+  to drop a pin, describe the change, and it **auto-assigns** the best-fit coworker (design →
+  Maya, backend → Rowan, tests → Iris…). One compact popover holds who / which model / how many
+  coworkers — all presets, mostly automatic. Pins show the assigned coworker's face; right-click a
+  pin for the same menu.
+- **Coworkers** — add / rename / pause / dismiss / restore / follow; name and role read louder than
+  the model; a manager (Maya) with two reporting specialists, shown with live tools and subagents.
+- **Docked developer tools** — a bottom panel (Explorer · Terminal · Logs · Problems · Source ·
+  Checkpoints) that pushes the workspace up, with a real shell over the filesystem and a shell
+  chooser (bash / zsh / pwsh / node).
+- **Checkpoints, Evidence, and Decision Sheets** — review work with diffs, tests, traces, blast
+  radius, and rollback; resolve conflicts and protected actions with a recommended option.
+- **Follow Mode** — following a coworker opens a panel showing what they're doing now, their latest
+  checkpoint, and their activity history. Presence flags collapse to avatars and expand on
+  hover/follow, so the stage stays calm with many coworkers.
+- **Ship** — deploy to **Vercel, Netlify, or Cloudflare** (deploying → live with a production URL).
+- **Account & settings** — a Cursor-style settings modal (plan & usage, appearance, notifications,
+  coworkers, integrations), a cross-project **inbox**, light + dark themes, and a command palette
+  where every entry drives state.
+- Everything is designed against **v0.app's system** — **Geist** type on the v0 gray ramp, one
+  radius / control-height / dialog / popover spec across the app.
+
+Run it, then switch scenarios from the top-bar picker or the URL:
+
+```
+npm install
+npm run dev            # http://localhost:5199
+
+# seeded scenarios
+/?scenario=calm        # a healthy project mid-flight (default)
+/?scenario=checkpoint  # a checkpoint ready for review
+/?scenario=conflict    # two coworkers conflict → a Decision Sheet
+/?scenario=approval    # a protected migration needs sign-off
+/?scenario=compare     # Stable vs Candidate, side by side
+/?scenario=shipping    # ready to ship
+/?scenario=devtools    # the IDE lens + docked tools panel
+/?scenario=empty        # a blank project → describe the first work
+# also: parallel, verifyFail   ·   append &theme=dark for dark mode
+```
+
+Keyboard: `1`–`6` switch lenses, `c` compare, `f` focus, `.` pause all, `⌘K` commands,
+`⌘⇧N` new work, `⌘\` split right, `⌘J` terminal, `Esc` closes the topmost surface.
+
+<details>
+<summary>The earlier workstream environment</summary>
+
+Before the autonomous-workspace redesign, Velocity was a single-workstream environment (a feature's
+conversation beside its editor, terminal, browser, and design canvas). That shell still lives in
+`src/workbench/` and the services it uses remain the real substrate the prototype's Code lens and
+tool drawer render.
+
+![Velocity — the earlier Work view](docs/screenshots/velocity-work.png)
+
+</details>
 
 ## Product model
 
