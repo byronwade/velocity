@@ -4,7 +4,7 @@ Velocity is an open-source, local-first **autonomous software-development worksp
 coworkers continuously build a shared project while you direct, observe, and approve — it is not a
 chat app. The full product thesis lives in [`VELOCITY_PRODUCT_VISION.md`](VELOCITY_PRODUCT_VISION.md).
 
-![Velocity — the Aurora project on the Preview lens, with coworker presence markers and the floating dock](docs/screenshots/prototype/velocity-calm-light.png)
+![Velocity — a project on the Browser lens beside the IDE, with coworker presence markers and the floating dock](docs/screenshots/prototype/velocity-calm-light.png)
 
 ## The prototype (Phase 1)
 
@@ -16,29 +16,40 @@ demo is fully repeatable.
 - **Project tabs** — the top row is a tab per project; each tab is a fully isolated workspace
   (its own coworkers, missions, lens, open terminals/tools, and rails). Above the tabs sits the
   account bar — credits/usage meter, the light/dark toggle, and the user profile.
-- **Quiet top bar** — project + mission progress, compare, focus, and a demo-scenario picker.
-- **Split-pane workspace (Cursor-style)** — the app is the left pane; the right holds tools. Every
-  pane has its own compact toolbar with a **view dropdown** (Preview · IDE · Browser · System ·
-  Data · Tests · Verify) and **split-right / split-down / close** — build 50/50, stacked, or 2×2
-  layouts, with draggable dividers. Toolbars adapt to pane width. A **Preview** pane also has a
-  **compare selector** (vs Stable / Live / Preview / Branch) that splits it into a side-by-side.
-  **Spatial presence markers** show where each coworker is working; click one to Follow.
-- **Ship** is a header button that opens the deploy sheet (Vercel / Netlify / Cloudflare).
-- **Floating dock** — new work, the coworker avatar stack, global pause, developer tools, ⌘K.
-- **Mission Sheet** — a structured outcome + acceptance-criteria intake (no chat composer).
+- **Split-pane workspace (Cursor-style)** — the running app is the left pane; the right holds the
+  IDE (or any tool). Every pane has its own **contextual** toolbar with a **view dropdown**
+  (Browser · IDE · System · Data · Tests · Verify) and **split-right / split-down / close** — build
+  50/50, stacked, or 2×2 layouts with draggable dividers. The Browser pane adds a **compare
+  selector** (vs Stable / Live / Preview / Branch); the IDE pane adds **toggle file tree**, **search
+  files**, and **find & replace**. **Spatial presence markers** show where each coworker is working;
+  click one to Follow.
+- **Real in-app browser** — a Chrome-style browser (address bar, history, bookmarks, zoom) that runs
+  the **live workspace preview** for local URLs and iframes external sites. Built-in **DevTools**
+  (⌥⌘I) with **Elements** (the real parsed DOM), **Console** (live output from the preview), and
+  **Network** — docked at the bottom of the pane.
+- **Real IDE** — a file tree bound to the in-memory filesystem beside a live CodeMirror editor;
+  open/close and search the tree, and full **find & replace** (match case, regexp, by word).
+- **Comments are the work** — there is no chat. **New work** (or ⌘⇧N) arms placement; click the app
+  to drop a pin, describe the change, and it **auto-assigns** the best-fit coworker (design →
+  Maya, backend → Rowan, tests → Iris…). One compact popover holds who / which model / how many
+  coworkers — all presets, mostly automatic. Pins show the assigned coworker's face; right-click a
+  pin for the same menu.
 - **Coworkers** — add / rename / pause / dismiss / restore / follow; name and role read louder than
-  the model; a manager (Maya) with two reporting specialists.
-- **Collaboration** — calm Figma-style presence flags for coworkers, live cursors for human
-  teammates, a **Share** dialog to invite real people (email + role), and **comments** you pin to
-  the stage and hand to a coworker to fix (comment mode in the dock → click the stage).
+  the model; a manager (Maya) with two reporting specialists, shown with live tools and subagents.
+- **Docked developer tools** — a bottom panel (Explorer · Terminal · Logs · Problems · Source ·
+  Checkpoints) that pushes the workspace up, with a real shell over the filesystem and a shell
+  chooser (bash / zsh / pwsh / node).
 - **Checkpoints, Evidence, and Decision Sheets** — review work with diffs, tests, traces, blast
   radius, and rollback; resolve conflicts and protected actions with a recommended option.
 - **Follow Mode** — following a coworker opens a panel showing what they're doing now, their latest
   checkpoint, and their activity history. Presence flags collapse to avatars and expand on
   hover/follow, so the stage stays calm with many coworkers.
 - **Ship** — deploy to **Vercel, Netlify, or Cloudflare** (deploying → live with a production URL).
-- Panels **pop up from the floating dock** (no side rail); **Stable vs Candidate** compare, a
-  resizable tool drawer, light + dark themes, and a command palette where every entry drives state.
+- **Account & settings** — a Cursor-style settings modal (plan & usage, appearance, notifications,
+  coworkers, integrations), a cross-project **inbox**, light + dark themes, and a command palette
+  where every entry drives state.
+- Everything is designed against **v0.app's system** — **Geist** type on the v0 gray ramp, one
+  radius / control-height / dialog / popover spec across the app.
 
 Run it, then switch scenarios from the top-bar picker or the URL:
 
@@ -53,13 +64,13 @@ npm run dev            # http://localhost:5199
 /?scenario=approval    # a protected migration needs sign-off
 /?scenario=compare     # Stable vs Candidate, side by side
 /?scenario=shipping    # ready to ship
-/?scenario=devtools    # the Code lens + terminal drawer
-/?scenario=empty        # a blank project → create a mission
+/?scenario=devtools    # the IDE lens + docked tools panel
+/?scenario=empty        # a blank project → describe the first work
 # also: parallel, verifyFail   ·   append &theme=dark for dark mode
 ```
 
 Keyboard: `1`–`6` switch lenses, `c` compare, `f` focus, `.` pause all, `⌘K` commands,
-`⌘⇧N` new mission, `Esc` closes the topmost surface.
+`⌘⇧N` new work, `⌘\` split right, `⌘J` terminal, `Esc` closes the topmost surface.
 
 <details>
 <summary>The earlier workstream environment</summary>
