@@ -11,7 +11,7 @@
 
 import { buildScenario } from './scenarios';
 import type {
-	Autonomy, Coworker, Lens, MissionInput, ToolId, WorkspaceState,
+	Autonomy, CollabRole, Coworker, Lens, MissionInput, ToolId, WorkspaceState,
 } from './model';
 
 export interface CoworkerRuntime {
@@ -51,6 +51,16 @@ export interface CoworkerRuntime {
 	decide(id: string, optionId: string): void;
 	assignArtifact(label: string, action: string): void;
 	ship(): void;
+
+	// --- collaboration ---
+	toggleCommentMode(): void;
+	addComment(lens: Lens, x: number, y: number, text: string): void;
+	openComment(id: string | null): void;
+	assignComment(commentId: string, coworkerId: string): void;
+	resolveComment(id: string): void;
+	openShare(open: boolean): void;
+	inviteCollaborator(email: string, role: CollabRole): void;
+	removeCollaborator(id: string): void;
 }
 
 const IDENTITY_COLORS = ['#6f74c9', '#4a8dd1', '#2f9e8f', '#5b7a99', '#8a6fb0', '#3f7fd0'];
@@ -123,8 +133,11 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 	closeRight(): void { this.patchLayout({ rightSurface: 'none' }); }
 	closeTopmost(): void {
 		const l = this.state.layout;
+		if (l.shareOpen) return this.patchLayout({ shareOpen: false });
 		if (l.commandOpen) return this.patchLayout({ commandOpen: false });
 		if (l.missionSheetOpen) return this.patchLayout({ missionSheetOpen: false });
+		if (l.activeCommentId) return this.patchLayout({ activeCommentId: null });
+		if (l.commentMode) return this.patchLayout({ commentMode: false });
 		if (l.rightSurface !== 'none') return this.patchLayout({ rightSurface: 'none' });
 		if (l.openTool) return this.patchLayout({ openTool: null });
 		if (l.followingId) return this.follow(null);
@@ -247,6 +260,59 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 		this.addEvent('merge', 'Shipped. Live link ready.', null);
 		this.toast('Shipped 🎉  aurora.app/p/onboarding · link copied');
 		setTimeout(() => this.set({ celebrate: false }), 1600);
+	}
+
+	// --- collaboration ---
+	toggleCommentMode(): void {
+		this.patchLayout({ commentMode: !this.state.layout.commentMode, activeCommentId: null });
+	}
+	addComment(lens: Lens, x: number, y: number, text: string): void {
+		if (!text.trim()) { this.patchLayout({ commentMode: false }); return; }
+		const me = this.state.collaborators.find((c) => c.id === 'you') ?? this.state.collaborators[0];
+		const id = uid('cm');
+		const comment = {
+			id, lens, x, y, authorName: me?.name ?? 'You', authorColor: me?.color ?? IDENTITY_COLORS[0],
+			text: text.trim(), createdLabel: 'now', resolved: false, assignedCoworkerId: null, replies: [],
+		};
+		this.set({ comments: [comment, ...this.state.comments], layout: { ...this.state.layout, commentMode: false, activeCommentId: id } });
+		this.addEvent('note', `Comment added on ${lens}.`, null);
+		this.toast('Comment added.');
+	}
+	openComment(id: string | null): void { this.patchLayout({ activeCommentId: id, commentMode: false }); }
+	assignComment(commentId: string, coworkerId: string): void {
+		const cw = this.state.coworkers.find((c) => c.id === coworkerId);
+		this.set({
+			comments: this.state.comments.map((c) => (c.id === commentId
+				? { ...c, assignedCoworkerId: coworkerId, replies: [...c.replies, { authorName: cw?.name ?? 'Coworker', authorColor: cw?.color ?? IDENTITY_COLORS[0], text: 'Picking this up now — I’ll post a checkpoint when it’s ready.', tsLabel: 'now', fromCoworker: true }] }
+				: c)),
+		});
+		if (cw) this.mapCoworkers((c) => (c.id === coworkerId ? { ...c, state: 'active', action: 'Addressing a comment' } : c));
+		this.addEvent('reassign', `${cw?.name ?? 'A coworker'} assigned to a comment.`, coworkerId);
+		this.toast(`Assigned to ${cw?.name ?? 'coworker'}.`);
+	}
+	resolveComment(id: string): void {
+		this.set({ comments: this.state.comments.map((c) => (c.id === id ? { ...c, resolved: true } : c)) });
+		this.patchLayout({ activeCommentId: null });
+		this.toast('Comment resolved.');
+	}
+	openShare(open: boolean): void { this.patchLayout({ shareOpen: open }); }
+	inviteCollaborator(email: string, role: CollabRole): void {
+		const clean = email.trim();
+		if (!clean) return;
+		const handle = clean.split('@')[0].replace(/[._-]+/g, ' ').trim();
+		const name = handle.replace(/\b\w/g, (m) => m.toUpperCase()) || clean;
+		const initials = (name.split(' ').map((w) => w[0]).join('').slice(0, 2) || clean.slice(0, 2)).toUpperCase();
+		const color = IDENTITY_COLORS[this.state.collaborators.length % IDENTITY_COLORS.length];
+		const collab = { id: uid('co'), name, initials, color, email: clean, role, status: 'invited' as const, cursor: null };
+		this.set({ collaborators: [...this.state.collaborators, collab] });
+		this.addEvent('note', `Invited ${clean} as ${role}.`, null);
+		this.toast(`Invite sent to ${clean} · ${role} (demo).`);
+	}
+	removeCollaborator(id: string): void {
+		const c = this.state.collaborators.find((x) => x.id === id);
+		if (!c || c.role === 'owner') return;
+		this.set({ collaborators: this.state.collaborators.filter((x) => x.id !== id) });
+		this.toast(`${c.name} removed.`);
 	}
 }
 

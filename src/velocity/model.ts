@@ -194,6 +194,45 @@ export interface ProjectInfo {
 	environment: string;
 }
 
+// --- Human collaboration (real people, distinct from AI coworkers) ---------
+export type CollabRole = 'owner' | 'editor' | 'viewer';
+export type CollabStatus = 'active' | 'invited' | 'offline';
+
+export interface Collaborator {
+	id: string;
+	name: string;
+	initials: string;
+	color: string;
+	email: string;
+	role: CollabRole;
+	status: CollabStatus;
+	/** Live cursor position on the stage, or null when not viewing. */
+	cursor: { lens: Lens; x: number; y: number } | null;
+}
+
+export interface CommentReply {
+	authorName: string;
+	authorColor: string;
+	text: string;
+	tsLabel: string;
+	fromCoworker?: boolean;
+}
+
+/** A comment pinned to a spot on a lens; can be handed to a coworker to fix. */
+export interface Comment {
+	id: string;
+	lens: Lens;
+	x: number;
+	y: number;
+	authorName: string;
+	authorColor: string;
+	text: string;
+	createdLabel: string;
+	resolved: boolean;
+	assignedCoworkerId: string | null;
+	replies: CommentReply[];
+}
+
 export interface CandidateEnv {
 	health: Health;
 	checks: { passed: number; total: number };
@@ -212,6 +251,10 @@ export interface LayoutState {
 	activeDecisionId: string | null;
 	missionSheetOpen: boolean;
 	commandOpen: boolean;
+	/** True while the stage is armed to drop a comment on the next click. */
+	commentMode: boolean;
+	activeCommentId: string | null;
+	shareOpen: boolean;
 }
 
 /** The whole prototype workspace at one moment — one deterministic snapshot. */
@@ -223,6 +266,8 @@ export interface WorkspaceState {
 	missions: Mission[];
 	coworkers: Coworker[];
 	archived: Coworker[];
+	collaborators: Collaborator[];
+	comments: Comment[];
 	events: WorkspaceEvent[];
 	checkpoints: Checkpoint[];
 	decisions: Decision[];

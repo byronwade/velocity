@@ -24,6 +24,9 @@ demo is fully repeatable.
 - **Mission Sheet** — a structured outcome + acceptance-criteria intake (no chat composer).
 - **Coworkers** — add / rename / pause / dismiss / restore / follow; name and role read louder than
   the model; a manager (Maya) with two reporting specialists.
+- **Collaboration** — calm Figma-style presence flags for coworkers, live cursors for human
+  teammates, a **Share** dialog to invite real people (email + role), and **comments** you pin to
+  the stage and hand to a coworker to fix (comment mode in the dock → click the stage).
 - **Checkpoints, Evidence, and Decision Sheets** — review work with diffs, tests, traces, blast
   radius, and rollback; resolve conflicts and protected actions with a recommended option.
 - **Stable vs Candidate** compare, a resizable/closable tool drawer, light + dark themes, and a

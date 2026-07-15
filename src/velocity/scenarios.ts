@@ -5,7 +5,7 @@
 // ---------------------------------------------------------------------------
 
 import type {
-	Budget, Coworker, Decision, Checkpoint, Mission, WorkspaceEvent, WorkspaceState, Lens,
+	Budget, Coworker, Collaborator, Comment, Decision, Checkpoint, Mission, WorkspaceEvent, WorkspaceState, Lens,
 } from './model';
 
 // Muted, cool identity colors — distinct from semantic green/amber/red.
@@ -22,7 +22,35 @@ function baseLayout(lens: Lens = 'preview') {
 		lens, openTool: null, dockExpanded: false, focusMode: false, followingId: null,
 		compare: false, rightSurface: 'none' as const, activeCheckpointId: null,
 		activeDecisionId: null, missionSheetOpen: false, commandOpen: false,
+		commentMode: false, activeCommentId: null, shareOpen: false,
 	};
+}
+
+// The human collaborators on a project — you (owner) plus invited teammates.
+// Distinct from AI coworkers; rendered as live cursors, not avatar chips.
+const CO = { you: '#6f74c9', nadia: '#c96f9a', dev: '#e0873d' };
+function defaultCollaborators(): Collaborator[] {
+	return [
+		{ id: 'you', name: 'You', initials: 'BW', color: CO.you, email: 'byron@aurora.dev', role: 'owner', status: 'active', cursor: null },
+		{ id: 'nadia', name: 'Nadia Rao', initials: 'NR', color: CO.nadia, email: 'nadia@aurora.dev', role: 'editor', status: 'active', cursor: { lens: 'preview', x: 68, y: 34 } },
+		{ id: 'devon', name: 'Devon Hale', initials: 'DH', color: CO.dev, email: 'devon@aurora.dev', role: 'viewer', status: 'active', cursor: { lens: 'code', x: 40, y: 30 } },
+	];
+}
+
+function baseComments(): Comment[] {
+	return [
+		{
+			id: 'cm1', lens: 'preview', x: 40, y: 66, authorName: 'Nadia Rao', authorColor: CO.nadia,
+			text: 'The passkey button should read “Continue with a passkey” — and can we soften the border?',
+			createdLabel: '4m', resolved: false, assignedCoworkerId: 'theo',
+			replies: [{ authorName: 'Theo', authorColor: '#4a8dd1', text: 'On it — adjusting the label and border weight now.', tsLabel: '3m', fromCoworker: true }],
+		},
+		{
+			id: 'cm2', lens: 'preview', x: 12, y: 30, authorName: 'You', authorColor: CO.you,
+			text: 'Hero headline could be one line on mobile. Worth a pass?',
+			createdLabel: '2m', resolved: false, assignedCoworkerId: null, replies: [],
+		},
+	];
 }
 
 function coworker(partial: Partial<Coworker> & Pick<Coworker, 'id' | 'name' | 'role' | 'department' | 'initials' | 'color'>): Coworker {
@@ -106,7 +134,11 @@ const baseEvents = (): WorkspaceEvent[] => events([
 	['verify-pass', 'Iris: 12/12 checks passed on the checkout scenario.', 'iris', 'now'],
 ]);
 
-type Builder = () => WorkspaceState;
+type BuilderState = Omit<WorkspaceState, 'collaborators' | 'comments'> & {
+	collaborators?: Collaborator[];
+	comments?: Comment[];
+};
+type Builder = () => BuilderState;
 
 const builders: Record<string, Builder> = {
 	calm: () => ({
@@ -247,5 +279,11 @@ export const SCENARIOS: Array<{ key: string; label: string }> = [
 
 export function buildScenario(key: string): WorkspaceState {
 	const make = builders[key] ?? builders.calm;
-	return make();
+	const s = make();
+	const hasTeam = s.coworkers.length > 0;
+	return {
+		...s,
+		collaborators: s.collaborators ?? (hasTeam ? defaultCollaborators() : [defaultCollaborators()[0]]),
+		comments: s.comments ?? (hasTeam ? baseComments() : []),
+	};
 }

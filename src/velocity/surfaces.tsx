@@ -4,9 +4,10 @@ import {
 	CornerUpLeft, ShieldQuestion, FlaskConical, Camera, Activity, FileDiff, Circle,
 	Users, ChevronRight, ArchiveRestore, Terminal as TermIcon, Folder, AlertTriangle, GitBranch, Flag,
 } from 'lucide-react';
+import { Link2, UserPlus, Check as CheckIcon } from 'lucide-react';
 import { useWorkspace, runtime } from './useWorkspace';
 import { AUTONOMY_LABEL, STATE_TONE, STATE_LABEL, LENS_META, EVENT_TONE } from './model';
-import type { Autonomy, Coworker, EvidenceKind, Lens, Risk, ToolId, WorkspaceEvent } from './model';
+import type { Autonomy, CollabRole, Coworker, EvidenceKind, Lens, Risk, ToolId, WorkspaceEvent } from './model';
 
 // --------------------------------------------------------------------------
 // Mission Sheet — structured intake (no chat composer).
@@ -93,6 +94,63 @@ export function MissionSheet() {
 					<div className="vs-spacer" />
 					<button className="vs-app-ghost" onClick={() => runtime.openMissionSheet(false)}>Cancel</button>
 					<button className="vs-app-primary" disabled={!canSubmit} onClick={submit}>Start mission</button>
+				</footer>
+			</div>
+		</div>
+	);
+}
+
+// --------------------------------------------------------------------------
+// Share — invite real people to collaborate on the project.
+// --------------------------------------------------------------------------
+const ROLE_LABEL: Record<CollabRole, string> = { owner: 'Owner', editor: 'Editor', viewer: 'Viewer' };
+
+export function ShareSheet() {
+	const state = useWorkspace();
+	const [email, setEmail] = useState('');
+	const [role, setRole] = useState<CollabRole>('editor');
+	const [copied, setCopied] = useState(false);
+	const emailRef = useRef<HTMLInputElement>(null);
+	useEffect(() => { if (state.layout.shareOpen) emailRef.current?.focus(); }, [state.layout.shareOpen]);
+	if (!state.layout.shareOpen) return null;
+
+	const valid = /.+@.+\..+/.test(email);
+	const invite = () => { if (!valid) return; runtime.inviteCollaborator(email, role); setEmail(''); };
+	const copy = () => { try { void navigator.clipboard?.writeText('https://velocity.app/p/aurora?invite=team'); } catch { /* ignore */ } setCopied(true); setTimeout(() => setCopied(false), 1600); };
+
+	return (
+		<div className="vs-scrim" onClick={() => runtime.openShare(false)}>
+			<div className="vs-sheet vs-share" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Share project">
+				<header className="vs-sheet-head">
+					<div><h2>Share {state.project.name}</h2><p>Invite people to view, comment, and direct coworkers with you.</p></div>
+					<button className="vs-icon" onClick={() => runtime.openShare(false)} aria-label="Close"><X size={16} /></button>
+				</header>
+				<div className="vs-sheet-body">
+					<div className="vs-invite">
+						<input ref={emailRef} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@company.com"
+							onKeyDown={(e) => { if (e.key === 'Enter') invite(); }} />
+						<select value={role} onChange={(e) => setRole(e.target.value as CollabRole)}>
+							<option value="editor">Editor</option><option value="viewer">Viewer</option>
+						</select>
+						<button className="vs-app-primary" disabled={!valid} onClick={invite}><UserPlus size={14} />Invite</button>
+					</div>
+					<div className="vs-collab-list">
+						{state.collaborators.map((c) => (
+							<div key={c.id} className="vs-collab">
+								<span className="vs-avatar" style={{ background: c.color }}>{c.initials}</span>
+								<div className="vs-collab-id"><b>{c.name}{c.id === 'you' && ' (you)'}</b><span>{c.email}</span></div>
+								{c.status === 'invited' && <span className="vs-tag">invited</span>}
+								{c.status === 'active' && c.id !== 'you' && <span className="vs-collab-live" title="Active now" />}
+								<span className="vs-collab-role">{ROLE_LABEL[c.role]}</span>
+								{c.role !== 'owner' && <button className="vs-icon sm" onClick={() => runtime.removeCollaborator(c.id)} aria-label={`Remove ${c.name}`}><X size={14} /></button>}
+							</div>
+						))}
+					</div>
+				</div>
+				<footer className="vs-sheet-foot">
+					<button className="vs-app-ghost" onClick={copy}>{copied ? <><CheckIcon size={14} />Copied</> : <><Link2 size={14} />Copy invite link</>}</button>
+					<div className="vs-spacer" />
+					<button className="vs-app-primary" onClick={() => runtime.openShare(false)}>Done</button>
 				</footer>
 			</div>
 		</div>
@@ -417,6 +475,8 @@ export function CommandBar() {
 		return [
 			{ id: 'mission', label: 'New mission', hint: '⌘⇧N', run: () => runtime.openMissionSheet(true) },
 			{ id: 'coworkers', label: 'Open coworkers', run: () => runtime.openRight('coworkers') },
+			{ id: 'share', label: 'Share & invite people', run: () => runtime.openShare(true) },
+			{ id: 'comment', label: 'Add a comment', hint: 'click stage', run: () => runtime.toggleCommentMode() },
 			{ id: 'activity', label: 'Open activity feed', run: () => runtime.openRight('activity') },
 			{ id: 'checkpoint', label: 'Review latest checkpoint', run: () => runtime.openRight('checkpoint') },
 			{ id: 'decision', label: 'Open decision', run: () => runtime.openRight('decision') },

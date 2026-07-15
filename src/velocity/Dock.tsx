@@ -1,4 +1,4 @@
-import { Plus, Pause, Play, Command, PanelBottom, Users, Eye, Activity } from 'lucide-react';
+import { Plus, Pause, Play, Command, PanelBottom, Users, Eye, Activity, MessageSquarePlus } from 'lucide-react';
 import { useWorkspace, runtime } from './useWorkspace';
 import { STATE_TONE, STATE_LABEL } from './model';
 
@@ -36,6 +36,9 @@ export function Dock() {
 
 			<div className="vs-dock-sep" />
 
+			<button className={`vs-dock-btn${state.layout.commentMode ? ' accent' : ''}`} onClick={() => runtime.toggleCommentMode()} title="Comment — click the stage to pin a note">
+				<MessageSquarePlus size={15} />
+			</button>
 			<button className={`vs-dock-btn${state.layout.rightSurface === 'activity' ? ' on' : ''}`} onClick={() => runtime.openRight(state.layout.rightSurface === 'activity' ? 'none' : 'activity')} title="Activity feed">
 				<Activity size={15} />
 			</button>

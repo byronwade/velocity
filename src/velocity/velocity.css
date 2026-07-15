@@ -163,30 +163,74 @@
 .vs-root.focus .vs-stage { margin: 0; border-radius: 0; border: 0; box-shadow: none; }
 .vs-stage-inner { position: absolute; inset: 0; overflow: auto; }
 
-/* Presence markers — the signature identity element. */
-.vs-marker {
-	position: absolute; transform: translate(-50%, -50%); z-index: 12;
-	display: inline-flex; align-items: center; gap: 0; background: transparent; border: 0; padding: 0; cursor: pointer;
+/* Presence flags — calm, Figma-style coworker presence (no pulsing dot). */
+.vs-flag {
+	position: absolute; transform: translate(-8px, -8px); z-index: 13;
+	display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 3px 11px 3px 3px;
+	background: var(--panel); border: 1px solid var(--line); border-radius: 999px; cursor: pointer;
+	box-shadow: 0 0 0 1px color-mix(in srgb, var(--id) 22%, transparent), var(--elev-2);
+	transition: box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
 }
-.vs-marker-dot {
-	width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
-	color: #fff; font-size: 10px; font-weight: var(--fw-semibold); letter-spacing: 0.02em;
-	box-shadow: 0 0 0 3px var(--panel), 0 0 0 4px color-mix(in srgb, var(--id, #6f74c9) 45%, transparent), var(--elev-1);
+.vs-flag:hover { transform: translate(-8px, -8px) translateY(-1px); }
+.vs-flag.following { box-shadow: 0 0 0 2px var(--id), var(--elev-2); }
+.vs-flag-avatar {
+	position: relative; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center;
+	color: #fff; font-size: 10px; font-weight: var(--fw-semibold); flex: 0 0 auto;
+}
+.vs-flag-work { position: absolute; right: -1px; bottom: -1px; width: 8px; height: 8px; border-radius: 50%; background: var(--good); border: 2px solid var(--panel); }
+.vs-flag-work::after { content: ''; position: absolute; inset: -2px; border-radius: 50%; border: 1.5px solid var(--good); opacity: 0.55; animation: vs-breathe 2.6s ease-in-out infinite; }
+@keyframes vs-breathe { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.5); opacity: 0; } }
+.vs-flag-body { display: flex; flex-direction: column; line-height: 1.15; text-align: left; }
+.vs-flag-name { font-size: var(--text-12); font-weight: var(--fw-semibold); color: var(--fg); }
+.vs-flag-act { font-size: 10px; color: var(--faint); white-space: nowrap; max-width: 140px; overflow: hidden; text-overflow: ellipsis; }
+@media (prefers-reduced-motion: reduce) { .vs-flag-work::after { animation: none; } }
+
+/* Human collaborator cursors — a pointer + name tag. */
+.vs-cursor { position: absolute; z-index: 14; pointer-events: none; transition: left 0.6s var(--ease), top 0.6s var(--ease); }
+.vs-cursor svg { display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.25)); }
+.vs-cursor-name { position: absolute; left: 12px; top: 12px; white-space: nowrap; color: #fff; font-size: 10px; font-weight: var(--fw-semibold); padding: 2px 7px; border-radius: 6px; box-shadow: var(--elev-1); }
+
+/* Comment pins + threads + composer. */
+.vs-comment-catcher { position: absolute; inset: 0; z-index: 18; cursor: crosshair; }
+.vs-pin {
+	position: absolute; transform: translate(-50%, -100%); z-index: 15; width: 30px; height: 30px;
+	display: grid; place-items: center; border: 0; cursor: pointer; color: #fff;
+	background: var(--id, var(--accent)); border-radius: 50% 50% 50% 2px; box-shadow: var(--elev-2);
 	transition: transform var(--dur) var(--ease);
 }
-.vs-marker::after {
-	content: ''; position: absolute; left: 50%; top: 50%; width: 26px; height: 26px; transform: translate(-50%, -50%);
-	border-radius: 50%; border: 2px solid var(--id, #6f74c9); opacity: 0.5; animation: vs-pulse 2.4s ease-out infinite;
+.vs-pin:hover, .vs-pin.active { transform: translate(-50%, -100%) scale(1.1); }
+.vs-pin-badge { position: absolute; right: -2px; top: -2px; width: 10px; height: 10px; border-radius: 50%; background: var(--good); border: 2px solid var(--panel); }
+.vs-thread {
+	position: absolute; z-index: 22; width: 288px; max-height: 70vh; overflow: auto;
+	background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-lg); box-shadow: var(--elev-2);
+	padding: 12px; display: flex; flex-direction: column; gap: 10px; cursor: default; animation: vs-rise var(--dur) var(--ease);
 }
-@keyframes vs-pulse { 0% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; } 100% { transform: translate(-50%, -50%) scale(2.4); opacity: 0; } }
-.vs-marker-label {
-	position: absolute; left: 32px; top: 50%; transform: translateY(-50%); white-space: nowrap;
-	background: var(--fg); color: var(--shell); font-size: 11px; font-weight: var(--fw-medium);
-	padding: 3px 8px; border-radius: 6px; opacity: 0; pointer-events: none; transition: opacity var(--dur) var(--ease);
+.vs-thread-head { display: flex; align-items: center; gap: 8px; }
+.vs-thread-head b { font-size: var(--text-13); font-weight: var(--fw-semibold); }
+.vs-thread-ts { font-size: 10px; color: var(--faint); }
+.vs-thread-head .vs-icon { margin-left: auto; }
+.vs-thread-text { font-size: var(--text-13); color: var(--fg); line-height: 1.45; }
+.vs-reply { display: flex; gap: 8px; padding: 8px; border-radius: var(--r-md); background: var(--panel-2); font-size: var(--text-12); }
+.vs-reply.bot { background: color-mix(in srgb, var(--accent) 6%, var(--panel-2)); }
+.vs-reply > div { flex: 1; color: var(--muted); }
+.vs-reply b { color: var(--fg); font-weight: var(--fw-medium); font-size: var(--text-12); }
+.vs-thread-assign { border-top: 1px solid var(--line); padding-top: 10px; display: flex; flex-direction: column; gap: 7px; }
+.vs-thread-assign > span { font-size: var(--text-11); color: var(--faint); font-weight: var(--fw-medium); }
+.vs-assign-row { display: flex; flex-wrap: wrap; gap: 5px; }
+.vs-assign-chip { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 9px 0 3px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--muted); font: inherit; font-size: var(--text-11); font-weight: var(--fw-medium); cursor: pointer; }
+.vs-assign-chip:hover { color: var(--fg); border-color: var(--line-2); }
+.vs-assign-chip.on { border-color: var(--id); color: color-mix(in srgb, var(--id) 55%, var(--fg)); background: color-mix(in srgb, var(--id) 10%, var(--panel)); }
+.vs-avatar.xs { width: 18px; height: 18px; font-size: 8px; margin: 0; }
+.vs-thread-resolve { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer; }
+.vs-thread-resolve:hover { border-color: var(--good); color: var(--good); }
+.vs-composer {
+	position: absolute; transform: translate(12px, -8px); z-index: 22; width: 256px;
+	background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r-md); box-shadow: var(--elev-2);
+	padding: 10px; display: flex; flex-direction: column; gap: 8px; animation: vs-rise var(--dur) var(--ease);
 }
-.vs-marker:hover .vs-marker-label, .vs-marker.following .vs-marker-label { opacity: 1; }
-.vs-marker.following .vs-marker-dot { transform: scale(1.08); }
-@media (prefers-reduced-motion: reduce) { .vs-marker::after { animation: none; } }
+.vs-composer textarea { border: 0; background: transparent; color: var(--fg); font: inherit; font-size: var(--text-13); resize: none; outline: none; }
+.vs-composer-foot { display: flex; align-items: center; justify-content: space-between; }
+.vs-stage.commenting .vs-stage-inner { cursor: crosshair; }
 
 /* --- The seeded live app (Preview lens) --------------------------------- */
 .vs-app { min-height: 100%; background: var(--panel); color: var(--fg); display: flex; flex-direction: column; }
@@ -589,7 +633,31 @@
 @keyframes vs-fall { to { transform: translateY(102vh) rotate(540deg); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .vs-confetti { display: none; } }
 
+/* --- Collaboration chrome: face pile, Share, invite modal --------------- */
+.vs-facepile { display: flex; align-items: center; margin-left: 4px; }
+.vs-face { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 10px; font-weight: var(--fw-semibold); box-shadow: 0 0 0 2px var(--shell); margin-left: -7px; }
+.vs-face:first-child { margin-left: 0; }
+.vs-share-btn { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer; }
+.vs-share-btn:hover { border-color: var(--line-2); background: var(--panel-2); }
+.vs-dock-btn.accent { background: color-mix(in srgb, var(--accent) 14%, var(--panel-2)); color: var(--accent); }
+
+.vs-share { width: min(520px, 100%); }
+.vs-invite { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; }
+.vs-invite input { height: 38px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel); color: var(--fg); padding: 0 12px; font: inherit; font-size: var(--text-13); }
+.vs-invite input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+.vs-invite select { height: 38px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel); color: var(--fg); padding: 0 10px; font: inherit; font-size: var(--text-13); cursor: pointer; }
+.vs-invite .vs-app-primary { height: 38px; }
+.vs-collab-list { display: flex; flex-direction: column; gap: 2px; }
+.vs-collab { display: flex; align-items: center; gap: 10px; padding: 9px 6px; border-radius: var(--r-md); }
+.vs-collab:hover { background: var(--panel-2); }
+.vs-collab-id { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.vs-collab-id b { font-size: var(--text-13); font-weight: var(--fw-medium); }
+.vs-collab-id span { font-size: var(--text-12); color: var(--faint); }
+.vs-collab-role { font-size: var(--text-12); color: var(--muted); }
+.vs-collab-live { width: 8px; height: 8px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 22%, transparent); }
+
 @media (max-width: 1180px) {
 	.vs-rail { position: fixed; right: 0; top: 0; bottom: 0; margin: 0; border-radius: 0; z-index: 45; }
 	.vs-lenses { display: none; }
+	.vs-facepile, .vs-scenario { display: none; }
 }

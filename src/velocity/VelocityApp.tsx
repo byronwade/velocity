@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Maximize2, Minimize2, GitCompare, Flag, ShieldQuestion, EyeOff } from 'lucide-react';
+import { Maximize2, Minimize2, GitCompare, Flag, ShieldQuestion, EyeOff, UserPlus } from 'lucide-react';
 import { useWorkspace, runtime } from './useWorkspace';
 import { LENS_META } from './model';
 import type { Lens } from './model';
@@ -7,7 +7,7 @@ import { SCENARIOS as SCENARIO_LIST } from './scenarios';
 import { TabBar } from './TabBar';
 import { Stage } from './Stage';
 import { Dock } from './Dock';
-import { MissionSheet, RightRail, ToolDrawer, CommandBar } from './surfaces';
+import { MissionSheet, RightRail, ToolDrawer, CommandBar, ShareSheet } from './surfaces';
 import './velocity.css';
 
 const LENS_ORDER: Lens[] = ['preview', 'code', 'system', 'data', 'verify', 'ship'];
@@ -54,6 +54,12 @@ function TopBar() {
 				<select className="vs-scenario" value={state.scenario} onChange={(e) => runtime.load(e.target.value)} title="Demo scenario" aria-label="Demo scenario">
 					{SCENARIO_LIST.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
 				</select>
+				<div className="vs-facepile">
+					{state.collaborators.filter((c) => c.status === 'active').slice(0, 4).map((c) => (
+						<span key={c.id} className="vs-face" style={{ background: c.color }} title={`${c.name} · ${c.role}`}>{c.initials}</span>
+					))}
+				</div>
+				<button className="vs-share-btn" onClick={() => runtime.openShare(true)} title="Share & invite"><UserPlus size={14} />Share</button>
 			</div>
 		</header>
 	);
@@ -128,6 +134,7 @@ export function VelocityApp() {
 				<ToolDrawer />
 				<Dock />
 				<MissionSheet />
+				<ShareSheet />
 				<CommandBar />
 				<Toast />
 				<Confetti />

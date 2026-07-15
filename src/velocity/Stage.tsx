@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Play, Check, X, RotateCcw, Rocket, ShieldCheck, Sparkles, ArrowRight, Server, Database, Clock, Gauge, Circle } from 'lucide-react';
+import { Play, Check, X, RotateCcw, Rocket, ShieldCheck, Sparkles, ArrowRight, Server, Database, Clock, Gauge, Circle, MessageSquare, Send, CheckCheck } from 'lucide-react';
 import { EditorMode } from '../modes/EditorMode';
 import { useWorkspace, runtime } from './useWorkspace';
-import type { Coworker, Lens } from './model';
+import type { Collaborator, Comment, Coworker, Lens } from './model';
 
 const ARTIFACT_ACTIONS = ['Improve', 'Fix', 'Rebuild', 'Investigate', 'Explain', 'Assign', 'Compare', 'Test'] as const;
 
@@ -245,18 +245,132 @@ function renderLens(lens: Lens, candidate: boolean) {
 	}
 }
 
-function Markers({ lens, coworkers }: { lens: Lens; coworkers: Coworker[] }) {
+/** Calm, Figma-style presence flag for an AI coworker pinned to its artifact. */
+function PresenceFlags({ lens, coworkers }: { lens: Lens; coworkers: Coworker[] }) {
 	const here = coworkers.filter((c) => c.marker && c.marker.lens === lens && c.state !== 'archived' && c.state !== 'dismissed');
 	return (
 		<>
+			{here.map((c) => {
+				const working = c.state === 'active' || c.state === 'verifying' || c.state === 'planning';
+				return (
+					<button key={c.id} className={`vs-flag${c.following ? ' following' : ''}`} style={{ left: `${c.marker!.x}%`, top: `${c.marker!.y}%`, ['--id' as string]: c.color }}
+						onClick={() => runtime.follow(c.following ? null : c.id)}
+						title={`${c.name} · ${c.role} — ${c.action}`} aria-label={`${c.name}, ${c.role}, ${c.action}`}>
+						<span className="vs-flag-avatar" style={{ background: c.color }}>
+							{c.initials}
+							{working && <span className="vs-flag-work" />}
+						</span>
+						<span className="vs-flag-body">
+							<span className="vs-flag-name">{c.name}</span>
+							<span className="vs-flag-act">{c.marker!.label}</span>
+						</span>
+					</button>
+				);
+			})}
+		</>
+	);
+}
+
+/** Live cursors for the human collaborators currently on this lens. */
+function CursorLayer({ lens, collaborators }: { lens: Lens; collaborators: Collaborator[] }) {
+	const here = collaborators.filter((c) => c.id !== 'you' && c.status === 'active' && c.cursor && c.cursor.lens === lens);
+	return (
+		<>
 			{here.map((c) => (
-				<button key={c.id} className={`vs-marker${c.following ? ' following' : ''}`} style={{ left: `${c.marker!.x}%`, top: `${c.marker!.y}%`, ['--id' as string]: c.color }}
-					onClick={() => runtime.follow(c.following ? null : c.id)}
-					title={`${c.name} · ${c.role} — ${c.action}`} aria-label={`${c.name}, ${c.role}, ${c.action}`}>
-					<span className="vs-marker-dot" style={{ background: c.color }}>{c.initials}</span>
-					<span className="vs-marker-label">{c.name} · {c.marker!.label}</span>
+				<div key={c.id} className="vs-cursor" style={{ left: `${c.cursor!.x}%`, top: `${c.cursor!.y}%`, ['--id' as string]: c.color }}>
+					<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M1 1L6.5 15L8.7 9.2L14.5 7L1 1Z" fill={c.color} stroke="var(--panel)" strokeWidth="1" /></svg>
+					<span className="vs-cursor-name" style={{ background: c.color }}>{c.name}</span>
+				</div>
+			))}
+		</>
+	);
+}
+
+function CommentThread({ comment }: { comment: Comment }) {
+	const state = useWorkspace();
+	const assignable = state.coworkers.filter((c) => c.state !== 'archived' && c.state !== 'dismissed');
+	const assigned = assignable.find((c) => c.id === comment.assignedCoworkerId);
+	const tx = comment.x > 66 ? 'calc(-100% - 12px)' : '12px';
+	const ty = comment.y > 52 ? 'calc(-100% + 8px)' : '-8px';
+	return (
+		<div className="vs-thread" style={{ left: `${comment.x}%`, top: `${comment.y}%`, transform: `translate(${tx}, ${ty})`, ['--id' as string]: comment.authorColor }} onClick={(e) => e.stopPropagation()}>
+			<div className="vs-thread-head">
+				<span className="vs-avatar sm" style={{ background: comment.authorColor }}>{comment.authorName.slice(0, 2).toUpperCase()}</span>
+				<b>{comment.authorName}</b><span className="vs-thread-ts">{comment.createdLabel}</span>
+				<button className="vs-icon sm" onClick={() => runtime.openComment(null)} aria-label="Close"><X size={14} /></button>
+			</div>
+			<div className="vs-thread-text">{comment.text}</div>
+			{comment.replies.map((r, i) => (
+				<div key={i} className={`vs-reply${r.fromCoworker ? ' bot' : ''}`}>
+					<span className="vs-avatar sm" style={{ background: r.authorColor }}>{r.authorName.slice(0, 2).toUpperCase()}</span>
+					<div><b>{r.authorName}</b> <span className="vs-thread-ts">{r.tsLabel}</span><div>{r.text}</div></div>
+				</div>
+			))}
+			<div className="vs-thread-assign">
+				<span>{assigned ? 'Assigned to' : 'Assign to a coworker'}</span>
+				<div className="vs-assign-row">
+					{assignable.map((c) => (
+						<button key={c.id} className={`vs-assign-chip${assigned?.id === c.id ? ' on' : ''}`} style={{ ['--id' as string]: c.color }}
+							onClick={() => runtime.assignComment(comment.id, c.id)}>
+							<span className="vs-avatar xs" style={{ background: c.color }}>{c.initials}</span>{c.name}
+						</button>
+					))}
+				</div>
+			</div>
+			<button className="vs-thread-resolve" onClick={() => runtime.resolveComment(comment.id)}><CheckCheck size={13} />Resolve</button>
+		</div>
+	);
+}
+
+/** Comment pins + the click-to-comment composer for the current lens. */
+function CommentLayer({ lens }: { lens: Lens }) {
+	const state = useWorkspace();
+	const { commentMode, activeCommentId } = state.layout;
+	const [draft, setDraft] = useState<{ x: number; y: number; text: string } | null>(null);
+	const comments = state.comments.filter((c) => c.lens === lens && !c.resolved);
+	const active = comments.find((c) => c.id === activeCommentId);
+
+	const onPlace = (e: React.MouseEvent<HTMLDivElement>) => {
+		const r = e.currentTarget.getBoundingClientRect();
+		setDraft({ x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100, text: '' });
+	};
+
+	return (
+		<>
+			{commentMode && <div className="vs-comment-catcher" onClick={onPlace} />}
+			{comments.map((c) => (
+				<button key={c.id} className={`vs-pin${activeCommentId === c.id ? ' active' : ''}${c.assignedCoworkerId ? ' assigned' : ''}`}
+					style={{ left: `${c.x}%`, top: `${c.y}%`, ['--id' as string]: c.authorColor }}
+					onClick={(e) => { e.stopPropagation(); runtime.openComment(activeCommentId === c.id ? null : c.id); }}
+					title={`${c.authorName}: ${c.text}`}>
+					<MessageSquare size={13} />
+					{c.assignedCoworkerId && <span className="vs-pin-badge" />}
 				</button>
 			))}
+			{active && <CommentThread comment={active} />}
+			{draft && (
+				<div className="vs-composer" style={{ left: `${draft.x}%`, top: `${draft.y}%`, transform: `translate(${draft.x > 66 ? 'calc(-100% - 12px)' : '12px'}, ${draft.y > 60 ? 'calc(-100% + 8px)' : '-8px'})` }} onClick={(e) => e.stopPropagation()}>
+					<textarea autoFocus value={draft.text} placeholder="Add a comment…" rows={2}
+						onChange={(e) => setDraft({ ...draft, text: e.target.value })}
+						onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); runtime.addComment(lens, draft.x, draft.y, draft.text); setDraft(null); } if (e.key === 'Escape') setDraft(null); }} />
+					<div className="vs-composer-foot">
+						<span className="vs-hint">↵ to post</span>
+						<button className="vs-app-primary sm" disabled={!draft.text.trim()} onClick={() => { runtime.addComment(lens, draft.x, draft.y, draft.text); setDraft(null); }}><Send size={12} />Comment</button>
+					</div>
+				</div>
+			)}
+		</>
+	);
+}
+
+/** The full collaboration overlay for the active stage lens. */
+function StageOverlay({ lens }: { lens: Lens }) {
+	const state = useWorkspace();
+	return (
+		<>
+			<PresenceFlags lens={lens} coworkers={state.coworkers} />
+			<CursorLayer lens={lens} collaborators={state.collaborators} />
+			<CommentLayer lens={lens} />
 		</>
 	);
 }
@@ -289,7 +403,7 @@ export function Stage() {
 				<div className="vs-compare-divider" />
 				<div className="vs-compare-pane">
 					<div className="vs-compare-tag">Candidate <span className={`vs-tag ${candidateHealthy ? 'good' : 'warn'}`}>{state.candidate.checks.passed}/{state.candidate.checks.total}</span></div>
-					<div className="vs-compare-frame"><PreviewLens candidate /><Markers lens="preview" coworkers={state.coworkers} /></div>
+					<div className="vs-compare-frame"><PreviewLens candidate /><PresenceFlags lens="preview" coworkers={state.coworkers} /></div>
 				</div>
 				<div className="vs-compare-bar">
 					<button className="vs-app-ghost" onClick={() => runtime.toggleCompare()}>Close compare</button>
@@ -303,10 +417,10 @@ export function Stage() {
 	}
 
 	return (
-		<div className={`vs-stage${focusMode ? ' focus' : ''}`}>
+		<div className={`vs-stage${focusMode ? ' focus' : ''}${state.layout.commentMode ? ' commenting' : ''}`}>
 			<div className="vs-stage-inner">
 				{renderLens(lens, candidateHealthy)}
-				<Markers lens={lens} coworkers={state.coworkers} />
+				<StageOverlay lens={lens} />
 			</div>
 		</div>
 	);
