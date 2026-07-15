@@ -116,8 +116,12 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 	/** Real source files, so heartbeat checkpoints diff files that exist. */
 	private filePool: string[] = [];
 
-	constructor(scenario = 'calm') {
-		this.state = { ...buildScenario(scenario), toast: null, celebrate: false };
+	constructor(scenario = 'calm', restored?: WorkspaceState) {
+		// A restored snapshot (persistence) wins over the scenario seed; its
+		// transient bits (toast, celebration) never survive a reload.
+		this.state = restored
+			? { ...restored, toast: null, celebrate: false }
+			: { ...buildScenario(scenario), toast: null, celebrate: false };
 		// The heartbeat: coworkers make real, deterministic forward progress.
 		this.beat = setInterval(() => this.tick(), 3000);
 		void getServices().fs.list().then((files) => {

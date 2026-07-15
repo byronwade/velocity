@@ -16,12 +16,16 @@ screenshot** for a UI change (drive the built app in Playwright). The earlier wo
 (`src/workbench/`) is legacy but still owns the shared services the prototype's IDE and tools render.
 
 Key `src/velocity/` files: `model.ts` (types + `LayoutState` + `WORK_INTENTS`), `runtime.ts` (the
-deterministic runtime + `pickCoworker` auto-assign), `workspace.ts` (the multi-project manager;
-`runtime` is a Proxy to the active tab), `Stage.tsx` (split panes, the `IDELens` file tree, the
-`WorkComposer`/comment threads), `surfaces.tsx` (rails, docked `ToolDrawer`, command bar),
-`Dock.tsx`, `TabBar.tsx`, `SettingsSheet.tsx`, and `velocity.css`. Work is directed via **comments,
-not chat**: "New work" arms placement → click the app → describe → auto-assign. The Browser
-(`src/modes/BrowserMode.tsx`) is a real in-app browser with DevTools.
+deterministic runtime + `pickCoworker` auto-assign + the 3s heartbeat), `workspace.ts` (the
+multi-project manager; `runtime` is a Proxy to the active tab; persistence + agents-as-files sync),
+`Stage.tsx` (split panes, the `IDELens` file tree, the `WorkComposer`/comment threads),
+`surfaces.tsx` (rails, docked `ToolDrawer`, command bar), `Dock.tsx`, `TabBar.tsx`,
+`SettingsSheet.tsx`, `native.ts` (Tauri bridge — no-ops in the browser), and `velocity.css`. Work
+is directed via **comments, not chat**: "New work" arms placement → click the app → describe →
+auto-assign. The Browser (`src/modes/BrowserMode.tsx`) is a real in-app browser with DevTools.
+**Workspace state persists across reloads** (`velocity.projects.v1`); when verifying with
+Playwright, load `?scenario=calm` (or another seed) for a fresh deterministic state. Native changes
+(`src-tauri/`) must pass `cargo check`.
 
 ## Commands
 

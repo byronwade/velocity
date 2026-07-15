@@ -8,6 +8,15 @@ list item of the shape `- **slug** — Name. What changed and why it matters. (\
 **slug** is a stable kebab-case feature id shared with [ROADMAP.md](ROADMAP.md) — never rename one;
 corrections get a new entry. Newest release first.
 
+## 2026-07-15 · Native foundation
+
+### Added
+- **persistence** — Projects survive restarts. Every project tab's full workspace state (coworkers, missions, checkpoints, comments, layout) is snapshotted continuously and restored on the next launch. `?scenario=` still seeds a fresh deterministic demo. Verified: a placed work item survived a full reload.
+- **native-notifications** — Native desktop banners. The Tauri build now uses the OS notification system for "checkpoint ready" (proper installed-app identity); the browser preview keeps the web Notification fallback. Same Settings toggle governs both.
+- **tray-badge** — System tray presence. Velocity gets a tray icon whose tooltip reflects the live cross-project inbox count ("Velocity — 3 need you"), with Open/Quit menu items.
+- **global-shortcut** — Summon from anywhere. Ctrl/⌘+Shift+V shows, unminimizes, and focuses Velocity system-wide.
+- **window-state** — The desktop window remembers its size and position across launches.
+
 ## 2026-07-15 · Agents as files
 
 ### Added

@@ -74,12 +74,12 @@ to the Dropped section at the bottom with a reason.
 
 - [x] **real-fs-tauri** — Open any real project folder in the Tauri build. _(shipped 2026-07-12)_
 - [x] **notifications-chime** — Chime + desktop notification on checkpoint (web-standard). _(shipped 2026-07-15)_
-- [ ] **native-notifications** — Tauri notification plugin: proper installed-app banners with OS-played sound while backgrounded. _(planned · phase 2)_
-- [ ] **persistence** — Real persistence: plugin-store + plugin-fs + plugin-dialog replace in-memory FS/localStorage. _(planned · phase 2)_
-- [ ] **tray-badge** — System tray icon with a "checkpoints waiting" badge. _(planned · phase 2)_
-- [ ] **global-shortcut** — System-wide "summon Velocity" hotkey. _(planned · phase 2)_
-- [ ] **window-state** — Remember window size/position. _(planned · phase 2)_
-- [ ] **auto-updater** — Signed in-app updates. _(planned · phase 2)_
+- [x] **native-notifications** — Native notification plugin wired: the desktop build sends real installed-app banners (web Notification API remains the browser fallback). _(shipped 2026-07-15)_
+- [x] **persistence** — Projects survive restarts: every project's full workspace state is snapshotted (throttled + on close) and restored on launch; `?scenario=` starts a fresh deterministic seed. _(shipped 2026-07-15)_
+- [x] **tray-badge** — System tray icon with an attention tooltip fed live by the cross-project inbox count, plus Open/Quit menu. _(shipped 2026-07-15)_
+- [x] **global-shortcut** — Ctrl/⌘+Shift+V summons Velocity from anywhere (shows, unminimizes, focuses). _(shipped 2026-07-15)_
+- [x] **window-state** — Window size/position remembered across launches. _(shipped 2026-07-15)_
+- [ ] **auto-updater** — Signed in-app updates. _(planned · phase 2 — blocked: needs a signing key + release endpoint)_
 
 ## Research & docs
 
