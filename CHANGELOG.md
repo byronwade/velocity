@@ -10,6 +10,9 @@ corrections get a new entry. Newest release first.
 
 ## 2026-07-15 · Review you can trust
 
+### Changed
+- **chat-sidebar** — The chat input is the AI Elements composer card now — the one designed for exactly this: a rounded card with the focus ring on the card itself, a borderless auto-growing textarea on top, and a tools row below with an @-mention button, a **live model chip** (shows which local model actually answers; click it to pin any installed Ollama model or return to auto), and the dark arrow-up send.
+
 ### Added
 - **checkpoint-readiness-gates** — Accept is earned, not assumed. Every checkpoint now derives readiness gates from typed evidence — build, tests, the mission's acceptance criteria, and its required evidence kinds — shown as a pass/fail list in Review. While any gate is open, "Accept & merge" is replaced by an explicit two-step **"Waive gates & accept…" → "Confirm — waive N gates"**, and a waived accept is audited by name in the activity log ("accepted with 2 gates waived (Acceptance criteria, Required evidence)"). One pure derivation is shared by the runtime (enforcement) and the UI (display), so the button can never disagree with the rule. First demo-harness prototype of the phase-3 platform epic.
 

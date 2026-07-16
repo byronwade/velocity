@@ -22,9 +22,22 @@ const ollama = createOpenAICompatible({
 });
 
 let cachedModel: string | null | undefined;
+let pinnedModel: string | null = null;
+
+/** Pin chat replies to a specific installed model; null returns to auto
+ *  (best installed, coder-first). The composer's model chip calls this. */
+export function setChatModel(model: string | null): void {
+	pinnedModel = model;
+	cachedModel = undefined;
+}
+
+export function pinnedChatModel(): string | null {
+	return pinnedModel;
+}
 
 /** The best installed local model (coder-first), or null when Ollama is down. */
 export async function chatModel(): Promise<string | null> {
+	if (pinnedModel) return pinnedModel;
 	if (cachedModel !== undefined) return cachedModel;
 	const models = await listOllamaModels(DEFAULT_OLLAMA_URL);
 	cachedModel = models.length ? (models.find((m) => m.includes('coder')) ?? models[0]) : null;

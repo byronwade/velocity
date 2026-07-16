@@ -88,12 +88,35 @@
 .vs-chat-suggest:hover { color: var(--fg); border-color: var(--line-2); background: var(--panel-2); }
 
 /* PromptInput — one bordered container that lifts on focus. */
-.vs-chat-input { position: relative; display: flex; align-items: flex-end; margin: 0 12px 12px; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--panel); transition: border-color var(--dur) var(--ease); }
-.vs-chat-input:focus-within { border-color: var(--line-2); box-shadow: var(--elev-1); }
-.vs-chat-input textarea { flex: 1; min-width: 0; max-height: 120px; border: 0; background: transparent; color: var(--fg); padding: 9px 40px 9px 12px; font: inherit; font-size: var(--text-13); line-height: 1.5; resize: none; outline: none; }
-.vs-chat-send { position: absolute; right: 6px; bottom: 6px; width: 26px; height: 26px; display: grid; place-items: center; border: 0; border-radius: var(--r-md); background: var(--fg); color: var(--shell); cursor: pointer; transition: opacity var(--dur) var(--ease); }
-.vs-chat-send:hover { opacity: 0.85; }
-.vs-chat-send:disabled { opacity: 0.25; cursor: default; }
+/* The AI Elements composer card (the one we designed for this): borderless
+   textarea on top, tools row below — mention · model chip · send — with the
+   focus ring on the card itself. Monochrome; only opacity and fg mixes.
+   (Named vs-chatbox: .vs-composer is the Stage's work-comment overlay.) */
+.vs-chatbox { flex: none; margin: 0 12px 12px; padding: 8px 8px 6px; border: 1px solid var(--line); border-radius: var(--r-lg); background: color-mix(in srgb, var(--fg) 2.5%, var(--panel)); cursor: text; transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
+.vs-chatbox:focus-within { border-color: var(--line-2); box-shadow: 0 0 0 3px color-mix(in srgb, var(--fg) 4%, transparent); }
+.vs-chatbox textarea { display: block; width: 100%; min-height: 32px; max-height: 120px; border: 0; background: transparent; color: var(--fg); padding: 4px 6px 6px; font: inherit; font-size: var(--text-13); line-height: 1.5; resize: none; outline: none; }
+.vs-chatbox textarea::placeholder { color: var(--faint); }
+.vs-chatbox-tools { display: flex; align-items: center; gap: 4px; cursor: default; }
+.vs-ctool { display: grid; width: 28px; height: 28px; place-items: center; border: 0; background: transparent; border-radius: var(--r-md); color: var(--muted); cursor: pointer; transition: background var(--dur) var(--ease), color var(--dur) var(--ease); }
+.vs-ctool:hover { background: color-mix(in srgb, var(--fg) 7%, transparent); color: var(--fg); }
+.vs-cspacer { flex: 1; }
+.vs-send { display: grid; width: 28px; height: 28px; place-items: center; flex: none; border: 0; border-radius: var(--r-md); background: var(--fg); color: var(--shell); cursor: pointer; transition: opacity var(--dur) var(--ease); }
+.vs-send:hover:not(:disabled) { opacity: 0.85; }
+.vs-send:disabled { opacity: 0.3; cursor: default; }
+/* Model chip + upward popover — which local model actually answers. */
+.vs-mchip-wrap { position: relative; }
+.vs-mchip { display: flex; height: 28px; max-width: 170px; align-items: center; gap: 5px; padding: 0 8px; border: 0; border-radius: var(--r-md); background: transparent; color: var(--muted); font: inherit; font-size: var(--text-11); cursor: pointer; transition: background var(--dur) var(--ease), color var(--dur) var(--ease); }
+.vs-mchip:hover { background: color-mix(in srgb, var(--fg) 7%, transparent); color: var(--fg); }
+.vs-mchip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vs-mchip svg { flex: 0 0 auto; }
+.vs-mpop { position: absolute; right: 0; bottom: calc(100% + 6px); width: 232px; padding: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--elev-2); z-index: 30; }
+.vs-mpop-item { display: flex; width: 100%; align-items: center; gap: 8px; padding: 7px 9px; border: 0; background: transparent; border-radius: var(--r-md); color: var(--fg); font: inherit; font-size: var(--text-12); cursor: pointer; text-align: left; }
+.vs-mpop-item:hover { background: var(--panel-2); }
+.vs-mpop-item > svg:last-child { margin-left: auto; color: var(--fg); flex: 0 0 auto; }
+.vs-mpop-name { font-family: var(--mono); font-size: var(--text-11); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vs-mpop-group { padding: 7px 9px 3px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--faint); }
+.vs-mpop-hint { padding: 8px 9px; font-size: var(--text-11); color: var(--faint); line-height: 1.5; }
+.vs-mpop-hint code { font-family: var(--mono); color: var(--muted); }
 
 /* Tab-bar icon toggle (chat) */
 .vs-tabbar-icon.on { background: var(--panel-2); color: var(--fg); }
