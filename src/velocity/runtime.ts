@@ -41,6 +41,8 @@ export interface CoworkerRuntime {
 	toggleDock(): void;
 	toggleFocus(): void;
 	follow(coworkerId: string | null): void;
+	/** Focus the pane (or open the lens) where a coworker's marker is. */
+	locateCoworker(id: string): void;
 	togglePause(): void;
 	openMissionSheet(open: boolean): void;
 	openCommand(open: boolean): void;
@@ -375,6 +377,17 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 		} else if (this.state.layout.rightSurface === 'follow') {
 			this.patchLayout({ rightSurface: 'none' });
 		}
+	}
+	/** Jump to where a coworker is working — focus (or create) a pane on their
+	 *  marker's lens, without entering follow mode. */
+	locateCoworker(id: string): void {
+		const cw = this.state.coworkers.find((c) => c.id === id);
+		if (!cw?.marker) { this.toast(`${cw?.name ?? 'They'} ${cw ? 'is between tasks — no live marker.' : ''}`); return; }
+		const l = this.state.layout;
+		const leaf = firstLeafOfView(l.panes, cw.marker.lens);
+		if (leaf) this.focusPane(leaf.id);
+		else this.setPaneView(l.activePaneId, cw.marker.lens);
+		this.toast(`${cw.name} · ${cw.marker.label ?? cw.action} — on the ${cw.marker.lens} lens.`);
 	}
 
 	// --- missions ---

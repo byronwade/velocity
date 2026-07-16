@@ -350,6 +350,7 @@ function CoworkerCard({ c }: { c: Coworker }) {
 	const budgetPct = Math.min(100, (c.budget.spent / c.budget.total) * 100);
 
 	const menu = () => [
+		...(c.marker ? [{ label: 'Jump to their work', icon: <CornerUpLeft size={14} />, onClick: () => runtime.locateCoworker(c.id) }] : []),
 		{ label: c.following ? 'Unfollow' : 'Follow', icon: <Eye size={14} />, onClick: () => runtime.follow(c.following ? null : c.id) },
 		{ label: c.state === 'paused' ? 'Resume' : 'Pause', icon: c.state === 'paused' ? <Play size={14} /> : <Pause size={14} />, onClick: () => (c.state === 'paused' ? runtime.resumeCoworker(c.id) : runtime.pauseCoworker(c.id)) },
 		{ label: 'Rename', icon: <Pencil size={14} />, onClick: () => setRenaming(true) },
@@ -381,10 +382,18 @@ function CoworkerCard({ c }: { c: Coworker }) {
 				</div>
 			</div>
 
-			<div className="vs-wk-now">
-				<span className="vs-wk-action">{c.action}{c.waitingOn ? ` · waiting on ${c.waitingOn}` : ''}</span>
-				{typeof c.progress === 'number' && <span className="vs-wk-pct">{c.progress}%</span>}
-			</div>
+			{c.marker ? (
+				<button className="vs-wk-now go" title={`Jump to the ${c.marker.lens} lens where ${c.name} is working`} onClick={() => runtime.locateCoworker(c.id)}>
+					<span className="vs-wk-action">{c.action}{c.waitingOn ? ` · waiting on ${c.waitingOn}` : ''}</span>
+					{typeof c.progress === 'number' && <span className="vs-wk-pct">{c.progress}%</span>}
+					<ChevronRight size={12} className="vs-wk-go" />
+				</button>
+			) : (
+				<div className="vs-wk-now">
+					<span className="vs-wk-action">{c.action}{c.waitingOn ? ` · waiting on ${c.waitingOn}` : ''}</span>
+					{typeof c.progress === 'number' && <span className="vs-wk-pct">{c.progress}%</span>}
+				</div>
+			)}
 			{typeof c.progress === 'number' && <div className="vs-wk-bar"><span style={{ width: `${c.progress}%` }} /></div>}
 
 			{(c.scope || c.activeTools?.length) && (

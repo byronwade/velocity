@@ -896,6 +896,11 @@ button.vs-chat-row-link:hover .vs-chat-row-text { text-decoration: underline; te
 .vs-wk-follow:hover, .vs-wk-more:hover { background: var(--panel-2); color: var(--fg); }
 .vs-wk-follow.on { color: var(--fg); background: var(--panel-2); }
 .vs-wk-now { display: flex; align-items: baseline; gap: 8px; }
+/* When a coworker has a live marker, the action line is a jump button. */
+button.vs-wk-now.go { align-items: center; width: calc(100% + 12px); border: 0; background: transparent; font: inherit; text-align: left; cursor: pointer; padding: 3px 6px; margin: -3px -6px; border-radius: var(--r-md); transition: background var(--dur) var(--ease); }
+button.vs-wk-now.go:hover { background: var(--panel-2); }
+.vs-wk-go { flex: 0 0 auto; color: var(--faint); opacity: 0; transition: opacity var(--dur) var(--ease); }
+button.vs-wk-now.go:hover .vs-wk-go { opacity: 1; }
 .vs-wk-action { flex: 1; min-width: 0; font-size: var(--text-12); color: var(--muted); line-height: 1.45; }
 .vs-wk-pct { font-size: var(--text-11); color: var(--faint); font-variant-numeric: tabular-nums; flex: 0 0 auto; }
 .vs-wk-bar { height: 4px; border-radius: 999px; background: var(--panel-2); overflow: hidden; }
