@@ -372,7 +372,6 @@ export interface LayoutState {
 	/** The full settings modal. */
 	settingsOpen: boolean;
 	/** The collaborative chat / activity sidebar (left of the workspace). */
-	chatOpen: boolean;
 }
 
 /** The whole prototype workspace at one moment — one deterministic snapshot. */

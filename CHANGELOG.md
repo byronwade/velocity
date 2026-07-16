@@ -11,6 +11,8 @@ corrections get a new entry. Newest release first.
 ## 2026-07-16 · Chat joins the pane system
 
 ### Changed
+- **chat-sidebar** — The tab rail's chat icon is gone — with chat living in the panels, the rail is back to just projects, inbox, and profile. ⌘⇧C, the command palette, and the view dropdown are the ways in.
+- **pane-drag-drop** — Every view in a panel's dropdown now shows its shortcut key (1–8), so the fastest way to switch is always one glance away.
 - **chat-sidebar** — Chat is a pane view now, not a bespoke sidebar. Pick **Chat** from any panel's view dropdown (key **8**), and arrange it exactly like Browser, IDE, or Terminal — split it, drag it anywhere, resize it with the ordinary pane dividers. Everything the chat could do comes along: streamed real-AI replies, @Name routing, pin-as-work, the composer with the model chip. **⌘⇧C** still toggles a Chat pane and lands you in the composer, and the tab-rail chat button and command palette do the same. One layout system, no special windows — your workspace is fully yours to arrange.
 
 ## 2026-07-15 · Review you can trust

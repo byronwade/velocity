@@ -783,11 +783,11 @@ function PaneToolbar({ leaf, single }: { leaf: PaneLeaf; single: boolean }) {
 						<>
 							<div className="vs-pane-scrim" onClick={() => setMenu(false)} />
 							<div className="vs-pane-menu" onClick={(e) => e.stopPropagation()}>
-								{LENS_ORDER.map((v) => {
+								{LENS_ORDER.map((v, i) => {
 									const I = LENS_ICON[v];
 									return (
 										<button key={v} className={`vs-pane-menuitem${v === leaf.view ? ' on' : ''}`} onClick={() => { runtime.setPaneView(leaf.id, v); setMenu(false); }}>
-											<I size={15} /><span>{LENS_META[v].label}</span><em>{LENS_META[v].hint}</em>
+											<I size={15} /><span>{LENS_META[v].label}</span><em>{LENS_META[v].hint}</em><kbd className="vs-pane-key">{i + 1}</kbd>
 										</button>
 									);
 								})}

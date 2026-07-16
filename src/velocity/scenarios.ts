@@ -30,7 +30,7 @@ function baseLayout(lens: Lens = 'browser', leftCompare?: CompareSource) {
 		openTool: null, dockExpanded: false, focusMode: false, followingId: null,
 		shipOpen: false, rightSurface: 'none' as const, activeCheckpointId: null,
 		activeDecisionId: null, missionSheetOpen: false, commandOpen: false,
-		commentMode: false, activeCommentId: null, shareOpen: false, settingsOpen: false, chatOpen: false,
+		commentMode: false, activeCommentId: null, shareOpen: false, settingsOpen: false,
 	};
 }
 

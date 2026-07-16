@@ -143,7 +143,6 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 				...restored, toast: null, celebrate: false,
 				// Fields newer than the snapshot get safe defaults.
 				feed: restored.feed ?? [],
-				layout: { ...restored.layout, chatOpen: restored.layout.chatOpen ?? false },
 			}
 			: { ...buildScenario(scenario), toast: null, celebrate: false };
 		// The heartbeat: coworkers make real, deterministic forward progress.
@@ -509,7 +508,6 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 		} else if (leaf) {
 			this.setPaneView(leaf.id, 'browser');
 		}
-		this.patchLayout({ chatOpen: open });
 	}
 	sendChat(text: string): void {
 		const t = text.trim();

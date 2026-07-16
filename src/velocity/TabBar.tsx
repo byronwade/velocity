@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { Plus, X, Flag, ShieldQuestion, Pause, Sun, Moon, Settings, CheckCircle2, Clock, Pencil, Bell, MessageSquare, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Plus, X, Flag, ShieldQuestion, Pause, Sun, Moon, Settings, CheckCircle2, Clock, Pencil, Bell, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useShell } from '../lib/store';
 import { useProjects, useWorkspace, manager, runtime } from './useWorkspace';
 import { SCENARIOS as SCENARIO_LIST } from './scenarios';
 import { ContextMenu, useContextMenu } from './ContextMenu';
-import { firstLeafOfView } from './panes';
 import type { TabView } from './workspace';
 
 /** Rich hover card — what's happening on a project and what needs attention. */
@@ -183,16 +182,9 @@ function Profile() {
 
 export function TabBar({ vertical = false }: { vertical?: boolean }) {
 	const { tabs, activeId } = useProjects();
-	// Chat is a pane lens — "open" means a pane is currently showing it.
-	const chatOpen = !!firstLeafOfView(useWorkspace().layout.panes, 'chat');
 	const [collapsed, setCollapsed] = useState(() => { try { return localStorage.getItem('vs-tabcollapsed') === '1'; } catch { return false; } });
 	const toggleCollapse = () => setCollapsed((c) => { try { localStorage.setItem('vs-tabcollapsed', c ? '0' : '1'); } catch { /* ignore */ } return !c; });
 
-	const chatToggle = (
-		<button className={`vs-tabbar-icon${chatOpen ? ' on' : ''}`} onClick={() => runtime.openChat(!chatOpen)} title="Chat & activity" aria-label="Chat & activity" aria-pressed={chatOpen}>
-			<MessageSquare size={15} />
-		</button>
-	);
 	const tabList = (
 		<>
 			{tabs.map((t) => <Tab key={t.id} tab={t} active={t.id === activeId} />)}
@@ -211,7 +203,6 @@ export function TabBar({ vertical = false }: { vertical?: boolean }) {
 						{collapsed ? <PanelLeftOpen size={15} /> : <PanelLeftClose size={15} />}
 					</button>
 				</div>
-				{chatToggle}
 				<div className="vs-tabs">{tabList}</div>
 				<div className="vs-tabbar-right">
 					<Inbox />
@@ -224,7 +215,6 @@ export function TabBar({ vertical = false }: { vertical?: boolean }) {
 	return (
 		<div className="vs-tabbar" role="tablist">
 			<span className="vs-tabbar-logo" />
-			{chatToggle}
 			<div className="vs-tabs">{tabList}</div>
 			<div className="vs-tabbar-right">
 				<Inbox />
