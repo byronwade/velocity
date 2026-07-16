@@ -178,6 +178,40 @@ export interface Checkpoint {
 	createdLabel: string;
 }
 
+/** checkpoint-readiness-gates (roadmap · phase 3) — one gate a checkpoint
+ *  must pass (or be explicitly waived) before Accept. */
+export interface ReadinessGate {
+	label: string;
+	ok: boolean;
+	detail?: string;
+}
+
+/** Derive a checkpoint's readiness from typed evidence: build, tests, the
+ *  mission's acceptance criteria, and its required evidence kinds. Pure, so
+ *  the runtime (enforcement) and the Review UI (display) share one truth. */
+export function checkpointReadiness(k: Checkpoint, mission: Mission | null): ReadinessGate[] {
+	const gates: ReadinessGate[] = [
+		{ label: 'Build', ok: k.buildOk, detail: k.buildOk ? 'passing' : 'failing' },
+		{ label: 'Tests', ok: k.tests.passed === k.tests.total, detail: `${k.tests.passed}/${k.tests.total} passing` },
+	];
+	if (mission) {
+		const verified = mission.criteria.filter((c) => c.state === 'verified').length;
+		gates.push({
+			label: 'Acceptance criteria',
+			ok: verified === mission.criteria.length,
+			detail: `${verified}/${mission.criteria.length} verified`,
+		});
+		const have = new Set(k.evidence.map((e) => e.kind));
+		const missing = mission.requiredEvidence.filter((kind) => !have.has(kind));
+		gates.push({
+			label: 'Required evidence',
+			ok: missing.length === 0,
+			detail: missing.length ? `missing: ${missing.join(', ')}` : 'all attached',
+		});
+	}
+	return gates;
+}
+
 export interface DecisionOption {
 	id: string;
 	label: string;

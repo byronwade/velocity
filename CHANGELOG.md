@@ -8,6 +8,11 @@ list item of the shape `- **slug** — Name. What changed and why it matters. (\
 **slug** is a stable kebab-case feature id shared with [ROADMAP.md](ROADMAP.md) — never rename one;
 corrections get a new entry. Newest release first.
 
+## 2026-07-15 · Review you can trust
+
+### Added
+- **checkpoint-readiness-gates** — Accept is earned, not assumed. Every checkpoint now derives readiness gates from typed evidence — build, tests, the mission's acceptance criteria, and its required evidence kinds — shown as a pass/fail list in Review. While any gate is open, "Accept & merge" is replaced by an explicit two-step **"Waive gates & accept…" → "Confirm — waive N gates"**, and a waived accept is audited by name in the activity log ("accepted with 2 gates waived (Acceptance criteria, Required evidence)"). One pure derivation is shared by the runtime (enforcement) and the UI (display), so the button can never disagree with the rule. First demo-harness prototype of the phase-3 platform epic.
+
 ## 2026-07-15 · Platform research and roadmap
 
 ### Added
@@ -24,8 +29,6 @@ corrections get a new entry. Newest release first.
 - **terminal-lens** — Terminal as a panel view. The real terminal joins the view dropdown (key 3) — any panel can be a terminal.
 - **browser-tabs** — Browser tabs. The in-app browser gets IDE-style tabs, each with its own history; new-tab and close controls included.
 - **vertical-tabs** — Arc-style vertical tabs. Settings → Appearance can switch the project tabs from the top row to a collapsible left rail — tabs stacked with their status rings, inbox and profile at the bottom.
-
-### Added
 - **ai-chat** — The chat is really AI now. Coworker replies are actual model output, streamed token-by-token through the **Vercel AI SDK** (`streamText` + the OpenAI-compatible provider) against local Ollama — no API key. Each coworker answers in persona ("You are Iris, the QA…"), `@Name` routes directly, and when a request spans departments a **second coworker replies with the first one's actual answer in context** — agents genuinely building on each other. A typing indicator shows while a reply streams; if no local model is available, the deterministic lines return as an honest fallback. Swapping to AI Gateway later is a baseURL + key change.
 - **checkpoint-patch** — See exactly what changed. Real checkpoints now carry the actual line-level diff (computed from before/after snapshots, long unchanged runs folded) and Review renders it as a proper patch — green additions, red removals, per file.
 - **real-rollback** — Reject really reverts. Rejecting a real checkpoint restores the workspace from inverse snapshots: files the model created are deleted, edits are restored to their prior content. Verified: a model edit to TODO.md was rejected and the file came back byte-for-byte.

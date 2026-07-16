@@ -95,7 +95,7 @@ dependencies, and P0–P8 exit gates live in the
 - [x] **checkpoint-diff-to-ide** — Open a checkpoint's changed file directly in the IDE. _(shipped 2026-07-15)_
 - [ ] **real-diffs** — Compute checkpoint diffs, status, and blame from the real Git worktree and immutable source revision. _(planned · phase 5 — depends on real-coworker-runtime and worktrees)_
 - [ ] **typed-evidence-store** — Persist source diffs, diagnostics, tests, screenshots, recordings, traces, console/network findings, accessibility results, risk, and provenance as typed evidence. _(planned · phase 3)_
-- [ ] **checkpoint-readiness-gates** — Block checkpoint proposal until required evidence, acceptance criteria, policy checks, and freshness constraints pass or are explicitly waived. _(planned · phase 3)_
+- [ ] **checkpoint-readiness-gates** — Block checkpoint proposal until required evidence, acceptance criteria, policy checks, and freshness constraints pass or are explicitly waived. _(planned · phase 3 — prototyped in the demo harness 2026-07-15: build/tests/criteria/required-evidence gates derived from typed evidence, Accept blocked until they pass, explicit two-step waive, audited waive events)_
 - [ ] **stable-candidate-transactions** — Advance Stable only through an auditable merge transaction binding source revision, environment, evidence, approvals, and rollback point. _(planned · phase 5)_
 - [ ] **verified-rollback** — Restore source, environment, migration state, configuration, and deployment to a tested checkpoint, followed by a health check. _(planned · phase 5)_
 - [ ] **blast-radius-analysis** — Show affected files, symbols, routes, tests, schemas, services, design tokens, users, and deployment surfaces before acceptance. _(planned · phase 5)_

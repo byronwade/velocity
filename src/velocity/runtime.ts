@@ -12,7 +12,7 @@
 import { buildScenario } from './scenarios';
 import { notifyCheckpoint } from './notify';
 import { getServices } from '../services/container';
-import { DEPLOY_TARGETS, WORK_INTENTS, WORK_MODELS } from './model';
+import { DEPLOY_TARGETS, WORK_INTENTS, WORK_MODELS, checkpointReadiness } from './model';
 import { findLeaf, firstLeafId, firstLeafOfView, leafIds, movePane, removeLeaf, setCompareSource, setRatio, setView, splitLeaf } from './panes';
 import type { DropEdge } from './panes';
 import type {
@@ -73,7 +73,7 @@ export interface CoworkerRuntime {
 	realWorkTool(coworkerId: string, label: string): void;
 	realWorkDone(commentId: string, summary: string, files: { path: string; added: number; removed: number }[], model: string, patch?: string, revert?: { path: string; before: string | null }[]): void;
 
-	acceptCheckpoint(id: string): void;
+	acceptCheckpoint(id: string, waive?: boolean): void;
 	rejectCheckpoint(id: string): void;
 	reviseCheckpoint(id: string): void;
 	rollback(id: string): void;
@@ -564,11 +564,22 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 	}
 
 	// --- checkpoints ---
-	acceptCheckpoint(id: string): void {
-		this.set({ checkpoints: this.state.checkpoints.map((k) => (k.id === id ? { ...k, state: 'accepted' } : k)) });
-		this.addEvent('merge', 'Checkpoint accepted → merged into Candidate.', null);
+	acceptCheckpoint(id: string, waive = false): void {
+		// checkpoint-readiness-gates: Accept is blocked while gates are open
+		// unless the reviewer explicitly waives them — and a waive is audited.
+		const k = this.state.checkpoints.find((c) => c.id === id);
+		const mission = k ? (this.state.missions.find((m) => m.id === k.missionId) ?? null) : null;
+		const open = k ? checkpointReadiness(k, mission).filter((g) => !g.ok) : [];
+		if (open.length && !waive) {
+			this.toast(`Not ready — ${open.length} gate${open.length > 1 ? 's' : ''} open. Waive explicitly to accept.`);
+			return;
+		}
+		this.set({ checkpoints: this.state.checkpoints.map((c) => (c.id === id ? { ...c, state: 'accepted' } : c)) });
+		this.addEvent('merge', open.length
+			? `Checkpoint accepted with ${open.length} gate${open.length > 1 ? 's' : ''} waived (${open.map((g) => g.label).join(', ')}) → merged into Candidate.`
+			: 'Checkpoint accepted — all readiness gates passed → merged into Candidate.', null);
 		this.patchLayout({ rightSurface: 'none' });
-		this.toast('Checkpoint accepted. Stable advanced.');
+		this.toast(open.length ? `Accepted with ${open.length} waived gate${open.length > 1 ? 's' : ''}.` : 'Checkpoint accepted. Stable advanced.');
 	}
 	/** Apply a real checkpoint's inverse snapshots — files restored on disk
 	 *  AND in any open editor pane. Returns how many files changed. */

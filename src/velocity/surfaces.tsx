@@ -29,7 +29,7 @@ async function openInIDE(path: string): Promise<void> {
 	await editor.bindPane(`velocity:editor:${paneId}`, path);
 	runtime.closeRight();
 }
-import { AUTONOMY_LABEL, STATE_TONE, STATE_LABEL, LENS_META, EVENT_TONE, DEPLOY_TARGETS } from './model';
+import { AUTONOMY_LABEL, STATE_TONE, STATE_LABEL, LENS_META, EVENT_TONE, DEPLOY_TARGETS, checkpointReadiness } from './model';
 import type { Autonomy, CollabRole, Coworker, EvidenceKind, Lens, Risk, ToolId, WorkspaceEvent } from './model';
 
 // --------------------------------------------------------------------------
@@ -478,12 +478,18 @@ const EVIDENCE_ICON: Record<EvidenceKind, typeof FlaskConical> = {
 
 function CheckpointPanel() {
 	const state = useWorkspace();
+	// Two-step waive: the first click arms, the second confirms. Re-arms per checkpoint.
+	const [armWaive, setArmWaive] = useState(false);
 	// Real model-run checkpoints outrank simulated momentum in the queue.
 	const k = state.checkpoints.find((c) => c.id === state.layout.activeCheckpointId)
 		?? state.checkpoints.find((c) => c.state === 'ready' && c.origin === 'real')
 		?? state.checkpoints[0];
+	useEffect(() => { setArmWaive(false); }, [k?.id]);
 	if (!k) return <div className="vs-rail-body vs-empty-rail">No checkpoints yet.</div>;
 	const cw = state.coworkers.find((c) => c.id === k.coworkerId);
+	const mission = state.missions.find((m) => m.id === k.missionId) ?? null;
+	const gates = checkpointReadiness(k, mission);
+	const open = gates.filter((g) => !g.ok);
 	return (
 		<>
 			<header className="vs-rail-head"><Flag size={15} /><h3>Checkpoint</h3><span className={`vs-risk ${k.risk}`}>{k.risk} risk</span>
@@ -494,6 +500,14 @@ function CheckpointPanel() {
 				<div className="vs-ckp-metrics">
 					<span className={`vs-tag ${k.buildOk ? 'good' : 'warn'}`}>{k.buildOk ? 'Build ok' : 'Build failing'}</span>
 					<span className={`vs-tag ${k.tests.passed === k.tests.total ? 'good' : 'warn'}`}>{k.tests.passed}/{k.tests.total} tests</span>
+				</div>
+				<div className="vs-ckp-sec">Readiness — {open.length === 0 ? 'all gates passed' : `${open.length} gate${open.length > 1 ? 's' : ''} open`}
+					<div className="vs-gates">{gates.map((g) => (
+						<div key={g.label} className={`vs-gate-row${g.ok ? ' ok' : ''}`}>
+							{g.ok ? <Check size={13} /> : <X size={13} />}
+							<b>{g.label}</b>{g.detail && <span>· {g.detail}</span>}
+						</div>
+					))}</div>
 				</div>
 				<div className="vs-ckp-sec">Changes
 					<div className="vs-diff">{k.diff.map((d) => (
@@ -525,7 +539,17 @@ function CheckpointPanel() {
 				</div>
 				<div className="vs-ckp-decide">
 					<button className="vs-ckp-reject" onClick={() => runtime.rejectCheckpoint(k.id)}><X size={15} />Reject</button>
-					<button className="vs-ckp-accept" onClick={() => runtime.acceptCheckpoint(k.id)}><Check size={15} />Accept &amp; merge</button>
+					{open.length === 0 ? (
+						<button className="vs-ckp-accept" onClick={() => runtime.acceptCheckpoint(k.id)}><Check size={15} />Accept &amp; merge</button>
+					) : armWaive ? (
+						<button className="vs-ckp-accept waive" onClick={() => runtime.acceptCheckpoint(k.id, true)}>
+							<ShieldQuestion size={15} />Confirm — waive {open.length} gate{open.length > 1 ? 's' : ''}
+						</button>
+					) : (
+						<button className="vs-ckp-accept waive" onClick={() => setArmWaive(true)} title={`Open: ${open.map((g) => g.label).join(', ')}`}>
+							<ShieldQuestion size={15} />Waive gates &amp; accept…
+						</button>
+					)}
 				</div>
 			</footer>
 		</>

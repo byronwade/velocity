@@ -844,6 +844,9 @@
 .vs-ckp-accept { border: 0; background: var(--good); color: #fff; }
 .vs-ckp-accept:hover { background: color-mix(in srgb, var(--good) 88%, #000); }
 .vs-ckp-accept:active, .vs-ckp-reject:active { transform: translateY(1px); }
+/* Gated accept — quiet neutral until the reviewer arms the explicit waive. */
+.vs-ckp-accept.waive { background: var(--panel-2); color: var(--fg); border: 1px solid var(--line); }
+.vs-ckp-accept.waive:hover { background: var(--panel); border-color: var(--line-strong, var(--line)); }
 .vs-empty-rail { color: var(--faint); text-align: center; padding: 40px 0; }
 
 /* --- Coworker card ------------------------------------------------------ */
@@ -941,6 +944,13 @@
 .vs-ev-row { display: flex; align-items: center; gap: 8px; font-size: var(--text-12); color: var(--muted); }
 .vs-ev-row svg { color: var(--accent); flex: 0 0 auto; }
 .vs-ev-row b { color: var(--fg); font-weight: var(--fw-medium); }
+/* Readiness gates — same quiet row grammar as evidence; the icon carries
+   the state (functional good/danger only, no colored borders). */
+.vs-gates { display: flex; flex-direction: column; gap: 7px; }
+.vs-gate-row { display: flex; align-items: center; gap: 8px; font-size: var(--text-12); color: var(--muted); }
+.vs-gate-row svg { color: var(--danger); flex: 0 0 auto; }
+.vs-gate-row.ok svg { color: var(--good); }
+.vs-gate-row b { color: var(--fg); font-weight: var(--fw-medium); }
 .vs-blast { display: flex; flex-wrap: wrap; gap: 5px; }
 .vs-ckp-limits { display: flex; gap: 8px; font-size: var(--text-12); color: var(--muted); background: var(--panel-2); border-radius: var(--r-md); padding: 10px 12px; }
 .vs-ckp-limits svg { color: var(--warn); flex: 0 0 auto; margin-top: 1px; }
