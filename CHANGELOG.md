@@ -40,7 +40,7 @@ corrections get a new entry. Newest release first.
 - **divider-grip** — Panel grab bars are obvious now: a wider hit area, a visible grip pill on hover, and a strong active state; resizing stays smooth with live snap points.
 
 ### Fixed
-- **verify-runs** — No dead buttons. The Verify lens's Run / Run-all and the scenario re-run actually run now (checking → verified with staggered progress and events; stuck criteria complete), and the Tests lens's per-suite and run-all buttons execute with live running states.
+- **verify-runs** — No dead buttons anywhere. The Verify lens's Run / Run-all and the scenario re-run actually run (checking → verified with staggered progress and events; stuck criteria complete), the Tests lens's per-suite and run-all buttons execute with live running states, the System lens's scenario run and the Data lens's query run respond, and **Roll back on a real checkpoint restores the files for real** — same inverse snapshots as Reject.
 - **live-doc-refresh** — Open editors never go stale. When a rejected checkpoint reverts files or the workspace rewrites a coworker definition, any pane showing that file updates in place (shared-document `replaceAll` fans out to every view). Verified: maya.md open in the editor updated live when Maya's autonomy changed.
 - **comment-dismiss** — Comment windows close on click-away. Clicking anywhere outside an open thread or composer dismisses it (Esc still works).
 - **chat-sidebar** — The activity portion of the feed no longer repeats itself: cycling sim tasks are deduped against recent entries, so the chat stays readable while the full history remains in the Activity panel.

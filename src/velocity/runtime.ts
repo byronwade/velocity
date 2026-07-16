@@ -545,6 +545,20 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 		this.patchLayout({ rightSurface: 'none' });
 		this.toast('Checkpoint accepted. Stable advanced.');
 	}
+	/** Apply a real checkpoint's inverse snapshots — files restored on disk
+	 *  AND in any open editor pane. Returns how many files changed. */
+	private async applyRevert(entries: { path: string; before: string | null }[]): Promise<number> {
+		const { fs, editor } = getServices();
+		for (const r of entries) {
+			if (r.before === null) await fs.delete(r.path).catch(() => {});
+			else {
+				await fs.writeFile(r.path, r.before);
+				editor.getDoc(r.path)?.replaceAll(r.before);
+			}
+		}
+		return entries.length;
+	}
+
 	rejectCheckpoint(id: string): void {
 		const k = this.state.checkpoints.find((c) => c.id === id);
 		this.set({ checkpoints: this.state.checkpoints.map((c) => (c.id === id ? { ...c, state: 'rejected' } : c)) });
@@ -553,19 +567,10 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 		// reverts the workspace, not just the label.
 		if (k?.origin === 'real' && k.revert?.length) {
 			const entries = k.revert;
-			void (async () => {
-				const { fs, editor } = getServices();
-				for (const r of entries) {
-					if (r.before === null) await fs.delete(r.path).catch(() => {});
-					else {
-						await fs.writeFile(r.path, r.before);
-						// A pane showing this file updates in place — never stale.
-						editor.getDoc(r.path)?.replaceAll(r.before);
-					}
-				}
-				this.addEvent('note', `Reverted ${entries.length} file${entries.length > 1 ? 's' : ''} from a rejected checkpoint.`, k.coworkerId);
-				this.toast(`Rejected — ${entries.length} file${entries.length > 1 ? 's' : ''} reverted.`);
-			})();
+			void this.applyRevert(entries).then((n) => {
+				this.addEvent('note', `Reverted ${n} file${n > 1 ? 's' : ''} from a rejected checkpoint.`, k.coworkerId);
+				this.toast(`Rejected — ${n} file${n > 1 ? 's' : ''} reverted.`);
+			});
 			return;
 		}
 		this.toast('Rejected. Stable preserved; Candidate discarded.');
@@ -578,6 +583,14 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 	}
 	rollback(id: string): void {
 		const k = this.state.checkpoints.find((c) => c.id === id);
+		// Real checkpoints roll back for real — same inverse snapshots as Reject.
+		if (k?.origin === 'real' && k.revert?.length) {
+			void this.applyRevert(k.revert).then((n) => {
+				this.addEvent('note', `Rolled back “${k.outcome.slice(0, 40)}” — ${n} file${n > 1 ? 's' : ''} restored.`, k.coworkerId);
+				this.toast(`Rolled back — ${n} file${n > 1 ? 's' : ''} restored.`);
+			});
+			return;
+		}
 		this.toast(`Rolled back to ${k?.rollbackPoint ?? 'the previous checkpoint'}.`);
 		this.addEvent('note', `Rolled back to ${k?.rollbackPoint ?? 'a checkpoint'}.`, null);
 	}

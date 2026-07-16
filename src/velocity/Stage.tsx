@@ -122,7 +122,7 @@ function SystemLens() {
 							</div>
 						))}
 					</div>
-					<button className="vs-run"><Play size={14} />Run checkout scenario</button>
+					<button className="vs-run" onClick={() => runtime.rerunScenario()}><Play size={14} />Run checkout scenario</button>
 				</div>
 				<div className="vs-panel-card">
 					<div className="vs-panel-head"><span>Contract change</span><span className="vs-tag">Rowan</span></div>
@@ -168,7 +168,7 @@ function DataLens() {
 				))}
 			</aside>
 			<div className="vs-data-main">
-				<div className="vs-data-q"><code>SELECT * FROM sessions ORDER BY created DESC</code><button className="vs-run sm"><Play size={13} />Run</button></div>
+				<div className="vs-data-q"><code>SELECT * FROM sessions ORDER BY created DESC</code><button className="vs-run sm" onClick={() => runtime.notify('Query ran — 4 rows in 12ms.')}><Play size={13} />Run</button></div>
 				<div className="vs-data-scroll">
 					<table className="vs-data-grid">
 						<thead><tr>{cols.map((c) => <th key={c} className={c === 'credential' ? 'new' : ''}>{c}{c === 'credential' && <span className="vs-th-tag">new</span>}</th>)}</tr></thead>
