@@ -774,7 +774,7 @@ export function CommandBar() {
 		const lensCmds: Cmd[] = (Object.keys(LENS_META) as Lens[]).map((l) => ({ id: `lens:${l}`, label: `Lens: ${LENS_META[l].label}`, hint: LENS_META[l].hint, run: () => runtime.setLens(l) }));
 		return [
 			{ id: 'newwork', label: 'New work — click your app to place it', hint: '⌘⇧N', run: () => runtime.armWork(true) },
-			{ id: 'chat', label: state.layout.chatOpen ? 'Hide chat sidebar' : 'Show chat sidebar', run: () => runtime.openChat(!state.layout.chatOpen) },
+			{ id: 'chat', label: firstLeafOfView(state.layout.panes, 'chat') ? 'Close the Chat pane' : 'Open Chat in a pane', hint: '⌘⇧C', run: () => runtime.openChat(!firstLeafOfView(state.layout.panes, 'chat')) },
 			{ id: 'tablayout', label: 'Toggle vertical tabs (Arc-style)', run: () => {
 				let v = 'side';
 				try { v = localStorage.getItem('vs-tablayout') === 'side' ? 'top' : 'side'; localStorage.setItem('vs-tablayout', v); } catch { /* ignore */ }
@@ -797,7 +797,7 @@ export function CommandBar() {
 			{ id: 'ship', label: 'Ship — deploy to a host', hint: '⌘⇧D', run: () => runtime.openShip(true) },
 			...lensCmds,
 		];
-	}, [state.paused, state.layout.openTool, state.layout.activePaneId, state.layout.chatOpen]);
+	}, [state.paused, state.layout.openTool, state.layout.activePaneId, state.layout.panes]);
 
 	if (!state.layout.commandOpen) return null;
 	const filtered = cmds.filter((c) => c.label.toLowerCase().includes(q.toLowerCase()));

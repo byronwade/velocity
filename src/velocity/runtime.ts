@@ -498,7 +498,19 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 	notify(text: string): void { this.toast(text); }
 
 	// --- chat: fully collaborative — humans, coworkers, and activity --------
-	openChat(open: boolean): void { this.patchLayout({ chatOpen: open }); }
+	/** Chat is a Lens now — "open chat" focuses an existing Chat pane or turns
+	 *  the active pane into one. `open: false` returns that pane to Browser. */
+	openChat(open: boolean): void {
+		const l = this.state.layout;
+		const leaf = firstLeafOfView(l.panes, 'chat');
+		if (open) {
+			if (leaf) this.focusPane(leaf.id);
+			else this.setPaneView(l.activePaneId, 'chat');
+		} else if (leaf) {
+			this.setPaneView(leaf.id, 'browser');
+		}
+		this.patchLayout({ chatOpen: open });
+	}
 	sendChat(text: string): void {
 		const t = text.trim();
 		if (!t) return;

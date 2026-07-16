@@ -1,25 +1,25 @@
 // ---------------------------------------------------------------------------
-// Chat sidebar — the collaborative record, v0-style on the left.
+// Chat lens — the collaborative record as a pane view, not a special window.
 //
 // One feed: messages from humans AND coworkers (agents answer, and riff off
 // each other), pinned work items, and the activity stream (started / landed /
 // completed), so it doubles as a live progress log. It is deliberately NOT the
 // core of the product — directing work stays on the app via comments.
 //
+// Chat is a Lens like Browser or Terminal: pick it from any pane's view
+// dropdown (key 8), split it, drag it, resize it with the ordinary pane
+// system. No bespoke sidebar, no second layout mechanism.
+//
 // The surface follows the Vercel AI SDK Elements vocabulary — Conversation,
 // Message (user bubbles right, assistant plain left), PromptInput,
-// Suggestions, and per-message Actions — implemented on Velocity's token
-// system (this repo is not Tailwind/shadcn). Resizable like every panel.
+// Suggestions, and per-message Actions — on Velocity's token system.
 // ---------------------------------------------------------------------------
 
 import { useEffect, useRef, useState } from 'react';
-import { ArrowUp, AtSign, MessageSquare, Pin, Activity, Copy, Check, ChevronDown, Flag, Sparkles } from 'lucide-react';
+import { ArrowUp, AtSign, Pin, Activity, Copy, Check, ChevronDown, Flag, Sparkles } from 'lucide-react';
 import { useWorkspace, runtime } from './useWorkspace';
 import { chatModel, setChatModel, pinnedChatModel } from './chatai';
 import { listOllamaModels, DEFAULT_OLLAMA_URL } from '../services/ollama';
-
-const MIN_W = 300;
-const MAX_W = 600;
 
 const SUGGESTIONS = [
 	'@Maya tighten the hero spacing',
@@ -97,30 +97,12 @@ function MsgActions({ text }: { text: string }) {
 	);
 }
 
-export function ChatSidebar() {
+export function ChatLens() {
 	const state = useWorkspace();
 	const [draft, setDraft] = useState('');
 	const scrollRef = useRef<HTMLDivElement>(null);
 	const taRef = useRef<HTMLTextAreaElement>(null);
 	const feed = state.feed;
-
-	// Resizable like every other panel — the grip lives on the right edge.
-	const [width, setWidth] = useState(() => {
-		try { return Math.min(MAX_W, Math.max(MIN_W, Number(localStorage.getItem('vs-chatw')) || 380)); } catch { return 380; }
-	});
-	const drag = useRef<{ x: number; w: number } | null>(null);
-	useEffect(() => {
-		const move = (e: MouseEvent) => { if (drag.current) setWidth(Math.min(MAX_W, Math.max(MIN_W, drag.current.w + (e.clientX - drag.current.x)))); };
-		const up = () => {
-			if (!drag.current) return;
-			drag.current = null;
-			document.body.style.userSelect = '';
-			setWidth((w) => { try { localStorage.setItem('vs-chatw', String(w)); } catch { /* ignore */ } return w; });
-		};
-		window.addEventListener('mousemove', move);
-		window.addEventListener('mouseup', up);
-		return () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
-	}, []);
 
 	// Conversation behavior: stick to the bottom as entries land AND while a
 	// reply streams (text growth) — but never yank the user out of scrollback.
@@ -132,8 +114,6 @@ export function ChatSidebar() {
 		if (nearBottom) el.scrollTo(0, el.scrollHeight);
 	}, [feed.length, lastLen]);
 
-	if (!state.layout.chatOpen) return null;
-
 	const send = (text?: string) => {
 		const t = (text ?? draft).trim();
 		if (!t) return;
@@ -143,12 +123,7 @@ export function ChatSidebar() {
 	};
 
 	return (
-		<aside className="vs-chat" style={{ width, flexBasis: width }} aria-label="Chat and activity">
-			<header className="vs-chat-head">
-				<MessageSquare size={14} />
-				<b>Chat</b>
-				<span>team · coworkers · activity</span>
-			</header>
+		<div className="vs-chat lens" aria-label="Chat and activity">
 			<div className="vs-chat-feed" ref={scrollRef}>
 				{feed.length === 0 && (
 					<div className="vs-chat-empty">
@@ -233,7 +208,6 @@ export function ChatSidebar() {
 					<button className="vs-send" disabled={!draft.trim()} onClick={() => send()} aria-label="Send"><ArrowUp size={15} /></button>
 				</div>
 			</div>
-			<div className="vs-chat-resize" onMouseDown={(e) => { drag.current = { x: e.clientX, w: width }; document.body.style.userSelect = 'none'; }} aria-hidden />
-		</aside>
+		</div>
 	);
 }

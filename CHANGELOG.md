@@ -8,6 +8,11 @@ list item of the shape `- **slug** — Name. What changed and why it matters. (\
 **slug** is a stable kebab-case feature id shared with [ROADMAP.md](ROADMAP.md) — never rename one;
 corrections get a new entry. Newest release first.
 
+## 2026-07-16 · Chat joins the pane system
+
+### Changed
+- **chat-sidebar** — Chat is a pane view now, not a bespoke sidebar. Pick **Chat** from any panel's view dropdown (key **8**), and arrange it exactly like Browser, IDE, or Terminal — split it, drag it anywhere, resize it with the ordinary pane dividers. Everything the chat could do comes along: streamed real-AI replies, @Name routing, pin-as-work, the composer with the model chip. **⌘⇧C** still toggles a Chat pane and lands you in the composer, and the tab-rail chat button and command palette do the same. One layout system, no special windows — your workspace is fully yours to arrange.
+
 ## 2026-07-15 · Review you can trust
 
 ### Changed

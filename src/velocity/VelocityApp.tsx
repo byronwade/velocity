@@ -9,12 +9,11 @@ import { Stage } from './Stage';
 import { Dock } from './Dock';
 import { MissionSheet, RightRail, ToolDrawer, CommandBar, ShipSheet } from './surfaces';
 import { SettingsSheet } from './SettingsSheet';
-import { ChatSidebar } from './ChatSidebar';
 import './velocity.css';
 
 
 const SHORTCUTS: { group: string; keys: [string, string][] }[] = [
-	{ group: 'Views', keys: [['1 – 7', 'Switch the active pane\'s view'], ['C', 'Compare Candidate vs Stable'], ['F', 'Focus mode']] },
+	{ group: 'Views', keys: [['1 – 8', 'Switch the active pane\'s view'], ['C', 'Compare Candidate vs Stable'], ['F', 'Focus mode']] },
 	{ group: 'Panes', keys: [['⌘ \\', 'Split active pane right'], ['⌘ ⇧ \\', 'Split active pane down'], ['⌘ J', 'Toggle terminal'], ['⌘ P', 'Go to file']] },
 	{ group: 'Work', keys: [['⌘ ⇧ N', 'New work'], ['⌘ ⇧ C', 'Chat — toggle and focus'], ['⌘ ⇧ D', 'Ship'], ['. ', 'Pause / resume all'], ['⌘ K', 'Command palette']] },
 	{ group: 'General', keys: [['?', 'This shortcuts help'], ['Esc', 'Close the topmost surface']] },
@@ -134,7 +133,8 @@ export function VelocityApp() {
 			if (mod && e.shiftKey && e.key.toLowerCase() === 'n') { e.preventDefault(); runtime.armWork(true); return; }
 			if (mod && e.shiftKey && e.key.toLowerCase() === 'c') {
 				e.preventDefault();
-				const open = !runtime.getState().layout.chatOpen;
+				// Chat is a pane lens: toggle one open/closed, and land in the composer.
+				const open = !firstLeafOfView(runtime.getState().layout.panes, 'chat');
 				runtime.openChat(open);
 				if (open) requestAnimationFrame(() => document.querySelector<HTMLTextAreaElement>('.vs-chatbox textarea')?.focus());
 				return;
@@ -144,7 +144,7 @@ export function VelocityApp() {
 			if (mod && e.key.toLowerCase() === 'j') { e.preventDefault(); runtime.openTool(runtime.getState().layout.openTool ? null : 'terminal'); return; }
 			if (typing || mod) return;
 			if (e.key === '?') { e.preventDefault(); setHelpOpen(true); return; }
-			if (e.key >= '1' && e.key <= '7') { runtime.setLens(LENS_ORDER[Number(e.key) - 1]); return; }
+			if (e.key >= '1' && e.key <= '8') { runtime.setLens(LENS_ORDER[Number(e.key) - 1]); return; }
 			if (e.key.toLowerCase() === 'c') runtime.comparePreview('stable');
 			if (e.key.toLowerCase() === 'f') runtime.toggleFocus();
 			if (e.key === '.') runtime.togglePause();
@@ -159,7 +159,6 @@ export function VelocityApp() {
 		<div className={`vs-shell${sideTabs ? ' side-tabs' : ''}`}>
 			{!focusMode && <TabBar vertical={sideTabs} />}
 			<div className="vs-hbody">
-				{!focusMode && <ChatSidebar />}
 				<div className={`vs-root${focusMode ? ' focus' : ''}`}>
 				<div className="vs-main">
 					<Stage />

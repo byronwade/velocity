@@ -27,7 +27,7 @@ dependencies, and P0–P8 exit gates live in the
 - [x] **pane-drag-drop** — Drag a panel by its toolbar onto any other panel; a blue outline shows where it will land and the layout restructures on drop. _(shipped 2026-07-15)_
 - [x] **terminal-lens** — Terminal is a pane view: pick it from any panel's view dropdown (key 3). _(shipped 2026-07-15)_
 - [x] **divider-grip** — Obvious split grab bars with a generous hit area, visible hover grip, and strong active state. _(shipped 2026-07-15)_
-- [x] **chat-sidebar** — Collaborative human/coworker chat and activity sidebar; comments remain the primary work-directing surface. _(shipped 2026-07-15)_
+- [x] **chat-sidebar** — Collaborative human/coworker chat and activity as a pane Lens (view dropdown · key 8 · ⌘⇧C) rather than a bespoke sidebar — place, split, and resize it with the ordinary pane system; comments remain the primary work-directing surface. _(shipped 2026-07-15)_
 - [x] **vertical-tabs** — Arc-style collapsible vertical project-tab rail, togglable in Settings → Appearance. _(shipped 2026-07-15)_
 - [x] **comment-dismiss** — Click outside an open comment thread or composer to close it. _(shipped 2026-07-15)_
 - [x] **settings-modal** — Settings modal for plan, appearance, notifications, coworkers, models, and integrations. _(shipped 2026-07-14)_

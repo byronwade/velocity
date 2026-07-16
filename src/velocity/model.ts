@@ -8,7 +8,7 @@
 // ---------------------------------------------------------------------------
 
 /** The views a pane can show. The running app lives in Browser (no separate Preview). */
-export type Lens = 'browser' | 'code' | 'terminal' | 'system' | 'data' | 'tests' | 'verify';
+export type Lens = 'browser' | 'code' | 'terminal' | 'system' | 'data' | 'tests' | 'verify' | 'chat';
 
 /** What a Preview pane compares the Candidate against. */
 export type CompareSource = 'none' | 'stable' | 'live' | 'preview' | 'branch';
@@ -418,7 +418,7 @@ export const DEPLOY_TARGETS: { id: DeployTarget; label: string; domain: string }
 ];
 
 /** The one canonical view order — the pane dropdown and the 1–7 keys use it. */
-export const LENS_ORDER: Lens[] = ['browser', 'code', 'terminal', 'system', 'data', 'tests', 'verify'];
+export const LENS_ORDER: Lens[] = ['browser', 'code', 'terminal', 'system', 'data', 'tests', 'verify', 'chat'];
 
 export const LENS_META: Record<Lens, { label: string; hint: string }> = {
 	browser: { label: 'Browser', hint: 'Live preview of the app' },
@@ -428,6 +428,7 @@ export const LENS_META: Record<Lens, { label: string; hint: string }> = {
 	data: { label: 'Data', hint: 'Schema + records' },
 	tests: { label: 'Tests', hint: 'Unit + integration runner' },
 	verify: { label: 'Verify', hint: 'Acceptance scenarios + evidence' },
+	chat: { label: 'Chat', hint: 'Team thread — coworkers + activity' },
 };
 
 export const AUTONOMY_LABEL: Record<Autonomy, string> = {

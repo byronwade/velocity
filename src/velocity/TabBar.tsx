@@ -4,6 +4,7 @@ import { useShell } from '../lib/store';
 import { useProjects, useWorkspace, manager, runtime } from './useWorkspace';
 import { SCENARIOS as SCENARIO_LIST } from './scenarios';
 import { ContextMenu, useContextMenu } from './ContextMenu';
+import { firstLeafOfView } from './panes';
 import type { TabView } from './workspace';
 
 /** Rich hover card — what's happening on a project and what needs attention. */
@@ -182,7 +183,8 @@ function Profile() {
 
 export function TabBar({ vertical = false }: { vertical?: boolean }) {
 	const { tabs, activeId } = useProjects();
-	const chatOpen = useWorkspace().layout.chatOpen;
+	// Chat is a pane lens — "open" means a pane is currently showing it.
+	const chatOpen = !!firstLeafOfView(useWorkspace().layout.panes, 'chat');
 	const [collapsed, setCollapsed] = useState(() => { try { return localStorage.getItem('vs-tabcollapsed') === '1'; } catch { return false; } });
 	const toggleCollapse = () => setCollapsed((c) => { try { localStorage.setItem('vs-tabcollapsed', c ? '0' : '1'); } catch { /* ignore */ } return !c; });
 

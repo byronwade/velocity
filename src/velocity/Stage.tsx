@@ -17,6 +17,7 @@ import { leafIds } from './panes';
 import type { DropEdge } from './panes';
 import { ContextMenu, useContextMenu } from './ContextMenu';
 import { TerminalPanel } from './surfaces';
+import { ChatLens } from './ChatSidebar';
 import type { MenuItem } from './ContextMenu';
 import type { Collaborator, Comment, CompareSource, Coworker, Lens, PaneLeaf, PaneNode, PaneSplit, WorkIntent } from './model';
 
@@ -452,6 +453,7 @@ function renderLens(lens: Lens, paneKey: string) {
 		case 'data': return <DataLens />;
 		case 'tests': return <TestsLens />;
 		case 'verify': return <VerifyLens />;
+		case 'chat': return <ChatLens />;
 	}
 }
 
@@ -724,7 +726,7 @@ function StageOverlay({ lens }: { lens: Lens }) {
 // Split-pane workspace — each pane picks its own view and can split / close.
 // --------------------------------------------------------------------------
 const LENS_ICON: Record<Lens, typeof Globe> = {
-	browser: Globe, code: Code2, terminal: TerminalSquare, system: Server, data: Database, tests: FlaskConical, verify: CheckCircle2,
+	browser: Globe, code: Code2, terminal: TerminalSquare, system: Server, data: Database, tests: FlaskConical, verify: CheckCircle2, chat: MessageSquare,
 };
 const COMPARE_ORDER: CompareSource[] = ['none', 'stable', 'live', 'preview', 'branch'];
 
