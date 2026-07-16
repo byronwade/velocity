@@ -259,8 +259,13 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 			feed: dupe ? this.state.feed : [...this.state.feed, { id: uid('f'), kind: 'event' as const, authorName: cw?.name ?? 'System', text, tsLabel: 'now', eventKind: kind }].slice(-120),
 		});
 	}
-	private addFeed(entry: Omit<WorkspaceState['feed'][number], 'id' | 'tsLabel'>): void {
-		this.set({ feed: [...this.state.feed, { ...entry, id: uid('f'), tsLabel: 'now' }].slice(-120) });
+	private addFeed(entry: Omit<WorkspaceState['feed'][number], 'id' | 'tsLabel'>): string {
+		const id = uid('f');
+		this.set({ feed: [...this.state.feed, { ...entry, id, tsLabel: 'now' }].slice(-120) });
+		return id;
+	}
+	private updateFeedText(id: string, text: string): void {
+		this.set({ feed: this.state.feed.map((f) => (f.id === id ? { ...f, text } : f)) });
 	}
 
 	load(scenario: string): void {
@@ -484,16 +489,36 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 		const primary = (at && live.find((c) => c.name.toLowerCase() === at[1].toLowerCase()))
 			?? live.find((c) => c.id === this.pickCoworker(t, null))
 			?? live[0];
-		this.addFeed({ kind: 'msg', authorName: primary.name, fromCoworker: true, text: `On it — I'll fold “${t.slice(0, 48)}${t.length > 48 ? '…' : ''}” into my current pass (${primary.action.toLowerCase()}).` });
-		// A second coworker riffs when the request also touches their turf —
-		// agents working off each other, deterministically.
+		// A second coworker joins when the request also touches their turf.
 		const wantsTests = /\b(test|tests|qa|coverage|regression|e2e)\b/i.test(t);
 		const wantsDesign = /\b(design|layout|ui|style|responsive|mobile|spacing)\b/i.test(t);
-		const second = live.find((c) => c.id !== primary.id && (
+		const second = at ? undefined : live.find((c) => c.id !== primary.id && (
 			(wantsTests && c.department === 'Verification') || (wantsDesign && c.department === 'Design')
 		));
+		void this.streamChatReplies(t, primary, second, live);
+	}
+
+	/** Real model replies (Vercel AI SDK → local Ollama), streamed into the
+	 *  feed. The second responder sees the first one's ACTUAL reply, so agents
+	 *  build on each other. Falls back to deterministic lines when no model. */
+	private async streamChatReplies(userText: string, primary: Coworker, second: Coworker | undefined, live: Coworker[]): Promise<void> {
+		const { streamCoworkerReply } = await import('./chatai');
+		const transcriptFor = (self: Coworker) => this.state.feed
+			.filter((f) => f.kind === 'msg' && f.text)
+			.slice(-10)
+			.map((f) => ({ speaker: f.authorName, text: f.text, self: f.fromCoworker === true && f.authorName === self.name }));
+		const respond = async (cw: Coworker, fallback: string) => {
+			const id = this.addFeed({ kind: 'msg', authorName: cw.name, fromCoworker: true, text: '' });
+			try {
+				const reply = await streamCoworkerReply(cw, live, this.state.project.name, transcriptFor(cw), (partial) => this.updateFeedText(id, partial));
+				if (!reply) this.updateFeedText(id, fallback);
+			} catch {
+				this.updateFeedText(id, fallback);
+			}
+		};
+		await respond(primary, `On it — I'll fold “${userText.slice(0, 48)}${userText.length > 48 ? '…' : ''}” into my current pass (${primary.action.toLowerCase()}).`);
 		if (second) {
-			this.addFeed({ kind: 'msg', authorName: second.name, fromCoworker: true, text: `I'll take the ${second.department.toLowerCase()} side once ${primary.name} lands theirs — flag me on the checkpoint.` });
+			await respond(second, `I'll take the ${second.department.toLowerCase()} side once ${primary.name} lands theirs — flag me on the checkpoint.`);
 		}
 	}
 

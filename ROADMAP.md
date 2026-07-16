@@ -69,6 +69,7 @@ dependencies, and P0–P8 exit gates live in the
 - [x] **checkpoint-patch** — Real checkpoints carry the actual line-level diff (LCS, unchanged runs folded) rendered in Review — you see exactly what the model changed. _(shipped 2026-07-15)_
 - [x] **real-rollback** — Rejecting a real checkpoint truly reverts the workspace via inverse snapshots (created files deleted, edits restored). _(shipped 2026-07-15)_
 - [x] **chat-pin** — Any of your chat messages can be pinned as a work item in one click — it lands on the app and auto-assigns like a placed comment. _(shipped 2026-07-15)_
+- [x] **ai-chat** — Coworkers answer in chat with REAL model replies, streamed via the Vercel AI SDK against local Ollama: per-coworker personas, @Name routing, a second agent building on the first's actual reply, typing indicator, deterministic fallback when no model is available. _(shipped 2026-07-15)_
 - [x] **mcp-tools** — Expose workspace file, shell, and browser services as an in-process MCP server and show the live toolbelt in Settings. _(shipped 2026-07-15)_
 - [ ] **real-coworker-runtime** — First provider-backed coworker using the Claude Agent SDK in a Node sidecar, with worktree cwd, checkpoint hooks, and approval-driven protected actions. _(planned · phase 4 — blocked: needs an Anthropic/Gateway API key and Node-sidecar approval)_
 - [ ] **provider-neutral-runtime** — Keep coworker identity and policy independent from provider, model, execution location, or agent protocol. _(planned · phase 4)_

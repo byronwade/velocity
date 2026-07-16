@@ -68,6 +68,14 @@
 .vs-patch .rem { color: var(--danger); }
 .vs-patch .fold { color: var(--faint); font-style: italic; }
 
+/* Typing loader — three quiet dots while a coworker's reply streams in. */
+.vs-chat-typing { display: inline-flex; gap: 4px; padding: 6px 0 2px; }
+.vs-chat-typing i { width: 5px; height: 5px; border-radius: 50%; background: var(--faint); animation: vs-typing 1.2s ease-in-out infinite; }
+.vs-chat-typing i:nth-child(2) { animation-delay: 0.15s; }
+.vs-chat-typing i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes vs-typing { 0%, 60%, 100% { opacity: 0.35; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-2px); } }
+@media (prefers-reduced-motion: reduce) { .vs-chat-typing i { animation: none; } }
+
 /* Task / activity rows */
 .vs-chat-row { display: flex; align-items: flex-start; gap: 7px; padding-left: 4px; color: var(--faint); }
 .vs-chat-row svg { flex: 0 0 auto; margin-top: 3px; }

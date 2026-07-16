@@ -93,8 +93,10 @@ export function ChatSidebar() {
 						<div key={f.id} className="vs-chat-msg bot">
 							<span className="vs-avatar sm neutral">{f.authorName.slice(0, 2).toUpperCase()}</span>
 							<div className="vs-chat-msg-body">
-								<div className="vs-chat-msg-head"><b>{f.authorName}</b><em>coworker</em><span>{f.tsLabel}</span><MsgActions text={f.text} /></div>
-								<div className="vs-chat-msg-text">{f.text}</div>
+								<div className="vs-chat-msg-head"><b>{f.authorName}</b><em>coworker</em><span>{f.tsLabel}</span>{f.text && <MsgActions text={f.text} />}</div>
+								{f.text
+									? <div className="vs-chat-msg-text">{f.text}</div>
+									: <span className="vs-chat-typing" aria-label={`${f.authorName} is typing`}><i /><i /><i /></span>}
 							</div>
 						</div>
 					) : (
