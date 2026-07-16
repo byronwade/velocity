@@ -161,12 +161,16 @@ export class WorkspaceManager {
 		if (sig === this.agentSig) return;
 		this.syncingFiles = true;
 		try {
-			const { fs } = getServices();
+			const { fs, editor } = getServices();
 			for (const c of live) {
 				const path = agentPath(c.id);
 				const desired = coworkerToFile(c);
 				const current = (await fs.exists(path)) ? await fs.readFile(path) : null;
-				if (current !== desired) await fs.writeFile(path, desired);
+				if (current !== desired) {
+					await fs.writeFile(path, desired);
+					// If the definition is open in an editor pane, refresh it live.
+					editor.getDoc(path)?.replaceAll(desired);
+				}
 			}
 			const liveIds = new Set(live.map((c) => c.id));
 			for (const path of await fs.list()) {

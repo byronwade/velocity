@@ -9,7 +9,7 @@
 // the next edit — the honest, working core that a network CRDT later replaces.
 // ---------------------------------------------------------------------------
 
-import { Annotation, type ChangeSet, Text, Transaction } from '@codemirror/state';
+import { Annotation, ChangeSet, Text, Transaction } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
 
 /**
@@ -85,6 +85,16 @@ export class TextDocument {
 	markSaved(): void {
 		this._saved = this._text;
 		this.emit();
+	}
+
+	/** Replace the whole buffer from an EXTERNAL source (a checkpoint revert,
+	 *  agents-as-files sync, a future file watcher). Fans out to every attached
+	 *  view and marks the result saved — open panes never show stale content. */
+	replaceAll(content: string): void {
+		if (this._text.toString() === content) return;
+		const changes = ChangeSet.of({ from: 0, to: this._text.length, insert: content }, this._text.length);
+		this.ingest(changes, null);
+		this.markSaved();
 	}
 
 	/** Subscribe to state changes (dirty toggle, version bump, view attach/detach). */

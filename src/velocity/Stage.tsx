@@ -201,6 +201,7 @@ function VerifyLens() {
 			<div className="vs-verify-head">
 				<div className="vs-ring" style={{ ['--pct' as string]: `${pct}` }}><span>{done}/{criteria.length}</span></div>
 				<div><h2>Verification</h2><p>Every acceptance criterion, checked against the Candidate.</p></div>
+				<button className="vs-run" onClick={() => runtime.runAllCriteria()}><Play size={14} />Run all</button>
 			</div>
 			<div className="vs-verify-grid">
 				<div className="vs-verify-list">
@@ -210,7 +211,7 @@ function VerifyLens() {
 							<div className="vs-verify-body"><span>{c.label}</span>
 								<span className="vs-verify-ev">{c.state === 'verified' ? 'test · screenshot · trace' : c.state === 'checking' ? 'running…' : c.state === 'failed' ? 'needs a fix' : 'queued'}</span>
 							</div>
-							<button className="vs-run sm"><Play size={12} />Run</button>
+							<button className="vs-run sm" disabled={c.state === 'checking'} onClick={() => runtime.runCriterion(c.id)}><Play size={12} />Run</button>
 						</div>
 					))}
 				</div>
@@ -225,7 +226,7 @@ function VerifyLens() {
 								</div>
 							))}
 						</div>
-						<button className="vs-run"><Play size={14} />Re-run scenario</button>
+						<button className="vs-run" onClick={() => runtime.rerunScenario()}><Play size={14} />Re-run scenario</button>
 					</div>
 					<MissionTimeline />
 				</div>
@@ -403,6 +404,18 @@ const TEST_SUITES = [
 ];
 
 function TestsLens() {
+	// Which suites are currently (re)running — a deterministic beat per suite.
+	const [running, setRunning] = useState<Set<string>>(() => new Set());
+	const run = (names: string[]) => {
+		setRunning((cur) => new Set([...cur, ...names]));
+		names.forEach((name, i) => {
+			const ms = TEST_SUITES.find((s) => s.name === name)?.ms ?? 300;
+			setTimeout(() => {
+				setRunning((cur) => { const next = new Set(cur); next.delete(name); return next; });
+				if (i === names.length - 1) runtime.notify(`${names.length > 1 ? 'All suites' : name.split('/').pop()} passed.`);
+			}, ms + i * 220);
+		});
+	};
 	const passed = TEST_SUITES.reduce((a, s) => a + s.passed, 0);
 	const total = TEST_SUITES.reduce((a, s) => a + s.total, 0);
 	return (
@@ -410,17 +423,18 @@ function TestsLens() {
 			<div className="vs-tests-head">
 				<div><h2>Tests</h2><p>Unit + integration suites for the candidate.</p></div>
 				<span className="vs-tag good">{passed}/{total} passing</span>
-				<button className="vs-run"><Play size={14} />Run all</button>
+				<button className="vs-run" disabled={running.size > 0} onClick={() => run(TEST_SUITES.map((s) => s.name))}><Play size={14} />Run all</button>
 			</div>
 			<div className="vs-tests-list">
 				{TEST_SUITES.map((s) => {
 					const ok = s.passed === s.total;
+					const busy = running.has(s.name);
 					return (
 						<div key={s.name} className={`vs-test-suite${ok ? '' : ' fail'}`}>
-							<span className="vs-test-icon">{ok ? <Check size={13} /> : <X size={13} />}</span>
-							<div className="vs-test-body"><code>{s.name}</code><span>{s.passed}/{s.total} passed{s.failing && ` · ✗ ${s.failing}`}</span></div>
+							<span className="vs-test-icon">{busy ? <span className="vs-spin" /> : ok ? <Check size={13} /> : <X size={13} />}</span>
+							<div className="vs-test-body"><code>{s.name}</code><span>{busy ? 'running…' : `${s.passed}/${s.total} passed${s.failing ? ` · ✗ ${s.failing}` : ''}`}</span></div>
 							<span className="vs-trace-ms">{s.ms}ms</span>
-							<button className="vs-run sm"><Play size={11} /></button>
+							<button className="vs-run sm" disabled={busy} onClick={() => run([s.name])}><Play size={11} /></button>
 						</div>
 					);
 				})}

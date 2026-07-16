@@ -50,6 +50,12 @@ export interface CoworkerRuntime {
 	resetLayout(): void;
 
 	createMission(input: MissionInput): void;
+	/** Run one acceptance criterion (checking → verified, deterministic). */
+	runCriterion(id: string): void;
+	/** Run every unverified criterion, staggered. */
+	runAllCriteria(): void;
+	/** Re-run the recorded acceptance scenario. */
+	rerunScenario(): void;
 	addCoworker(name: string, role: string): void;
 	renameCoworker(id: string, name: string): void;
 	pauseCoworker(id: string): void;
@@ -389,6 +395,31 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 		this.toast('Mission created.');
 	}
 
+	// --- verification: criteria + scenario runs (deterministic sim) --------
+	private setCriterion(id: string, state: 'pending' | 'checking' | 'verified' | 'failed'): void {
+		if (!this.state.mission) return;
+		const criteria = this.state.mission.criteria.map((c) => (c.id === id ? { ...c, state } : c));
+		this.set({ mission: { ...this.state.mission, criteria } });
+	}
+	runCriterion(id: string): void {
+		const c = this.state.mission?.criteria.find((x) => x.id === id);
+		if (!c) return;
+		this.setCriterion(id, 'checking');
+		setTimeout(() => {
+			this.setCriterion(id, 'verified');
+			this.addEvent('verify-pass', `Verified: ${c.label}.`, null);
+		}, 900);
+	}
+	runAllCriteria(): void {
+		const pending = this.state.mission?.criteria.filter((c) => c.state !== 'verified') ?? [];
+		if (!pending.length) { this.toast('All criteria already verified.'); return; }
+		pending.forEach((c, i) => setTimeout(() => this.runCriterion(c.id), i * 450));
+	}
+	rerunScenario(): void {
+		this.addEvent('verify-pass', 'Checkout scenario re-run — 4 steps passed in 0.9s.', null);
+		this.toast('Scenario passed · 4 steps · 0.9s.');
+	}
+
 	// --- coworkers ---
 	addCoworker(name: string, role: string): void {
 		const id = uid('cw');
@@ -523,10 +554,14 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 		if (k?.origin === 'real' && k.revert?.length) {
 			const entries = k.revert;
 			void (async () => {
-				const { fs } = getServices();
+				const { fs, editor } = getServices();
 				for (const r of entries) {
 					if (r.before === null) await fs.delete(r.path).catch(() => {});
-					else await fs.writeFile(r.path, r.before);
+					else {
+						await fs.writeFile(r.path, r.before);
+						// A pane showing this file updates in place — never stale.
+						editor.getDoc(r.path)?.replaceAll(r.before);
+					}
 				}
 				this.addEvent('note', `Reverted ${entries.length} file${entries.length > 1 ? 's' : ''} from a rejected checkpoint.`, k.coworkerId);
 				this.toast(`Rejected — ${entries.length} file${entries.length > 1 ? 's' : ''} reverted.`);
