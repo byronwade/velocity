@@ -11,6 +11,8 @@ corrections get a new entry. Newest release first.
 ## 2026-07-15 · Review you can trust
 
 ### Changed
+- **checkpoint-readiness-gates** — Open gates are actionable now: clicking one jumps straight to the lens where you close it (criteria and evidence → Verify, tests → Tests, build → Terminal), and closing the loop really works — Run all verifies the criteria, Re-run scenario attaches the recorded trace as typed evidence, and the true green "Accept & merge" comes back only when every gate passes. Also fixed the state bug the gates surfaced: verifying a criterion updated the active mission but not the missions list, so downstream readers saw stale counts.
+- **chat-sidebar** — Chat activity is actionable: a "landed — ready to review" row is a button that opens that coworker's checkpoint directly in Review (hover shows the affordance). And while a coworker's reply streams in, the feed follows it — unless you've scrolled up to read history, in which case it stays put.
 - **chat-sidebar** — The chat input is the AI Elements composer card now — the one designed for exactly this: a rounded card with the focus ring on the card itself, a borderless auto-growing textarea on top, and a tools row below with an @-mention button, a **live model chip** (shows which local model actually answers; click it to pin any installed Ollama model or return to auto), and the dark arrow-up send.
 
 ### Added

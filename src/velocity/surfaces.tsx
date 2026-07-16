@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import {
 	X, Plus, Check, RotateCcw, GitCompare, Eye, Pause, Play, Pencil, Trash2,
 	CornerUpLeft, ShieldQuestion, FlaskConical, Camera, Activity, FileDiff, Circle,
-	Users, ArchiveRestore, Terminal as TermIcon, Folder, AlertTriangle, GitBranch, Flag, EyeOff,
+	Users, ArchiveRestore, Terminal as TermIcon, Folder, AlertTriangle, GitBranch, Flag, EyeOff, ChevronRight,
 } from 'lucide-react';
 import { Link2, UserPlus, Check as CheckIcon, Rocket } from 'lucide-react';
 import { MoreHorizontal } from 'lucide-react';
@@ -490,6 +490,13 @@ function CheckpointPanel() {
 	const mission = state.missions.find((m) => m.id === k.missionId) ?? null;
 	const gates = checkpointReadiness(k, mission);
 	const open = gates.filter((g) => !g.ok);
+	// An open gate is actionable: it jumps to the lens where you fix it.
+	const GATE_LENS: Record<string, Lens> = { Build: 'terminal', Tests: 'tests', 'Acceptance criteria': 'verify', 'Required evidence': 'verify' };
+	const jumpToLens = (lens: Lens) => {
+		const leaf = firstLeafOfView(state.layout.panes, lens);
+		if (leaf) runtime.focusPane(leaf.id);
+		else runtime.setPaneView(state.layout.activePaneId, lens);
+	};
 	return (
 		<>
 			<header className="vs-rail-head"><Flag size={15} /><h3>Checkpoint</h3><span className={`vs-risk ${k.risk}`}>{k.risk} risk</span>
@@ -502,11 +509,16 @@ function CheckpointPanel() {
 					<span className={`vs-tag ${k.tests.passed === k.tests.total ? 'good' : 'warn'}`}>{k.tests.passed}/{k.tests.total} tests</span>
 				</div>
 				<div className="vs-ckp-sec">Readiness — {open.length === 0 ? 'all gates passed' : `${open.length} gate${open.length > 1 ? 's' : ''} open`}
-					<div className="vs-gates">{gates.map((g) => (
-						<div key={g.label} className={`vs-gate-row${g.ok ? ' ok' : ''}`}>
-							{g.ok ? <Check size={13} /> : <X size={13} />}
-							<b>{g.label}</b>{g.detail && <span>· {g.detail}</span>}
+					<div className="vs-gates">{gates.map((g) => g.ok ? (
+						<div key={g.label} className="vs-gate-row ok">
+							<Check size={13} /><b>{g.label}</b>{g.detail && <span>· {g.detail}</span>}
 						</div>
+					) : (
+						<button key={g.label} className="vs-gate-row act" title={`Open ${GATE_LENS[g.label] ?? 'verify'} to close this gate`}
+							onClick={() => jumpToLens(GATE_LENS[g.label] ?? 'verify')}>
+							<X size={13} /><b>{g.label}</b>{g.detail && <span>· {g.detail}</span>}
+							<ChevronRight size={12} className="vs-gate-go" />
+						</button>
 					))}</div>
 				</div>
 				<div className="vs-ckp-sec">Changes

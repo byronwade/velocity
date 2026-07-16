@@ -404,7 +404,9 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 	private setCriterion(id: string, state: 'pending' | 'checking' | 'verified' | 'failed'): void {
 		if (!this.state.mission) return;
 		const criteria = this.state.mission.criteria.map((c) => (c.id === id ? { ...c, state } : c));
-		this.set({ mission: { ...this.state.mission, criteria } });
+		const mission = { ...this.state.mission, criteria };
+		// Keep the missions list in sync — readiness gates read from it.
+		this.set({ mission, missions: this.state.missions.map((m) => (m.id === mission.id ? mission : m)) });
 	}
 	runCriterion(id: string): void {
 		const c = this.state.mission?.criteria.find((x) => x.id === id);
@@ -421,6 +423,13 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 		pending.forEach((c, i) => setTimeout(() => this.runCriterion(c.id), i * 450));
 	}
 	rerunScenario(): void {
+		// The re-run records a trace — attach it as typed evidence to the
+		// mission's ready checkpoints so the evidence gate can actually close.
+		const mid = this.state.mission?.id ?? null;
+		this.set({ checkpoints: this.state.checkpoints.map((k) =>
+			k.state === 'ready' && k.missionId === mid && !k.evidence.some((e) => e.kind === 'trace')
+				? { ...k, evidence: [...k.evidence, { kind: 'trace' as const, label: 'Scenario trace', detail: 'checkout · 4 steps · 0.9s' }] }
+				: k) });
 		this.addEvent('verify-pass', 'Checkout scenario re-run — 4 steps passed in 0.9s.', null);
 		this.toast('Scenario passed · 4 steps · 0.9s.');
 	}

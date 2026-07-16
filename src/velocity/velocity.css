@@ -81,6 +81,10 @@
 .vs-chat-row svg { flex: 0 0 auto; margin-top: 3px; }
 .vs-chat-row-text { font-size: var(--text-11); line-height: 1.5; }
 .vs-chat-row.work .vs-chat-row-text { color: var(--muted); }
+/* Landed-checkpoint rows are buttons — they open the checkpoint in Review. */
+button.vs-chat-row-link { border: 0; background: transparent; font: inherit; cursor: pointer; text-align: left; width: 100%; padding: 3px 4px; margin: -3px 0; border-radius: var(--r-md); transition: background var(--dur) var(--ease), color var(--dur) var(--ease); }
+button.vs-chat-row-link:hover { background: var(--panel-2); color: var(--muted); }
+button.vs-chat-row-link:hover .vs-chat-row-text { text-decoration: underline; text-underline-offset: 2px; }
 
 /* Suggestions — one-tap starters when the thread is empty. */
 .vs-chat-suggests { display: flex; flex-direction: column; gap: 6px; padding: 0 14px 10px; }
@@ -974,6 +978,11 @@
 .vs-gate-row svg { color: var(--danger); flex: 0 0 auto; }
 .vs-gate-row.ok svg { color: var(--good); }
 .vs-gate-row b { color: var(--fg); font-weight: var(--fw-medium); }
+/* Open gates are buttons — they jump to the lens where you close them. */
+button.vs-gate-row.act { border: 0; background: transparent; padding: 3px 4px; margin: -3px -4px; border-radius: var(--r-md); font: inherit; font-size: var(--text-12); cursor: pointer; text-align: left; width: calc(100% + 8px); transition: background var(--dur) var(--ease); }
+button.vs-gate-row.act:hover { background: var(--panel-2); }
+.vs-gate-go { margin-left: auto; color: var(--faint); opacity: 0; transition: opacity var(--dur) var(--ease); }
+button.vs-gate-row.act:hover .vs-gate-go { opacity: 1; }
 .vs-blast { display: flex; flex-wrap: wrap; gap: 5px; }
 .vs-ckp-limits { display: flex; gap: 8px; font-size: var(--text-12); color: var(--muted); background: var(--panel-2); border-radius: var(--r-md); padding: 10px 12px; }
 .vs-ckp-limits svg { color: var(--warn); flex: 0 0 auto; margin-top: 1px; }

@@ -13,7 +13,7 @@
 // ---------------------------------------------------------------------------
 
 import { useEffect, useRef, useState } from 'react';
-import { ArrowUp, AtSign, MessageSquare, Pin, Activity, Copy, Check, ChevronDown, Sparkles } from 'lucide-react';
+import { ArrowUp, AtSign, MessageSquare, Pin, Activity, Copy, Check, ChevronDown, Flag, Sparkles } from 'lucide-react';
 import { useWorkspace, runtime } from './useWorkspace';
 import { chatModel, setChatModel, pinnedChatModel } from './chatai';
 import { listOllamaModels, DEFAULT_OLLAMA_URL } from '../services/ollama';
@@ -38,6 +38,8 @@ function ModelChip() {
 	useEffect(() => { void chatModel().then((m) => setLabel(m ?? 'offline · canned')); }, []);
 	useEffect(() => {
 		if (!open) return;
+		// Re-probe on open so the chip recovers when Ollama comes online later.
+		void chatModel().then((m) => setLabel(m ?? 'offline · canned'));
 		void listOllamaModels(DEFAULT_OLLAMA_URL).then(setModels);
 		const close = (e: MouseEvent) => { if (!wrapRef.current?.contains(e.target as Node)) setOpen(false); };
 		const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
@@ -112,8 +114,15 @@ export function ChatSidebar() {
 		return () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
 	}, []);
 
-	// Conversation behavior: stick to the bottom as new entries land.
-	useEffect(() => { scrollRef.current?.scrollTo(0, scrollRef.current.scrollHeight); }, [feed.length]);
+	// Conversation behavior: stick to the bottom as entries land AND while a
+	// reply streams (text growth) — but never yank the user out of scrollback.
+	const lastLen = feed.length ? feed[feed.length - 1].text.length : 0;
+	useEffect(() => {
+		const el = scrollRef.current;
+		if (!el) return;
+		const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 200;
+		if (nearBottom) el.scrollTo(0, el.scrollHeight);
+	}, [feed.length, lastLen]);
 
 	if (!state.layout.chatOpen) return null;
 
@@ -164,6 +173,18 @@ export function ChatSidebar() {
 							</div>
 						</div>
 					)
+				) : f.eventKind === 'checkpoint' ? (
+					/* Activity you can act on: a landed checkpoint opens straight in Review. */
+					<button key={f.id} className={`vs-chat-row ${f.kind} vs-chat-row-link`} title="Open in Review"
+						onClick={() => {
+							const cw = state.coworkers.find((c) => f.text.startsWith(c.name));
+							const ckp = state.checkpoints.find((k) => k.state === 'ready' && (!cw || k.coworkerId === cw.id))
+								?? state.checkpoints.find((k) => !cw || k.coworkerId === cw.id);
+							runtime.openRight('checkpoint', ckp?.id);
+						}}>
+						<Flag size={11} />
+						<span className="vs-chat-row-text">{f.text}</span>
+					</button>
 				) : (
 					<div key={f.id} className={`vs-chat-row ${f.kind}`}>
 						{f.kind === 'work' ? <Pin size={11} /> : <Activity size={11} />}
