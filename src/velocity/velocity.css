@@ -112,6 +112,7 @@ button.vs-chat-row-link:hover .vs-chat-row-text { text-decoration: underline; te
 .vs-mchip { display: flex; height: 28px; max-width: 170px; align-items: center; gap: 5px; padding: 0 8px; border: 0; border-radius: var(--r-md); background: transparent; color: var(--muted); font: inherit; font-size: var(--text-11); cursor: pointer; transition: background var(--dur) var(--ease), color var(--dur) var(--ease); }
 .vs-mchip:hover { background: color-mix(in srgb, var(--fg) 7%, transparent); color: var(--fg); }
 .vs-mchip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vs-mchip.off { color: var(--faint); font-style: italic; }
 .vs-mchip svg { flex: 0 0 auto; }
 .vs-mpop { position: absolute; right: 0; bottom: calc(100% + 6px); width: 232px; padding: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--elev-2); z-index: 30; }
 .vs-mpop-item { display: flex; width: 100%; align-items: center; gap: 8px; padding: 7px 9px; border: 0; background: transparent; border-radius: var(--r-md); color: var(--fg); font: inherit; font-size: var(--text-12); cursor: pointer; text-align: left; }
@@ -203,6 +204,8 @@ button.vs-chat-row-link:hover .vs-chat-row-text { text-decoration: underline; te
 .vs-dock-alert { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 11px; border-radius: var(--r-md); border: 1px solid color-mix(in srgb, var(--warn) 40%, var(--line)); background: color-mix(in srgb, var(--warn) 12%, var(--panel)); color: color-mix(in srgb, var(--warn) 62%, var(--fg)); font: inherit; font-size: var(--text-12); font-weight: var(--fw-medium); cursor: pointer; }
 .vs-dock-alert:hover { background: color-mix(in srgb, var(--warn) 18%, var(--panel)); }
 .vs-dock-alert.decision { border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); background: color-mix(in srgb, var(--accent) 12%, var(--panel)); color: color-mix(in srgb, var(--accent) 60%, var(--fg)); }
+.vs-dock-n { display: inline-grid; place-items: center; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: currentColor; font-size: 10px; font-weight: var(--fw-semibold); line-height: 1; }
+.vs-dock-n { color: var(--panel); background: color-mix(in srgb, var(--warn) 62%, var(--fg)); }
 .vs-credits { display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); }
 .vs-credits-bar { width: 54px; height: 5px; border-radius: 3px; background: var(--panel-2); overflow: hidden; }
 .vs-credits-bar span { display: block; height: 100%; border-radius: 3px; background: var(--brand-mark); }

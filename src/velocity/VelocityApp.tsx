@@ -16,7 +16,7 @@ import './velocity.css';
 const SHORTCUTS: { group: string; keys: [string, string][] }[] = [
 	{ group: 'Views', keys: [['1 – 7', 'Switch the active pane\'s view'], ['C', 'Compare Candidate vs Stable'], ['F', 'Focus mode']] },
 	{ group: 'Panes', keys: [['⌘ \\', 'Split active pane right'], ['⌘ ⇧ \\', 'Split active pane down'], ['⌘ J', 'Toggle terminal'], ['⌘ P', 'Go to file']] },
-	{ group: 'Work', keys: [['⌘ ⇧ N', 'New work'], ['⌘ ⇧ D', 'Ship'], ['. ', 'Pause / resume all'], ['⌘ K', 'Command palette']] },
+	{ group: 'Work', keys: [['⌘ ⇧ N', 'New work'], ['⌘ ⇧ C', 'Chat — toggle and focus'], ['⌘ ⇧ D', 'Ship'], ['. ', 'Pause / resume all'], ['⌘ K', 'Command palette']] },
 	{ group: 'General', keys: [['?', 'This shortcuts help'], ['Esc', 'Close the topmost surface']] },
 ];
 
@@ -132,6 +132,13 @@ export function VelocityApp() {
 			if (mod && e.key.toLowerCase() === 'k') { e.preventDefault(); runtime.openCommand(true); return; }
 			if (mod && !e.shiftKey && e.key.toLowerCase() === 'p') { e.preventDefault(); setQuickOpen(true); return; }
 			if (mod && e.shiftKey && e.key.toLowerCase() === 'n') { e.preventDefault(); runtime.armWork(true); return; }
+			if (mod && e.shiftKey && e.key.toLowerCase() === 'c') {
+				e.preventDefault();
+				const open = !runtime.getState().layout.chatOpen;
+				runtime.openChat(open);
+				if (open) requestAnimationFrame(() => document.querySelector<HTMLTextAreaElement>('.vs-chatbox textarea')?.focus());
+				return;
+			}
 			if (mod && e.shiftKey && e.key.toLowerCase() === 'd') { e.preventDefault(); runtime.openShip(true); return; }
 			if (mod && e.key === '\\') { e.preventDefault(); runtime.splitPane(runtime.getState().layout.activePaneId, e.shiftKey ? 'col' : 'row'); return; }
 			if (mod && e.key.toLowerCase() === 'j') { e.preventDefault(); runtime.openTool(runtime.getState().layout.openTool ? null : 'terminal'); return; }

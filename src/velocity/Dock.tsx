@@ -77,7 +77,8 @@ export function Dock() {
 	const coworkers = state.coworkers.filter((c) => c.state !== 'archived' && c.state !== 'dismissed');
 	const humans = state.collaborators.filter((c) => c.id !== 'you' && c.status === 'active');
 	const following = coworkers.find((c) => c.following);
-	const pendingReview = state.checkpoints.some((k) => k.state === 'ready');
+	const readyCount = state.checkpoints.filter((k) => k.state === 'ready').length;
+	const pendingReview = readyCount > 0;
 	const openDecision = state.decisions.some((d) => d.state === 'open');
 	const workersOpen = state.layout.rightSurface === 'coworkers';
 	const totalWorkers = coworkers.length + humans.length;
@@ -113,7 +114,12 @@ export function Dock() {
 				<>
 					<div className="vs-dock-sep" />
 					{openDecision && <button className="vs-dock-alert decision" onClick={() => runtime.openRight('decision')} title="A decision needs you"><ShieldQuestion size={14} />Decision</button>}
-					{pendingReview && <button className="vs-dock-alert" onClick={() => runtime.openRight('checkpoint')} title="A checkpoint is ready to review"><Flag size={14} />Review</button>}
+					{pendingReview && (
+						<button className="vs-dock-alert" onClick={() => runtime.openRight('checkpoint')}
+							title={readyCount === 1 ? 'A checkpoint is ready to review' : `${readyCount} checkpoints are ready to review`}>
+							<Flag size={14} />Review{readyCount > 1 && <span className="vs-dock-n">{readyCount}</span>}
+						</button>
+					)}
 				</>
 			)}
 

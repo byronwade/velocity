@@ -35,7 +35,15 @@ function ModelChip() {
 	const [label, setLabel] = useState('…');
 	const [models, setModels] = useState<string[]>([]);
 	const wrapRef = useRef<HTMLDivElement>(null);
-	useEffect(() => { void chatModel().then((m) => setLabel(m ?? 'offline · canned')); }, []);
+	// Probe on mount; while offline, keep re-probing so the chip recovers the
+	// moment Ollama comes up (chatModel resets its null cache every 15s).
+	useEffect(() => {
+		let alive = true;
+		const sync = () => void chatModel().then((m) => { if (alive) setLabel(m ?? 'offline · canned'); });
+		sync();
+		const t = setInterval(() => { if (label.startsWith('offline')) sync(); }, 16_000);
+		return () => { alive = false; clearInterval(t); };
+	}, [label]);
 	useEffect(() => {
 		if (!open) return;
 		// Re-probe on open so the chip recovers when Ollama comes online later.
@@ -55,7 +63,7 @@ function ModelChip() {
 	const pinned = pinnedChatModel();
 	return (
 		<div className="vs-mchip-wrap" ref={wrapRef}>
-			<button type="button" className="vs-mchip" title="Model answering the chat" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
+			<button type="button" className={`vs-mchip${label.startsWith('offline') ? ' off' : ''}`} title="Model answering the chat" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
 				<Sparkles size={12} /><span>{label}</span><ChevronDown size={11} />
 			</button>
 			{open && (
@@ -153,7 +161,17 @@ export function ChatSidebar() {
 						<div key={f.id} className="vs-chat-msg bot">
 							<span className="vs-avatar sm neutral">{f.authorName.slice(0, 2).toUpperCase()}</span>
 							<div className="vs-chat-msg-body">
-								<div className="vs-chat-msg-head"><b>{f.authorName}</b><em>coworker</em><span>{f.tsLabel}</span>{f.text && <MsgActions text={f.text} />}</div>
+								<div className="vs-chat-msg-head"><b>{f.authorName}</b><em>coworker</em><span>{f.tsLabel}</span>
+									{f.text && (
+										<>
+											<button className="vs-chat-act" title="Pin this reply as work — auto-assigns a coworker" aria-label="Pin as work"
+												onClick={() => { runtime.addComment('browser', 46, 42, f.text.slice(0, 200)); runtime.notify('Pinned as work.'); }}>
+												<Pin size={12} />
+											</button>
+											<MsgActions text={f.text} />
+										</>
+									)}
+								</div>
 								{f.text
 									? <div className="vs-chat-msg-text">{f.text}</div>
 									: <span className="vs-chat-typing" aria-label={`${f.authorName} is typing`}><i /><i /><i /></span>}
