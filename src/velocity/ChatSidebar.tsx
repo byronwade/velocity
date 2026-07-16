@@ -133,7 +133,9 @@ export function ChatLens() {
 				)}
 				{feed.map((f) => f.kind === 'msg' ? (
 					f.fromCoworker ? (
-						<div key={f.id} className="vs-chat-msg bot">
+						<div key={f.id} className="vs-chat-msg bot" draggable={!!f.text}
+							title={f.text ? 'Drag onto the app to pin as work there' : undefined}
+							onDragStart={(e) => { e.dataTransfer.setData('velocity/chatwork', f.text.slice(0, 200)); e.dataTransfer.effectAllowed = 'copy'; }}>
 							<span className="vs-avatar sm neutral">{f.authorName.slice(0, 2).toUpperCase()}</span>
 							<div className="vs-chat-msg-body">
 								<div className="vs-chat-msg-head"><b>{f.authorName}</b><em>coworker</em><span>{f.tsLabel}</span>
@@ -153,7 +155,9 @@ export function ChatLens() {
 							</div>
 						</div>
 					) : (
-						<div key={f.id} className="vs-chat-msg user">
+						<div key={f.id} className="vs-chat-msg user" draggable
+							title="Drag onto the app to pin as work there"
+							onDragStart={(e) => { e.dataTransfer.setData('velocity/chatwork', f.text.slice(0, 200)); e.dataTransfer.effectAllowed = 'copy'; }}>
 							<div className="vs-chat-bubble">
 								{f.text}
 								<span className="vs-chat-bubble-acts">

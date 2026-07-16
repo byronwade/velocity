@@ -832,7 +832,10 @@ function Pane({ leaf, single }: { leaf: PaneLeaf; single: boolean }) {
 	return (
 		<section className={`vs-pane${active ? ' active' : ''}${state.layout.commentMode ? ' commenting' : ''}`} onMouseDown={() => runtime.focusPane(leaf.id)}
 			onDragOver={(e) => {
-				if (![...e.dataTransfer.types].includes('velocity/pane')) return;
+				const types = [...e.dataTransfer.types];
+				// A chat message dragged onto the app pins as work where it lands.
+				if (types.includes('velocity/chatwork')) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; return; }
+				if (!types.includes('velocity/pane')) return;
 				e.preventDefault();
 				e.dataTransfer.dropEffect = 'move';
 				setDropEdge(edgeAt(e, e.currentTarget));
@@ -840,6 +843,17 @@ function Pane({ leaf, single }: { leaf: PaneLeaf; single: boolean }) {
 			onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDropEdge(null); }}
 			onDrop={(e) => {
 				e.preventDefault();
+				const work = e.dataTransfer.getData('velocity/chatwork');
+				if (work) {
+					// Place relative to the pane body so pin coordinates match clicks.
+					const body = e.currentTarget.querySelector('.vs-pane-body');
+					const r = (body ?? e.currentTarget).getBoundingClientRect();
+					const x = Math.min(96, Math.max(2, ((e.clientX - r.left) / r.width) * 100));
+					const y = Math.min(96, Math.max(2, ((e.clientY - r.top) / r.height) * 100));
+					runtime.addComment(leaf.view, x, y, work);
+					runtime.notify('Pinned as work where you dropped it.');
+					return;
+				}
 				const src = e.dataTransfer.getData('velocity/pane');
 				const edge = edgeAt(e, e.currentTarget);
 				setDropEdge(null);

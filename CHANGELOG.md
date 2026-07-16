@@ -10,6 +10,9 @@ corrections get a new entry. Newest release first.
 
 ## 2026-07-16 · Chat joins the pane system
 
+### Added
+- **chat-drag-pin** — Drag a chat message onto your app and it pins as work **right where you drop it**. Any message — yours or a coworker's reply — can be dragged from the Chat pane onto any panel; the drop point becomes the comment's position, the intent is auto-classified, a coworker auto-assigns, and the thread opens on the spot. The fastest path from "someone said it" to "someone's doing it".
+
 ### Changed
 - **chat-sidebar** — The tab rail's chat icon is gone — with chat living in the panels, the rail is back to just projects, inbox, and profile. ⌘⇧C, the command palette, and the view dropdown are the ways in.
 - **pane-drag-drop** — Every view in a panel's dropdown now shows its shortcut key (1–8), so the fastest way to switch is always one glance away.
