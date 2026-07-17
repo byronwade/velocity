@@ -60,6 +60,7 @@ function persona(c: Coworker, team: Coworker[], project: string): string {
 		`Your teammates: ${team.filter((t) => t.id !== c.id).map((t) => `${t.name} (${t.role})`).join(', ')}.`,
 		'You are chatting in the team channel. Write ONLY your own single reply, in 1–3 short, concrete sentences — a teammate, not an assistant.',
 		'Never write lines for teammates, never quote their turns, never prefix any name followed by a colon. No markdown headings or lists.',
+		'When you want a specific teammate to act, address them as @Name (e.g. "@Theo can you…") — they will see it and answer.',
 	].join('\n');
 }
 
@@ -68,7 +69,7 @@ function persona(c: Coworker, team: Coworker[], project: string): string {
  *  that starts impersonating someone else. */
 function onlyOwnVoice(text: string, self: Coworker, team: Coworker[]): string {
 	const names = team.map((t) => t.name);
-	let out = text.replace(new RegExp(`^\\s*${self.name}\\s*:\\s*`, 'i'), '');
+	let out = text.replace(new RegExp(`^\\s*@?${self.name}\\s*[:,]\\s*`, 'i'), '');
 	for (const name of names) {
 		if (name === self.name) continue;
 		const at = out.search(new RegExp(`(^|\\n)\\s*${name}\\s*:`, 'i'));

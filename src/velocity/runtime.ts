@@ -534,24 +534,54 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 	 *  feed. The second responder sees the first one's ACTUAL reply, so agents
 	 *  build on each other. Falls back to deterministic lines when no model. */
 	private async streamChatReplies(userText: string, primary: Coworker, second: Coworker | undefined, live: Coworker[]): Promise<void> {
+		const first = await this.respondAsCoworker(primary, live,
+			`On it — I'll fold “${userText.slice(0, 48)}${userText.length > 48 ? '…' : ''}” into my current pass (${primary.action.toLowerCase()}).`);
+		let handled = [primary.id];
+		if (second) {
+			await this.respondAsCoworker(second, live,
+				`I'll take the ${second.department.toLowerCase()} side once ${primary.name} lands theirs — flag me on the checkpoint.`);
+			handled = [primary.id, second.id];
+		}
+		// Agents talk to each other: a reply that @mentions a teammate pulls
+		// that teammate into the conversation (bounded, real replies only).
+		if (first) await this.chainMentions(first, primary, live, handled, 0);
+	}
+
+	/** Stream one coworker's real reply into the feed; returns the final text
+	 *  (or null when the model was unavailable and the fallback was used). */
+	private async respondAsCoworker(cw: Coworker, live: Coworker[], fallback: string): Promise<string | null> {
 		const { streamCoworkerReply } = await import('./chatai');
-		const transcriptFor = (self: Coworker) => this.state.feed
+		const transcript = this.state.feed
 			.filter((f) => f.kind === 'msg' && f.text)
 			.slice(-10)
-			.map((f) => ({ speaker: f.authorName, text: f.text, self: f.fromCoworker === true && f.authorName === self.name }));
-		const respond = async (cw: Coworker, fallback: string) => {
-			const id = this.addFeed({ kind: 'msg', authorName: cw.name, fromCoworker: true, text: '' });
-			try {
-				const reply = await streamCoworkerReply(cw, live, this.state.project.name, transcriptFor(cw), (partial) => this.updateFeedText(id, partial));
-				if (!reply) this.updateFeedText(id, fallback);
-			} catch {
-				this.updateFeedText(id, fallback);
-			}
-		};
-		await respond(primary, `On it — I'll fold “${userText.slice(0, 48)}${userText.length > 48 ? '…' : ''}” into my current pass (${primary.action.toLowerCase()}).`);
-		if (second) {
-			await respond(second, `I'll take the ${second.department.toLowerCase()} side once ${primary.name} lands theirs — flag me on the checkpoint.`);
+			.map((f) => ({ speaker: f.authorName, text: f.text, self: f.fromCoworker === true && f.authorName === cw.name }));
+		const id = this.addFeed({ kind: 'msg', authorName: cw.name, fromCoworker: true, text: '' });
+		try {
+			const reply = await streamCoworkerReply(cw, live, this.state.project.name, transcript, (partial) => this.updateFeedText(id, partial));
+			if (!reply) { this.updateFeedText(id, fallback); return null; }
+			return reply;
+		} catch {
+			this.updateFeedText(id, fallback);
+			return null;
 		}
+	}
+
+	/** When a coworker's reply @mentions a teammate, the teammate answers —
+	 *  for real. Depth-bounded so two chatty models can't loop forever, one
+	 *  reply per coworker per exchange, and silent when no model is running
+	 *  (a canned chain would be theater). */
+	private async chainMentions(text: string, from: Coworker, live: Coworker[], handled: string[], depth: number): Promise<void> {
+		if (depth >= 2) return;
+		// "@Theo" or a plain "Theo" both count — people (and small models)
+		// drop the @; a named teammate being asked for something should answer.
+		const mentioned = live.find((c) => c.id !== from.id && !handled.includes(c.id) && new RegExp(`@?\\b${c.name}\\b`, 'i').test(text));
+		if (!mentioned) return;
+		// Chains only happen for real — no model, no theater.
+		const { chatModel } = await import('./chatai');
+		if (!(await chatModel())) return;
+		const reply = await this.respondAsCoworker(mentioned, live,
+			`${from.name} — noted, I'll pick that up.`);
+		if (reply) await this.chainMentions(reply, mentioned, live, [...handled, mentioned.id], depth + 1);
 	}
 
 	// --- real work: a local model actually doing the job -------------------
@@ -593,6 +623,25 @@ export class PrototypeCoworkerRuntime implements CoworkerRuntime {
 		this.addFeed({ kind: 'msg', authorName: cw.name, fromCoworker: true, text: reply.slice(0, 300) });
 		this.addEvent(files.length ? 'checkpoint' : 'note', `${cw.name} finished “${comment.text.slice(0, 40)}”${files.length ? ` — ${files.length} file${files.length > 1 ? 's' : ''} changed.` : '.'}`, cw.id);
 		this.toast(`${cw.name} finished the work item.`);
+		// Agent-to-agent handoff: real changed files get handed to QA in chat,
+		// and QA answers with a real streamed reply (skipped when no model).
+		if (files.length) void this.handoffToVerifier(cw, comment.text);
+	}
+
+	private async handoffToVerifier(author: Coworker, task: string): Promise<void> {
+		const live = this.state.coworkers.filter((c) => c.state !== 'archived' && c.state !== 'dismissed');
+		const qa = live.find((c) => c.id !== author.id && /verif|qa|quality|test/i.test(`${c.department} ${c.role}`));
+		if (!qa) return;
+		const { chatModel } = await import('./chatai');
+		if (!(await chatModel())) return;
+		this.addFeed({
+			kind: 'msg', authorName: author.name, fromCoworker: true,
+			text: `@${qa.name} — “${task.slice(0, 60)}${task.length > 60 ? '…' : ''}” just landed as a checkpoint. Can you give it a verification pass?`,
+		});
+		const reply = await this.respondAsCoworker(qa, live, `On it — I'll run the checks against the checkpoint.`);
+		this.mapCoworkers((c) => (c.id === qa.id ? { ...c, state: 'active', action: `Verifying “${task.slice(0, 32)}${task.length > 32 ? '…' : ''}”` } : c));
+		this.addEvent('reserve', `${author.name} handed “${task.slice(0, 40)}” to ${qa.name} for verification.`, qa.id);
+		if (reply) await this.chainMentions(reply, qa, live, [author.id, qa.id], 1);
 	}
 
 	// --- checkpoints ---

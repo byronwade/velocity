@@ -11,6 +11,7 @@ corrections get a new entry. Newest release first.
 ## 2026-07-16 · Chat joins the pane system
 
 ### Added
+- **agent-handoffs** — Coworkers talk to each other. When a coworker lands real changed files, they hand the work to QA **in chat** — "@Iris — '…' just landed as a checkpoint. Can you give it a verification pass?" — and Iris answers with a real streamed model reply and flips to Verifying. And when any coworker's reply names a teammate ("@Theo can you…" or just "Theo"), that teammate answers for real. Chains are bounded (depth 2, one reply per coworker per exchange) and only happen when a local model is actually running — no canned agent theater.
 - **chat-drag-pin** — Drag a chat message onto your app and it pins as work **right where you drop it**. Any message — yours or a coworker's reply — can be dragged from the Chat pane onto any panel; the drop point becomes the comment's position, the intent is auto-classified, a coworker auto-assigns, and the thread opens on the spot. The fastest path from "someone said it" to "someone's doing it".
 
 ### Changed
